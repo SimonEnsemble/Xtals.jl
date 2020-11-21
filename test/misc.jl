@@ -4,7 +4,6 @@ using Xtals
 using Test
 using DataFrames
 using CSV
-using Random
 
 @testset "Misc Tests" begin
     am = read_atomic_masses()
