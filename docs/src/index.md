@@ -1,4 +1,5 @@
-![Xtals.jl](assets/logo.png)
+# Xtals.jl
+
 A pure-[Julia](https://julialang.org/) package for representation of porous
 crystals such as metal-organic frameworks (MOFs).
 
