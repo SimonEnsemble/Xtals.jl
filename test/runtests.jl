@@ -1,4 +1,4 @@
-TRAVIS=true
+TRAVIS=true # set false for better UX on local machines. must be true for CI
 
 testfiles = ["box.jl",
              "matter.jl",
