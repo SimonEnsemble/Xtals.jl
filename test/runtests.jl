@@ -1,5 +1,6 @@
-using Logging, Test, Revise
-global_logger(ConsoleLogger(stdout, Logging.Info))
+#using Logging
+#global_logger(ConsoleLogger(stdout, Logging.Info))
+using Test, Revise
 using Xtals
 
 function runtest(testfile::String)
