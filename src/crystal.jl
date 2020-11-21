@@ -61,6 +61,9 @@ or construct a `Crystal` data structure directly.
 - `include_zero_charges::Bool`: if `false`, do not include in `crystal.charges` atoms which have zero charges, in order to speed up the electrostatic calculations.
     If `true,` include the atoms in `crystal.charges` that have zero charge, ensuring that the number of atoms is equal to the number of charges and that `crystal.charges.coords.xf` and `crystal.atoms.coords.xf` are the same.
 - `remove_duplicates::Bool`: remove duplicate atoms and charges. an atom is duplicate only if it is the same species.
+- `species_col::Array{String}`: which column to use for species identification for `crystal.atoms.species`. we use a priority list:
+    we check for the first entry of `species_col` in the .cif file; if not present, we then use the second entry, and so on.
+- `infer_bonds::Union{Bool, Missing}` : if `true`, bonds are inferred across periodic unit cell boundaries; if `false`, bonds are only inferred within the local unit cell; if `missing` (default), bonds are not inferred.
 
 # Returns
 - `crystal::Crystal`: A crystal containing the crystal structure information
@@ -73,20 +76,19 @@ or construct a `Crystal` data structure directly.
 - `bonds::SimpleGraph`: Unweighted, undirected graph showing all of the atoms
     that are bonded within the crystal
 - `symmetry::SymmetryInfo`: symmetry inforomation
-- `species_col::Array{String}`: which column to use for species identification for `crystal.atoms.species`. we use a priority list:
-    we check for the first entry of `species_col` in the .cif file; if not present, we then use the second entry, and so on.
 """
 function Crystal(filename::String;
-                 check_neutrality::Bool=true, 
+                 check_neutrality::Bool=true,
                  net_charge_tol::Float64=NET_CHARGE_TOL,
                  check_overlap::Bool=true,
                  overlap_tol::Float64=0.1,
                  convert_to_p1::Bool=true,
-                 read_bonds_from_file::Bool=false, 
+                 read_bonds_from_file::Bool=false,
                  wrap_coords::Bool=true,
                  include_zero_charges::Bool=false,
                  remove_duplicates::Bool=false,
-                 species_col::Array{String, 1}=["_atom_site_label", "_atom_site_type_symbol"])
+                 species_col::Array{String, 1}=["_atom_site_type_symbol", "_atom_site_label"],
+                 infer_bonds::Union{Bool, Missing}=missing)
     # Read file extension. Ensure we can read the file type
     extension = split(filename, ".")[end]
     if ! (extension in ["cif", "cssr"])
@@ -428,11 +430,11 @@ function Crystal(filename::String;
             crystal.name, crystal.symmetry.space_group)
         crystal = apply_symmetry_operations(crystal)
     end
-    
+
     if wrap_coords
         wrap!(crystal) # do before checking overlap!
     end
-    
+
     if remove_duplicates
         crystal = remove_duplicate_atoms_and_charges(crystal)
     end
@@ -449,6 +451,10 @@ function Crystal(filename::String;
         _check_overlap(crystal)
     end
 
+    if !ismissing(infer_bonds)
+        infer_bonds!(crystal, infer_bonds)
+    end
+
     return crystal
 end
 
@@ -461,9 +467,9 @@ function _check_overlap(crystal::Crystal)
             @warn @sprintf("atom %d (%s) and %d (%s) are overlapping\n", i, crystal.atoms.species[i],
                 j, crystal.atoms.species[j])
         end
-        error(crystal.name * " has overlapping pairs of atoms! 
+        error(crystal.name * " has overlapping pairs of atoms!
             (this occurs often when applying symmetry rules, if your structure was not in P1 symmetry to begin with.)
-            pass `check_overlap=false` then run `overlap(crystal)` to find pairs of overlapping atoms for inspection. 
+            pass `check_overlap=false` then run `overlap(crystal)` to find pairs of overlapping atoms for inspection.
             or pass `remove_duplicates=true` to the `Crystal` constructor to automatically remove the duplicate atoms and charges.
             you should then visualize your .cif to make sure it is proper.`\n")
     end

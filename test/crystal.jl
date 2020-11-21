@@ -296,7 +296,7 @@ end
       # 2.  Make sure a .cif w/ good labels loads to an identical Crystal with
       #     and without species_column="_atom_site_type_symbol".
       # 3.  Make sure a bogus species_column throws an exception.
-    xtal = Crystal("SBMOF-1_bad_labels.cif")
+    xtal = Crystal("SBMOF-1_bad_labels.cif", species_col=["_atom_site_label"])
     @test xtal.atoms.species[1] == :C1A
 
     xtal = Crystal("SBMOF-1_bad_labels.cif", species_col=["_atom_site_type_symbol"])
@@ -313,5 +313,15 @@ end
     xtal = Crystal("SBMOF-1_overlap.cif", remove_duplicates=true)
     @test isapprox(xtal, Crystal("SBMOF-1.cif"))
     @test_throws ErrorException Crystal("SBMOF-1_overlap_diff_atom.cif", remove_duplicates=true) # duplicate but diff atom, so not repairable
+
+    # infer_bonds option tests
+    xtal2 = deepcopy(xtal)
+    infer_bonds!(xtal, true)
+    infer_bonds!(xtal2, false)
+    xtal3 = Crystal("SBMOF-1_overlap.cif", remove_duplicates=true, infer_bonds=true)
+    xtal4 = Crystal("SBMOF-1_overlap.cif", remove_duplicates=true, infer_bonds=false)
+    @test xtal.bonds ≠ xtal2.bonds
+    @test xtal.bonds == xtal3.bonds
+    @test xtal2.bonds == xtal4.bonds
 end
 end
