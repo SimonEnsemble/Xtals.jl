@@ -16,31 +16,44 @@ print off paths where Xtals.jl looks for input files and writes output files.
 """
 function print_file_paths()
     println("general data folder: ", PATH_TO_DATA)
-    println("\tcrystal structures (.cif, .cssr): ", PATH_TO_CRYSTALS)
-    println("\tforce field files (.csv): ", PATH_TO_FORCEFIELDS)
-    println("\tmolecule input files: ", PATH_TO_MOLECULES)
-    println("\tsimulation output files: ", PATH_TO_SIMS)
-    println("\tgrids (.cube): ", PATH_TO_GRIDS)
+    println("crystal structures (.cif, .cssr): ", PATH_TO_CRYSTALS)
 end
 
 """
-    set_path_to_data("../data")
+    set_path_to_data("../data/")
 
-set the `PATH_TO_DATA` variable.
-this adjusts the path to crystals, forcefields, molecules, grids, and simulation output files.
+set the `PATH_TO_DATA` or `PATH_TO_CRYSTALS` variable. by default, sets
+`PATH_TO_DATA` to `path`, and `PATH_TO_CRYSTALS` to `path/crystals`.
+
+# Arguments
+- `path::String` The path to use for setting the environment variable.
+- `relpath_xtals::Bool` Specify `true` to update path to crystals relative to new data path.
+- `print::Bool` Specify `true` to print path variables.
 """
-function set_path_to_data(ptd::String; print_paths::Bool=true)
-    global PATH_TO_DATA = ptd
+function set_path_to_data(path::String; relpath_xtals::Bool=false, print::Bool=false)
+	global PATH_TO_DATA = path
+	if relpath_xtals
+		set_path_to_crystals(joinpath(PATH_TO_DATA, "crystals"))
+	end
+	if print
+		print_file_paths()
+	end
+end
 
-    global PATH_TO_CRYSTALS = joinpath(PATH_TO_DATA, "crystals")
-    global PATH_TO_FORCEFIELDS = joinpath(PATH_TO_DATA, "forcefields")
-    global PATH_TO_MOLECULES = joinpath(PATH_TO_DATA, "molecules")
-    global PATH_TO_GRIDS = joinpath(PATH_TO_DATA, "grids")
-    global PATH_TO_SIMS = joinpath(PATH_TO_DATA, "simulations")
+"""
+    set_path_to_crystals("../other_crystals/")
 
-    if print_paths
-        print_file_paths()
-    end
+set `Xtals.PATH_TO_CRYSTALS`.
+
+# Arguments
+- `path::String` The path to use for setting the environment variable.
+- `print::Bool` Specify `true` to print path variables.
+"""
+function set_path_to_crystals(path::String; print::Bool=false)
+	global PATH_TO_CRYSTALS = path
+	if print
+		print_file_paths()
+	end
 end
 
 """
@@ -51,14 +64,7 @@ to see current set up, call [`print_file_paths`](@ref)
 """
 function set_default_file_paths(;print_paths::Bool=true)
     # this is the main directory where crystal structures, forcefields, and molecules data is stored
-    global PATH_TO_DATA = joinpath(pwd(), "data")
-
-    global PATH_TO_CRYSTALS = joinpath(PATH_TO_DATA, "crystals")
-    global PATH_TO_FORCEFIELDS = joinpath(PATH_TO_DATA, "forcefields")
-    global PATH_TO_MOLECULES = joinpath(PATH_TO_DATA, "molecules")
-    global PATH_TO_GRIDS = joinpath(PATH_TO_DATA, "grids")
-    global PATH_TO_SIMS = joinpath(PATH_TO_DATA, "simulations")
-
+	set_path_to_data(joinpath(pwd(), "data"), relpath_xtals=true)
     if print_paths
         print_file_paths()
     end
@@ -70,97 +76,27 @@ function __init__()
     set_default_file_paths(print_paths=false)
 end
 
- # """
- #     set_tutorial_mode()
- #
- # places Xtals in "tutorial mode". it changes the `path_to_data` variable to
- # the directory where the Xtals test data is stored. it can be used to
- # follow examples shown in the readme. it displays a warning so that the user knows
- # they are no longer using their own data.
- # """
- # function set_tutorial_mode()
- #     new_path = joinpath(dirname(pathof(Xtals)), "..", "test", "data")
- #     if ! isdir(new_path)
- #         @error @sprintf("directory for testing data %s does not exist.\nnot entering tutorial mode.\n", new_path)
- #     else
- #         global path_to_data = new_path
- #         global path_to_crystals = joinpath(path_to_data, "crystals")
- #         global path_to_forcefields = joinpath(path_to_data, "forcefields")
- #         global path_to_molecules = joinpath(path_to_data, "molecules")
- #         global path_to_grids = joinpath(path_to_data, "grids")
- #         @warn "Xtals is now in tutorial mode. you have access to the testing data to experiment with Xtals.\nto reset to default file paths, call `set_default_file_paths()`\n"
- #     end
- # end
- #
+
 include("matter.jl")
 include("box.jl")
 include("distance.jl")
 include("misc.jl")
 include("crystal.jl")
 include("bonds.jl")
+include("repfactors.jl")
 
-"""
-	repfactors = replication_factors(unitcell, cutoffradius)
-Find the replication factors needed to make a supercell big enough to fit a sphere with the specified cutoff radius.
-In Xtals.jl, rather than replicating the atoms in the home unit cell to build the supercell that
-serves as a simulation box, we replicate the home unit cell to form the supercell (simulation box) in a for loop.
-This function ensures enough replication factors such that the nearest image convention can be applied.
-A non-replicated supercell has 1 as the replication factor in each dimension (`repfactors = (1, 1, 1)`).
-# Arguments
-- `unitcell::Box`: The unit cell of the framework
-- `cutoff_radius::Float64`: Cutoff radius beyond which we define the potential energy to be zero (units: Angstrom)
-# Returns
-- `repfactors::Tuple{Int, Int, Int}`: The replication factors in the a, b, c directions
-"""
-function replication_factors(unitcell::Box, cutoff_radius::Float64)
-	# Unit vectors used to transform from fractional coordinates to cartesian coordinates. We'll be
-	a = unitcell.f_to_c[:, 1]
-	b = unitcell.f_to_c[:, 2]
-	c = unitcell.f_to_c[:, 3]
-
-	n_ab = cross(a, b)
-	n_ac = cross(a, c)
-	n_bc = cross(b, c)
-
-	# c0 defines a center in the unit cell
-	c0 = [a b c] * [.5, .5, .5]
-
-	rep = [1, 1, 1]
-
-	# Repeat for `a`
-	# |n_bc ⋅ c0|/|n_bc| defines the distance from the end of the supercell and the center. As long as that distance is less than the cutoff radius, we need to increase it
-	while abs(dot(n_bc, c0)) / norm(n_bc) < cutoff_radius
-		rep[1] += 1
-		a += unitcell.f_to_c[:,1]
-		c0 = [a b c] * [.5, .5, .5]
-	end
-
-	# Repeat for `b`
-	while abs(dot(n_ac, c0)) / norm(n_ac) < cutoff_radius
-		rep[2] += 1
-		b += unitcell.f_to_c[:,2]
-		c0 = [a b c] * [.5, .5, .5]
-	end
-
-	# Repeat for `c`
-	while abs(dot(n_ab, c0)) / norm(n_ab) < cutoff_radius
-		rep[3] += 1
-		c += unitcell.f_to_c[:,3]
-		c0 = [a b c] * [.5, .5, .5]
-	end
-
-	return (rep[1], rep[2], rep[3])::Tuple{Int, Int, Int}
-end
 
 export
     # Xtals.jl
     print_file_paths, set_path_to_data,
 
     # matter.jl
-    Coords, Frac, Cart, Atoms, Charges, wrap!, neutral, net_charge, translate_by!, origin,
+    Coords, Frac, Cart, Atoms, Charges, wrap!, neutral, net_charge,
+	translate_by!, origin,
 
     # box.jl
-    Box, replicate, unit_cube, write_vtk, inside, fractional_coords, cartesian_coords,
+    Box, replicate, unit_cube, write_vtk, inside, fractional_coords,
+	cartesian_coords,
 
     # distance.jl
     nearest_image!, distance, overlap, remove_duplicates,
@@ -174,6 +110,7 @@ export
     apply_symmetry_operations,
 
     # bonds.jl
-    infer_bonds!, write_bond_information, BondingRule, bond_sanity_check, remove_bonds!,
-    infer_geometry_based_bonds!, cordero_covalent_atomic_radii
-end
+    infer_bonds!, write_bond_information, BondingRule, bond_sanity_check,
+	remove_bonds!, infer_geometry_based_bonds!, cordero_covalent_atomic_radii
+
+end # module Xtals

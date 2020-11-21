@@ -4,7 +4,7 @@
 
 ## reading in a crystal structure file
 
-Currently, the crystal structure file reader accepts `.cif` and `.cssr` file formats. `Xtals.jl` looks for the crystal structure files in `Xtals.PATH_TO_CRYSTALS` which is by default `./data/crystals`. By typing `@eval Xtals PATH_TO_CRYSTALS = "my_crystal_dir"`, `Xtals.jl` now looks for the crystal structure file in `my_crystal_dir`.
+Currently, the crystal structure file reader accepts `.cif` and `.cssr` file formats. `Xtals.jl` looks for the crystal structure files in `Xtals.PATH_TO_CRYSTALS` which is by default `./data/crystals`. By typing `set_path_to_crystals("my_crystal_dir")`, `Xtals.jl` now looks for the crystal structure file in `my_crystal_dir`.
 The files can be read as:
 
 ```julia
@@ -42,11 +42,13 @@ cart_coords = xtal.box.f_to_c * xtal.atoms.coords.xf    # array of cartesian coo
 ## creating a super cell
 
 For many simulations, one needs to replicate the unit cell multiple times to create a bigger super cell.
-```
+
+```julia
 super_xtal = replicate(xtal, (2,2,2))       # Replicates the original unit cell once in each dimension
 ```
 
 ## finding other properties
+
 ```julia
 rho = crystal_density(xtal)         # Crystal density of the crystal in kg/m^2
 mw = molecular_weight(xtal)         # The molecular weight of the unit cell in amu
@@ -54,7 +56,9 @@ formula = chemical_formula(xtal)    # The irreducible chemical formula of the cr
 ```
 
 ## assigning new charges
+
 If the crystal structure file does not contains partial charges, we provide methods to assign new charges to the crystal
+
 ```julia
 species_to_charges = Dict(:Ca => 2.0, :C => 1.0, :H => -1.0)                # This method assigns a static charge to atom species
 charged_xtal = assign_charges(xtal, species_to_charge, 1e-5)                # This function creates a new charged `Crystal` object.
@@ -66,7 +70,9 @@ other_charged_xtal = Crystal(xtal.name, xtal.box, xtal.atoms,               # He
 ```
 
 ## writing crystal files
+
 We provide methods to write both `.xyz` and `.cif` files
+
 ```julia
 write_cif(xtal, "my_new_cif_file.cif")      # Stored in the current directory
 write_xyz(xtal, "my_new_xyz_file.xyz")      # stored in the current directory
@@ -78,6 +84,9 @@ write_xyz(xtal, "my_new_xyz_file.xyz")      # stored in the current directory
 ```@docs
     Crystal
     SymmetryInfo
+    set_path_to_data
+    set_path_to_crystals
+    strip_numbers_from_atom_labels!
     replicate
     molecular_weight
     crystal_density
