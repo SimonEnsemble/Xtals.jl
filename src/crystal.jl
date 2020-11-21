@@ -559,6 +559,9 @@ function write_xyz(crystal::Crystal; comment::AbstractString="", center_at_origi
     end
 end
 
+# convenient wrapper for saving crystals
+write_xyz(xtal::Crystal, name::String) = write_xyz(Cart(xtal.atoms, xtal.box), name)
+
 # docstring in matter.jl
 neutral(crystal::Crystal, tol::Float64=1e-5) = neutral(crystal.charges, tol)
 
