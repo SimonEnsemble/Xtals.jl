@@ -1,20 +1,10 @@
 module Xtals
 
 using CSV
-#using DataFrames
-#using Roots # for fzero
-#using SpecialFunctions # for erfc
-#using StatsBase
-#using ProgressMeter
-#using Polynomials
-#using JLD2
-#using Statistics
+using DataFrames
 using Printf
 using LinearAlgebra
 using LightGraphs
-#using Distributed
-#using Optim
-#using PyCall
 
 # atoms are considered to overlap if this close.
 const R²_OVERLAP = 0.1 # Units: Angstrom²

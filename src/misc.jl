@@ -1,5 +1,3 @@
-using DataFrames
-
 function add_extension(filename::String, extension::String)
     if ! occursin(extension, filename)
         filename *= extension
