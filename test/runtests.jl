@@ -1,6 +1,20 @@
+TRAVIS=true
+
+testfiles = ["box.jl",
+             "matter.jl",
+             "crystal.jl",
+             "distance.jl",
+             "misc.jl",
+             "assert_p1_symmetry.jl",
+             "paths.jl" # last, to not interfere with reading test data
+             ]
+
 using Logging
 global_logger(ConsoleLogger(stdout, Logging.Info))
-using Test#, Revise
+using Test
+if !TRAVIS
+    using Revise
+end
 using Xtals
 
 function runtest(testfile::String)
@@ -12,13 +26,8 @@ function runtest(testfile::String)
     end
 end
 
-testfiles = ["box.jl",
-             "matter.jl",
-             "crystal.jl",
-             "distance.jl",
-             "misc.jl",
-             "assert_p1_symmetry.jl",
-             "paths.jl" # last, to not interfere with reading test data
-             ]
-
-runtest.(testfiles)
+if TRAVIS
+    include.(testfiles)
+else
+    runtest.(testfiles)
+end
