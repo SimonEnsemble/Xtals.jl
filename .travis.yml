@@ -16,7 +16,7 @@ script:
     - julia --project --check-bounds=yes -e 'import Pkg; Pkg.build(); Pkg.test("Xtals")'
 
 after_success:
-    - julia --project -e 'import Pkg; Pkg.add("Documenter")'
+    - julia --project -e 'import Pkg; Pkg.add("Documenter"); Pkg.add("Logging")'
     - julia --project ./docs/make.jl
 
 notifications:

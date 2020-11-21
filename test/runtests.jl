@@ -1,5 +1,5 @@
-#using Logging
-#global_logger(ConsoleLogger(stdout, Logging.Info))
+using Logging
+global_logger(ConsoleLogger(stdout, Logging.Info))
 using Test, Revise
 using Xtals
 
