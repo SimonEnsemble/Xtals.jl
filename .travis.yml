@@ -12,11 +12,8 @@ addons:
 
 sudo: enabled
 
-before_install:
-  - sudo apt-get install -y python-scipy
-
 script:
-  - julia --project --check-bounds=yes -e 'import Pkg; Pkg.build(); Pkg.test("Xtals")'
+  - julia --project --check-bounds=yes -e 'import Pkg; Pkg.build(); ENV["PYTHON"]=""; Pkg.build("PyCall"); Pkg.test("Xtals")'
 
 after_success:
   - julia --project -e 'import Pkg; Pkg.add("Documenter");'
