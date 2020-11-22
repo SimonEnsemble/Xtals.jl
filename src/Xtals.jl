@@ -88,7 +88,7 @@ include("repfactors.jl")
 
 export
     # Xtals.jl
-    print_file_paths, set_path_to_data,
+    print_file_paths, set_path_to_data, set_path_to_crystals,
 
     # matter.jl
     Coords, Frac, Cart, Atoms, Charges, wrap!, neutral, net_charge,
