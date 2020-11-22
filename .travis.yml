@@ -13,7 +13,7 @@ addons:
 sudo: enabled
 
 script:
-  - julia --project --check-bounds=yes -e 'import Pkg; Pkg.build(); ENV["PYTHON"]=""; Pkg.build("PyCall"); using Conda; Conda.add("scipy.spatial"); Pkg.test("Xtals")'
+  - julia --project --check-bounds=yes -e 'import Pkg; Pkg.build(); ENV["PYTHON"]=""; Pkg.build("PyCall"); Pkg.add("Conda"); using Conda; Conda.add("scipy.spatial"); Pkg.test("Xtals")'
 
 after_success:
   - julia --project -e 'import Pkg; Pkg.add("Documenter");'
