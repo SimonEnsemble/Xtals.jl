@@ -3,7 +3,7 @@ language: julia
 coveralls: true
 
 julia:
-    - 1.5
+  - 1.5
 
 addons:
   apt:
@@ -13,11 +13,11 @@ addons:
 sudo: enabled
 
 script:
-    - julia --project --check-bounds=yes -e 'import Pkg; Pkg.build(); Pkg.test("Xtals")'
+  - julia --project --check-bounds=yes -e 'import Pkg; Pkg.build(); ENV["PYTHON"]=""; Pkg.build("PyCall"); Pkg.add("Conda"); using Conda; Conda.add("scipy"); Pkg.test("Xtals")'
 
 after_success:
-    - julia --project -e 'import Pkg; Pkg.add("Documenter"); Pkg.add("Logging")'
-    - julia --project ./docs/make.jl
+  - julia --project -e 'import Pkg; Pkg.add("Documenter");'
+  - julia --project ./docs/make.jl
 
 notifications:
   email: true
