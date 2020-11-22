@@ -9,6 +9,7 @@ DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 LightGraphs = "093fc24a-ae57-5d10-9952-331d41423f4d"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
 
 [compat]
 DataFrames = "≥0.20.0" # accept any version ≥ last known min working
@@ -28,4 +29,4 @@ Logging = "56ddb016-857b-54e1-b83d-db4d58db5568"
 
 [targets]
 test = ["Test", "Documenter", "CSV", "DataFrames", "LightGraphs",
-  "LinearAlgebra", "Printf", "Logging"]
+  "LinearAlgebra", "Printf", "Logging", "PyCall"]

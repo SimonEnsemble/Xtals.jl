@@ -6,6 +6,7 @@ testfiles = ["box.jl",
              "distance.jl",
              "misc.jl",
              "assert_p1_symmetry.jl",
+             "bonds.jl",
              "paths.jl" # last, to not interfere with reading test data
              ]
 
