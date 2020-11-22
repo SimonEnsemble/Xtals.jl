@@ -1,3 +1,7 @@
+os: linux
+
+dist: xenial
+
 language: julia
 
 coveralls: true
@@ -9,8 +13,6 @@ addons:
   apt:
     packages:
     - libhdf5-serial-dev
-
-sudo: enabled
 
 script:
   - julia --project --check-bounds=yes -e 'import Pkg; Pkg.build(); ENV["PYTHON"]=""; Pkg.build("PyCall"); Pkg.add("Conda"); using Conda; Conda.add("scipy"); Pkg.test("Xtals")'
