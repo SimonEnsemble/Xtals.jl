@@ -1,4 +1,4 @@
-m set_path_to_crystals,odule Xtals
+module Xtals
 
 using CSV
 using DataFrames
