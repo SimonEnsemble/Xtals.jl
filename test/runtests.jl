@@ -13,6 +13,7 @@ testfiles = ["box.jl",
 using Logging
 global_logger(ConsoleLogger(stdout, Logging.Info))
 using Test
+using LightGraphs
 if !TRAVIS
     using Revise
 end

@@ -3,6 +3,7 @@ module Misc_Test
 using Xtals
 using Test
 using DataFrames
+using LightGraphs
 using CSV
 
 @testset "Misc Tests" begin
@@ -23,5 +24,12 @@ using CSV
     rm(test_xyz_filename * ".xyz")
 
     @test read_cpk_colors()[:Li] == (204,128,255)
+
+    atoms, bonds, bond_types = read_mol("example.mol")
+    @test (atoms.species[1] == :O) && (atoms.species[end] == :H) & (length(atoms.species) == 31) && (atoms.n == 31)
+    @test ne(bonds) == 32
+    @test nv(bonds) == 31
+    @test (bond_types[1] == 1) && (bond_types[3] == 2)
+    @test neighbors(bonds, 1) == [2, 5]
 end
 end

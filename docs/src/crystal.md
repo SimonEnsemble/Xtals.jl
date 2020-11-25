@@ -94,4 +94,6 @@ write_xyz(xtal, "my_new_xyz_file.xyz")      # stored in the current directory
     assign_charges
     write_cif
     write_xyz
+    read_xyz
+    read_mol
 ```

@@ -103,7 +103,7 @@ export
     nearest_image!, distance, overlap, remove_duplicates,
 
     # misc.jl
-    read_xyz, read_cpk_colors, write_xyz, read_atomic_masses,
+    read_xyz, read_cpk_colors, write_xyz, read_atomic_masses, read_mol,
 
     # crystal.jl
     Crystal, strip_numbers_from_atom_labels!, assign_charges,

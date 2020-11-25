@@ -6,12 +6,12 @@ function add_extension(filename::String, extension::String)
 end
 
 """
-    atoms = read_xyz(filename)
+    atoms = read_xyz("molecule.xyz")
 
 read a list of atomic species and their corresponding coordinates from an .xyz file.
 
 # Arguments
-- `filename::AbstractString`: The filename of the .xyz file
+- `filename::AbstractString`: the path to and filename of the .xyz file
 
 # Returns
 - `atoms::Atoms{Cart}`: the set of atoms read from the .xyz file.
@@ -105,4 +105,53 @@ function read_atomic_masses()
     end
 
     return atomic_masses
+end
+
+"""
+    atoms, bonds = read_mol("molecule.mol")
+
+read a `.mol` file, which contains info about both atoms and bonds.
+see [here](https://chem.libretexts.org/Courses/University_of_Arkansas_Little_Rock/ChemInformatics_(2017)%3A_Chem_4399%2F%2F5399/2.2%3A_Chemical_Representations_on_Computer%3A_Part_II/2.2.2%3A_Anatomy_of_a_MOL_file) for the anatomy of a `.mol` file.
+
+# Arguments
+- `filename::AbstractString`: the path to and filename of the .mol file (must pass extension)
+
+# Returns
+- `atoms::Atoms{Cart}`: the set of atoms read from the `.mol` file.
+- `bonds::SimpleGraph`: the bonding graph of the atoms read from the `.mol` file.
+- `bond_types::Array{Int, 1}`: the array of bond types.
+"""
+function read_mol(filename::String)
+    f = open(filename)
+    lines = readlines(f)
+    close(f)
+    
+    n_atoms = parse(Int, split(lines[4])[1])
+    n_bonds = parse(Int, split(lines[4])[2])
+    
+    atoms = Atoms([:blah for i = 1:n_atoms], 
+                  Cart(zeros(Float64, 3, n_atoms))
+                  )
+    for i = 1:n_atoms
+        line_atom_i = split(lines[4+i])
+        
+        atoms.species[i] = Symbol(line_atom_i[4])
+        for j = 1:3
+            atoms.coords.x[j, i] = parse(Float64, line_atom_i[j])
+        end
+    end
+
+    bonds = SimpleGraph(n_atoms)
+    bond_types = [-1 for i = 1:n_bonds]
+    for b = 1:n_bonds
+        line_bond_b = split(lines[n_atoms + 4 + b])
+        
+        i = parse(Int, line_bond_b[1])
+        j = parse(Int, line_bond_b[2])
+        add_edge!(bonds, i, j)
+    
+        bond_types[b] = parse(Int, line_bond_b[3])
+    end
+    
+    return atoms, bonds, bond_types
 end
