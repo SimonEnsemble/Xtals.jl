@@ -795,13 +795,17 @@ end
 
 """
     write_cif(crystal, filename; fractional_coords=true, number_atoms=true)
+    write_cif(crystal) # writes to file crystal.name
 
-Write a `crystal::Crystal` to a .cif file with `filename::AbstractString`. If `filename` does
-not include the .cif extension, it will automatically be added. the `fractional_coords` flag
-allows us to write either fractional or Cartesian coordinates.
+Write a `crystal::Crystal` to a .cif file.
+
+# arguments
+* `crystal::Crystal`: crystal to write to file
+* `filename::String`: the filename of the `.cif` file. if ".cif" is not included as an extension, it will automatically be appended to the `filename` string.
+* `fractional_coords::Bool=true`: write the coordinates of the atoms as fractional coords if `true`. if `false`, write Cartesian coords.
+* `number_atoms::Bool=true`: write the atoms as "C1", "C2", "C3", ..., "N1", "N2", ... etc. to give each atom a unique identifier
 """
-function write_cif(crystal::Crystal, filename::AbstractString; fractional_coords::Bool=true,
-		   number_atoms::Bool=true)
+function write_cif(crystal::Crystal, filename::String; fractional_coords::Bool=true, number_atoms::Bool=true)
     if has_charges(crystal)
         if crystal.atoms.n != crystal.charges.n
             error("write_cif assumes equal numbers of Charges and Atoms (or zero charges)")
@@ -815,7 +819,7 @@ function write_cif(crystal::Crystal, filename::AbstractString; fractional_coords
     # create dictionary for tracking label numbers
     label_numbers = Dict{Symbol, Int}()
     for atom in crystal.atoms.species
-        if !haskey(label_numbers, atom)
+        if ! haskey(label_numbers, atom)
             label_numbers[atom] = 1
         end
     end
