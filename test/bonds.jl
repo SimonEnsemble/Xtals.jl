@@ -33,12 +33,14 @@ end
     remove_bonds!(c)
     infer_geometry_based_bonds!(c, true)
     @test length(conn_comps) == 2 # interpenetrated
+    # FAILING TEST probably need different bonding_rules to match Cordero results
     @test g1 == c.bonds # consistency between two different bonding schemes
 
     # FIQCEN bonding
     c = Crystal("FIQCEN_clean.cif")
     strip_numbers_from_atom_labels!(c)
     infer_geometry_based_bonds!(c, true)
+    # FAILING TEST probably need different bonding_rules to match Cordero results
     @test length(connected_components(c.bonds)) == 1 # not interpenetrated
     @test c.atoms.species[neighbors(c.bonds, 1)] == [:Cu, :O, :O, :O, :O]
     visual_check("FIQCEN_clean.cif")
