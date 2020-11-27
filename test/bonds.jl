@@ -1,5 +1,5 @@
 module Bonds_test
-
+using Revise
 using Xtals
 using LightGraphs
 using Test
@@ -42,12 +42,12 @@ end
     @test length(connected_components(c.bonds)) == 1 # not interpenetrated
     @test c.atoms.species[neighbors(c.bonds, 1)] == [:Cu, :O, :O, :O, :O]
     visual_check("FIQCEN_clean.cif")
-    # reduce covalant radii to see Cu-O bond disappear
-    cov_radii = cordero_covalent_atomic_radii()
-    cov_radii[:Cu] = 1.125
+    # reduce covalant radii to see Cu-Cu bond disappear
+    bonding_rules = Xtals.default_bondingrules()
+    prepend!(bonding_rules, [BondingRule(:Cu, :Cu, 0.1, 1.)])
     remove_bonds!(c)
     @test ne(c.bonds) == 0
-    infer_geometry_based_bonds!(c, true, covalent_radii=cov_radii)
+    infer_geometry_based_bonds!(c, true, bondingrules=bonding_rules)
     @test c.atoms.species[neighbors(c.bonds, 1)] == [:O, :O, :O, :O]
 end
 end

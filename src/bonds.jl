@@ -3,7 +3,7 @@
     bonding_rules = [BondingRule(:H, :*, 0.4, 1.2),
                      BondingRule(:*, :*, 0.4, 1.9)]
 
-A rule for determining if two atoms within a crystal are bonded. 
+A rule for determining if two atoms within a crystal are bonded.
 
 # Attributes
 -`species_i::Symbol`: One of the atoms types for this bond rule
@@ -23,6 +23,13 @@ end
 
 Returns the default bonding rules. Using `append!` and/or `prepend!` to add to the default bonding rules:
 
+# Arguments
+
+- `corderopath::String` Path to a CSV containing Cordero covalent radii
+- `wildcard_min::Float64` Unknown atom lower radius bound
+- `wildcard_max::Float64` Unknown atom upper radius bound
+- `σ::Float64` Number of e.s.d.s to use with Cordero radii
+
 # Example
 ```
 bond_rules = default_bondingrules()
@@ -32,7 +39,33 @@ prepend!(bond_rules, BondingRule(:Cu, :*, 0.1, 2.6))
 # Returns
 -`default_bondingrules::Array{BondingRule, 1}`: The default bonding rules: `[BondingRule(:*, :*, 0.4, 1.2), BondingRule(:*, :*, 0.4, 1.9)]`
 """
-default_bondingrules() = [BondingRule(:H, :*, 0.4, 1.2), BondingRule(:*, :*, 0.4, 1.9)]
+function default_bondingrules(corderopath::String="data/cordero_simple.csv",
+	wildcard_min::Float64=0.4, wildcard_max::Float64=1.9, σ::Float64=3.)::Array{BondingRule}
+	# load data
+	cordero_df = CSV.read(corderopath, DataFrame)
+	cordero_df[!, :x] = Symbol.(cordero_df.x)
+	# calculate upper and lower bounds
+	cordero_df[!, :plus] = σ .* cordero_df.esd_pm ./ 100 .+ cordero_df.r_Ang
+	cordero_df[!, :minus] = cordero_df.r_Ang .- σ .* cordero_df.esd_pm ./ 100
+	# generate the rules
+    rules = BondingRule[]
+	# loop over rows
+	for (i, species_i) ∈ enumerate(eachrow(cordero_df))
+		# make every x -> y rule, no commutative duplicates
+		for (j, species_j) ∈ enumerate(eachrow(cordero_df))
+			if j < i
+				continue
+			end
+			# calculate max and min radii
+			rmin = cordero_df.minus[i] + cordero_df.minus[j]
+			rmax = cordero_df.plus[i] + cordero_df.plus[j]
+			push!(rules, BondingRule(species_i.x, species_j.x, rmin, rmax))
+		end
+	end
+	# catch-all rule for
+    push!(rules, BondingRule(:*, :*, wildcard_min, wildcard_max))
+    return rules
+end
 
 """
     are_atoms_bonded = is_bonded(crystal, i, j, bonding_rules=[BondingRule(:H, :*, 0.4, 1.2), BondingRule(:*, :*, 0.4, 1.9)],
@@ -59,7 +92,7 @@ function is_bonded(crystal::Crystal, i::Int64, j::Int64,
                    include_bonds_across_periodic_boundaries::Bool=true)
     species_i = crystal.atoms.species[i]
     species_j = crystal.atoms.species[j]
-    
+
     r = distance(crystal.atoms, crystal.box, i, j, include_bonds_across_periodic_boundaries)
 
     # loop over possible bonding rules
@@ -100,11 +133,11 @@ function remove_bonds!(crystal::Crystal)
 end
 
 """
-    infer_bonds!(crystal, include_bonds_across_periodic_boundaries, 
+    infer_bonds!(crystal, include_bonds_across_periodic_boundaries,
                     bonding_rules=[BondingRule(:H, :*, 0.4, 1.2), BondingRule(:*, :*, 0.4, 1.9)])
 
 Populate the bonds in the crystal object based on the bonding rules. If a
-pair doesn't have a suitable rule then they will not be considered bonded. 
+pair doesn't have a suitable rule then they will not be considered bonded.
 
 `:*` is considered a wildcard and can be substituted for any species. It is a
 good idea to include a bonding rule between two `:*` to allow any atoms to bond
@@ -134,23 +167,6 @@ function infer_bonds!(crystal::Crystal, include_bonds_across_periodic_boundaries
             end
         end
     end
-end
-
-"""
-    atom_to_radius = cordero_covalent_atomic_radii()
-
-Create a dictionary with the Cordero covalent radius for each element
-
-# Returns
--`atom_to_radius::Dict{Symbol, Float64}`: A dictionary with elements as keys and their respective cordero covalent radii as the values.
-"""
-function cordero_covalent_atomic_radii()
-    df = CSV.read(joinpath(PATH_TO_DATA, "covalent_radii.csv"), DataFrame, comment="#")
-    atom_to_radius = Dict{Symbol, Float64}()
-    for atom in eachrow(df)
-        atom_to_radius[Symbol(atom[:atom])] = atom[:covalent_radius_A]
-    end
-    return atom_to_radius
 end
 
 """
@@ -270,11 +286,10 @@ Returns the ids of atoms that are bonded to atom `i` by determining bonds using 
 # Returns
 -`ids_bonded::Array{Int, 1}`: A list of indices of atoms bonded to atom `i`
 """
-function bonded_atoms(crystal::Crystal, i::Int, am::Array{Float64, 2}; r::Float64=6.0,
-                      tol::Float64=0.25, covalent_radii::Union{Nothing, Dict{Symbol, Float64}}=nothing)
-    if isnothing(covalent_radii)
-        covalent_radii = cordero_covalent_atomic_radii()
-    end
+function bonded_atoms(crystal::Crystal, i::Int, am::Array{Float64, 2}; r::Float64=6.0, bonding_rules=nothing)
+	if isnothing(bonding_rules)
+		bonding_rules = default_bondingrules()
+	end
     species_i = crystal.atoms.species[i]
 
     ids_neighbors, xs, rs = neighborhood(crystal, i, r, am)
@@ -283,12 +298,9 @@ function bonded_atoms(crystal::Crystal, i::Int, am::Array{Float64, 2}; r::Float6
 
     ids_bonded = Int[]
     for j in ids_shared_voro_faces
-        species_j = crystal.atoms.species[j]
-        # sum of covalent radii
-        radii_sum = covalent_radii[species_j] + covalent_radii[species_i]
-        if am[i, j] < radii_sum + tol
-            push!(ids_bonded, j)
-        end
+		if is_bonded(crystal, i, j, bonding_rules)
+			push!(ids_bonded, j)
+		end
     end
     return ids_bonded
 end
@@ -304,13 +316,14 @@ Infers bonds by first finding which atoms share a Voronoi face, and then bond th
 -`include_bonds_across_periodic_boundaries::Bool`: Whether to check across the periodic boundaries
 """
 function infer_geometry_based_bonds!(crystal::Crystal, include_bonds_across_periodic_boundaries::Bool;
-                                     r::Float64=6.0, tol::Float64=0.25, 
-                                     covalent_radii::Union{Nothing, Dict{Symbol, Float64}}=nothing)
+                                     r::Float64=6.0, bondingrules::Array{BondingRule}=BondingRule[])
     @assert ne(crystal.bonds) == 0 @sprintf("The crystal %s already has bonds. Remove them with the `remove_bonds!` function before inferring new ones.", crystal.name)
     am = adjacency_matrix(crystal, include_bonds_across_periodic_boundaries)
-
+	if bondingrules == []
+		bondingrules = default_bondingrules()
+	end
     for i = 1:crystal.atoms.n
-        for j in bonded_atoms(crystal, i, am; r=r, tol=tol, covalent_radii=covalent_radii)
+        for j in bonded_atoms(crystal, i, am; r=r, bonding_rules=bondingrules)
             add_edge!(crystal.bonds, i, j)
         end
     end
@@ -392,7 +405,7 @@ function compare_bonds_in_crystal(fi::Crystal, fj::Crystal; atol::Float64=0.0)
     end
     return num_in_common == ne(fi.bonds) && num_in_common == ne(fj.bonds)
 end
- 
+
 """
     write_bond_information(crystal, filename)
     write_bond_information(crystal, center_at_origin=false)
