@@ -112,6 +112,6 @@ export
 
     # bonds.jl
     infer_bonds!, write_bond_information, BondingRule, bond_sanity_check,
-	remove_bonds!, infer_geometry_based_bonds!, cordero_covalent_atomic_radii
+	remove_bonds!, infer_geometry_based_bonds!, cordero_parameters
 
 end # module Xtals
