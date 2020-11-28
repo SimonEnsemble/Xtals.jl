@@ -88,7 +88,8 @@ function Crystal(filename::String;
                  include_zero_charges::Bool=false,
                  remove_duplicates::Bool=false,
                  species_col::Array{String, 1}=["_atom_site_type_symbol", "_atom_site_label"],
-                 infer_bonds::Union{Bool, Missing}=missing)
+                 infer_bonds::Union{Bool, Missing}=missing,
+                 periodic_boundaries::Union{Bool, Missing}=missing)
     # Read file extension. Ensure we can read the file type
     extension = split(filename, ".")[end]
     if ! (extension in ["cif", "cssr"])
@@ -452,7 +453,15 @@ function Crystal(filename::String;
     end
 
     if !ismissing(infer_bonds)
-        infer_bonds!(crystal, infer_bonds)
+        if ismissing(periodic_boundaries)
+            @error "Must specify periodic_boundaries when using infer_bonds kwarg"
+        elseif infer_bonds == :cordero
+            infer_bonds!(crystal, periodic_boundaries)
+        elseif infer_bonds == :voronoi
+            infer_geometry_based_bonds!(crystal, periodic_boundaries)
+        else
+            @error "Must specify either :cordero or :voronoi for infer_bonds kwarg"
+        end
     end
 
     return crystal
