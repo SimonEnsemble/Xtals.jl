@@ -32,13 +32,13 @@ set the `PATH_TO_DATA` or `PATH_TO_CRYSTALS` variable. by default, sets
 - `print::Bool` Specify `true` to print path variables.
 """
 function set_path_to_data(path::String; relpath_xtals::Bool=false, print::Bool=false)
-	global PATH_TO_DATA = path
-	if relpath_xtals
-		set_path_to_crystals(joinpath(PATH_TO_DATA, "crystals"))
-	end
-	if print
-		print_file_paths()
-	end
+    global PATH_TO_DATA = path
+    if relpath_xtals
+        set_path_to_crystals(joinpath(PATH_TO_DATA, "crystals"))
+    end
+    if print
+        print_file_paths()
+    end
 end
 
 """
@@ -51,10 +51,10 @@ set `Xtals.PATH_TO_CRYSTALS`.
 - `print::Bool` Specify `true` to print path variables.
 """
 function set_path_to_crystals(path::String; print::Bool=false)
-	global PATH_TO_CRYSTALS = path
-	if print
-		print_file_paths()
-	end
+    global PATH_TO_CRYSTALS = path
+    if print
+        print_file_paths()
+    end
 end
 
 """
@@ -65,7 +65,7 @@ to see current set up, call [`print_file_paths`](@ref)
 """
 function set_default_file_paths(;print_paths::Bool=true)
     # this is the main directory where crystal structures, forcefields, and molecules data is stored
-	set_path_to_data(joinpath(pwd(), "data"), relpath_xtals=true)
+    set_path_to_data(joinpath(pwd(), "data"), relpath_xtals=true)
     if print_paths
         print_file_paths()
     end
@@ -93,11 +93,11 @@ export
 
     # matter.jl
     Coords, Frac, Cart, Atoms, Charges, wrap!, neutral, net_charge,
-	translate_by!, origin,
+    translate_by!, origin,
 
     # box.jl
     Box, replicate, unit_cube, write_vtk, inside, fractional_coords,
-	cartesian_coords,
+    cartesian_coords,
 
     # distance.jl
     nearest_image!, distance, overlap, remove_duplicates,
@@ -112,6 +112,6 @@ export
 
     # bonds.jl
     infer_bonds!, write_bond_information, BondingRule, bond_sanity_check,
-	remove_bonds!, infer_geometry_based_bonds!, cordero_parameters
+    remove_bonds!, infer_geometry_based_bonds!, cordero_parameters
 
 end # module Xtals
