@@ -1,5 +1,4 @@
 module Bonds_test
-using Revise
 using Xtals
 using LightGraphs
 using Test
