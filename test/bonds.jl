@@ -22,7 +22,7 @@ end
                      BondingRule(:Ni, :O, 0.4, 2.5),
                      BondingRule(:Ni, :N, 0.4, 2.5),
                      BondingRule(:*, :*, 0.4, 1.9)]
-    infer_bonds!(c, true, bonding_rules)
+    infer_bonds!(c, true, bonding_rules=bonding_rules)
     c1 = deepcopy(c)
     conn_comps = connected_components(c.bonds)
 

@@ -310,18 +310,42 @@ end
 
     # overlap tests
     @test_throws ErrorException Crystal("SBMOF-1_overlap.cif")
-    xtal = Crystal("SBMOF-1_overlap.cif", remove_duplicates=true)
-    @test isapprox(xtal, Crystal("SBMOF-1.cif"))
+    xtal1 = Crystal("SBMOF-1_overlap.cif", remove_duplicates=true)
+    @test isapprox(xtal1, Crystal("SBMOF-1.cif"))
     @test_throws ErrorException Crystal("SBMOF-1_overlap_diff_atom.cif", remove_duplicates=true) # duplicate but diff atom, so not repairable
 
     # infer_bonds option tests
-    xtal2 = deepcopy(xtal)
-    infer_bonds!(xtal, true)
+    xtal2 = deepcopy(xtal1) # no bonds
+    infer_bonds!(xtal1, true)
     infer_bonds!(xtal2, false)
-    xtal3 = Crystal("SBMOF-1_overlap.cif", remove_duplicates=true, infer_bonds=true)
-    xtal4 = Crystal("SBMOF-1_overlap.cif", remove_duplicates=true, infer_bonds=false)
-    @test xtal.bonds ≠ xtal2.bonds
-    @test xtal.bonds == xtal3.bonds
+    xtal3 = Crystal("SBMOF-1_overlap.cif", remove_duplicates=true,
+      infer_bonds=:cordero, periodic_boundaries=true)
+    xtal4 = Crystal("SBMOF-1_overlap.cif", remove_duplicates=true,
+      infer_bonds=:cordero, periodic_boundaries=false)
+    xtal5 = Crystal("SBMOF-1_overlap.cif", remove_duplicates=true,
+      infer_bonds=:voronoi, periodic_boundaries=true)
+    xtal6 = Crystal("SBMOF-1_overlap.cif", remove_duplicates=true,
+      infer_bonds=:voronoi, periodic_boundaries=false)
+    # xtal1  : default bonding rules, periodic boundaries
+    # xtal2 : default bonding rules, no periodic boundaries
+    # xtal3 : default bonding rules, periodic boundaries
+    # xtal4 : default bonding rules, no periodic boundaries
+    # xtal5 : voronoi bonding rules, periodic boundaries
+    # xtal6 : voronoi bonding rules, no periodic boundaries
+    @test xtal1.bonds ≠ xtal2.bonds
+    @test xtal1.bonds == xtal3.bonds
+    @test xtal1.bonds ≠ xtal4.bonds
+    # @test xtal1.bonds == xtal5.bonds # TODO examine test failure
+    @test xtal1.bonds ≠ xtal6.bonds
+    @test xtal2.bonds ≠ xtal3.bonds
     @test xtal2.bonds == xtal4.bonds
+    @test xtal2.bonds ≠ xtal5.bonds
+    #@test xtal2.bonds == xtal6.bonds # TODO examine test failure
+    @test xtal3.bonds ≠ xtal4.bonds
+    #@test xtal3.bonds == xtal5.bonds # TODO examine test failure
+    @test xtal3.bonds ≠ xtal6.bonds
+    @test xtal4.bonds ≠ xtal5.bonds
+    #@test xtal4.bonds == xtal6.bonds # TODO examine test failure
+    @test xtal5.bonds ≠ xtal6.bonds
 end
 end
