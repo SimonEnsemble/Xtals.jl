@@ -21,7 +21,9 @@ end
 @doc raw"""
     r = distance(coords, box, i, j, apply_pbc)
     r = distance(atoms, box, i, j, apply_pbc) # atoms i and j
-    r = distance(charges, box, i, j, apply_pbc) # atoms i and j
+    r = distance(charges, box, i, j, apply_pbc) # charges i and j
+    r = distance(atoms, i, j) # no PBCs, coords must be in Cartesian coords
+    r = distance(coords, i, j) # no PBCs, coords must be in Cartesian coords
 
 calculate the (Cartesian) distance between particles `i` and `j`.
 
@@ -54,6 +56,13 @@ function distance(coords::Cart, box::Box, i::Int, j::Int, apply_pbc::Bool)
         return norm(dx)
     end
 end
+
+# no PBCs
+function distance(coords::Cart, i::Int, j::Int)
+    dx = coords.x[:, i] - coords.x[:, j]
+    return norm(dx)
+end
+distance(atoms::Atoms{Cart}, i::Int, j::Int) = distance(atoms.coords, i, j)
 
 distance(atoms::Atoms, box::Box, i::Int, j::Int, apply_pbc::Bool) = distance(atoms.coords, box, i, j, apply_pbc)
 distance(charges::Charges, box::Box, i::Int, j::Int, apply_pbc::Bool) = distance(charges.coords, box, i, j, apply_pbc)

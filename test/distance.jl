@@ -76,6 +76,7 @@ using LinearAlgebra
     @test isapprox(distance(crystal.atoms, crystal.box, 2, 5, false), 4.059, atol=0.001)
     @test isapprox(distance(crystal.atoms, crystal.box, 1, 5, false), 17.279, atol=0.001)
     @test isapprox(distance(crystal.atoms, crystal.box, 1, 5, true), 1.531, atol=0.001)
+    @test isapprox(distance(Cart(crystal.atoms, crystal.box), 1, 5), 17.279, atol=0.001)
 
     ###
     #   remove duplicates
