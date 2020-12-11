@@ -63,49 +63,6 @@ function write_xyz(atoms::Atoms{Cart}, filename::AbstractString; comment::Abstra
     return nothing
 end
 
-"""
-    atom_colors = read_cpk_colors()
-
-Read in CPK color scheme for atoms. Return `atom_colors::Dict{Symbol, Tuple{Int, Int, Int}}` such that
-`atom_colors[":C"]` gives RGB code for carbon as a tuple, `(144, 144, 144)`.
-https://en.wikipedia.org/wiki/CPK_coloring
-
-# Returns
-- `atom_colors::Dict{Symbol, Tuple{Int, Int, Int}}`: A dictionary linking an element symbol to its' corresponding CPK color in RGB
-"""
-function read_cpk_colors()
-    atom_colors = Dict{Symbol, Tuple{Int, Int, Int}}()
-    df_colors = CSV.read(joinpath(PATH_TO_DATA, "cpk_atom_colors.csv"), DataFrame)
-    for row in eachrow(df_colors)
-        atom_colors[Symbol(row[:atom])] = (row[:R], row[:G], row[:B])
-    end
-    return atom_colors
-end
-
-"""
-    atomic_masses = read_atomic_masses()
-
-Read the `data/atomicmasses.csv` file to construct a dictionary of atoms and their atomic
-masses in amu.
-
-# Returns
-- `atomic_masses::Dict{Symbol, Float64}`: A dictionary containing the atomic masses of each atom stored in `data/atomicmasses.csv`
-"""
-function read_atomic_masses()
-    if ! isfile(joinpath(PATH_TO_DATA, "atomicmasses.csv"))
-        error("Cannot find atomicmasses.csv file in your data folder\n")
-    end
-
-    df_am = CSV.read(joinpath(PATH_TO_DATA, "atomicmasses.csv"), DataFrame)
-
-    atomic_masses = Dict{Symbol, Float64}()
-
-    for row in eachrow(df_am)
-		atomic_masses[Symbol(row[:atom])] = row[:mass]
-    end
-
-    return atomic_masses
-end
 
 """
     atoms, bonds = read_mol("molecule.mol")
@@ -125,16 +82,16 @@ function read_mol(filename::String)
     f = open(filename)
     lines = readlines(f)
     close(f)
-    
+
     n_atoms = parse(Int, split(lines[4])[1])
     n_bonds = parse(Int, split(lines[4])[2])
-    
-    atoms = Atoms([:blah for i = 1:n_atoms], 
+
+    atoms = Atoms([:blah for i = 1:n_atoms],
                   Cart(zeros(Float64, 3, n_atoms))
                   )
     for i = 1:n_atoms
         line_atom_i = split(lines[4+i])
-        
+
         atoms.species[i] = Symbol(line_atom_i[4])
         for j = 1:3
             atoms.coords.x[j, i] = parse(Float64, line_atom_i[j])
@@ -145,13 +102,13 @@ function read_mol(filename::String)
     bond_types = [-1 for i = 1:n_bonds]
     for b = 1:n_bonds
         line_bond_b = split(lines[n_atoms + 4 + b])
-        
+
         i = parse(Int, line_bond_b[1])
         j = parse(Int, line_bond_b[2])
         add_edge!(bonds, i, j)
-    
+
         bond_types[b] = parse(Int, line_bond_b[3])
     end
-    
+
     return atoms, bonds, bond_types
 end

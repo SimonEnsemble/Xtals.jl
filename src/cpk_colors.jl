@@ -1,5 +1,61 @@
-atom,R,G,B,Hex
-H,255,255,255,FFFFFF
+"""
+    atom_colors = read_cpk_colors()
+
+Read in CPK color scheme for atoms. Return `atom_colors::Dict{Symbol, Tuple{Int, Int, Int}}` such that
+`atom_colors[":C"]` gives RGB code for carbon as a tuple, `(144, 144, 144)`.
+https://en.wikipedia.org/wiki/CPK_coloring
+
+# Returns
+- `atom_colors::Dict{Symbol, Tuple{Int, Int, Int}}`: A dictionary linking an element symbol to its' corresponding CPK color in RGB
+"""
+function read_cpk_colors(filename::String="cpk_atom_colors.csv")
+    atom_colors = Dict{Symbol, Tuple{Int, Int, Int}}()
+    df_colors = CSV.read(joinpath(PATH_TO_DATA, filename), DataFrame)
+    for row in eachrow(df_colors)
+        atom_colors[Symbol(row[:atom])] = (row[:R], row[:G], row[:B])
+    end
+    return atom_colors
+end
+
+
+# makes dict from stringified cpk_atom_colors.csv
+function _CPKColors(headers::Array{Symbol}, data::String)::Dict{Symbol,Tuple{Int,Int,Int}}
+    atom_colors = Dict{Symbol, Tuple{Int, Int, Int}}()
+    species = Symbol[]
+    r = Int[]
+    g = Int[]
+    b = Int[]
+    hex = String[]
+    for line ∈ split(data, "\n")
+        fields = split(line, ",")
+        if length(fields) == 5
+            push!(species, Symbol(fields[1]))
+            push!(r, parse(Float64, fields[2]))
+            push!(g, parse(Float64, fields[3]))
+            push!(b, parse(Float64, fields[4]))
+            push!(hex, fields[5])
+        end
+    end
+    df_colors = DataFrame([species, r, g, b, hex], headers)
+    for row in eachrow(df_colors)
+        atom_colors[Symbol(row[:atom])] = (row[:R], row[:G], row[:B])
+    end
+    return atom_colors
+end
+
+
+"""
+    get_cpk_colors()
+Returns the global CPK colors dictionary
+"""
+function get_cpk_colors()
+    return CPK_COLORS
+end
+
+
+# global cpk color dictionary
+CPK_COLORS = _CPKColors([:atom, :R, :G, :B, :Hex],
+"""H,255,255,255,FFFFFF
 He,217,255,255,D9FFFF
 Li,204,128,255,CC80FF
 Be,194,255,0,C2FF00
@@ -108,3 +164,4 @@ Sg,217,0,69,D90045
 Bh,224,0,56,E00038
 Hs,230,0,46,E6002E
 Mt,235,0,38,EB0026
+""")

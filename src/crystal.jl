@@ -667,7 +667,7 @@ Calculates the molecular weight of a unit cell of the crystal in amu using infor
 - `mass_of_crystal::Float64`: The molecular weight of a unit cell of the crystal in amu
 """
 function molecular_weight(crystal::Crystal)
-    atomic_masses = read_atomic_masses()
+    atomic_masses = get_atomic_masses()
 
     mass = 0.0
 	for i = 1:crystal.atoms.n

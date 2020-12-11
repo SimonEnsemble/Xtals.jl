@@ -80,6 +80,8 @@ include("misc.jl")
 include("cordero.jl")
 include("bonds.jl")
 include("repfactors.jl")
+include("atomic_masses.jl")
+include("cpk_colors.jl")
 
 
 # runs every time the module is imported
@@ -112,7 +114,13 @@ export
     nearest_image!, distance, overlap, remove_duplicates,
 
     # misc.jl
-    read_xyz, read_cpk_colors, write_xyz, read_atomic_masses, read_mol,
+    read_xyz, write_xyz, read_mol,
+
+    # cpk_colors.jl
+    read_cpk_colors, get_cpk_colors,
+
+    # atomic_masses.jl
+    read_atomic_masses, get_atomic_masses,
 
     # crystal.jl
     Crystal, strip_numbers_from_atom_labels!, assign_charges,
