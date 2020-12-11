@@ -164,3 +164,29 @@ function remove_duplicates(ac::Union{Atoms{Frac}, Charges{Frac}}, box::Box, appl
     end
     return ac[ids_keep]
 end
+
+
+"""
+    dm = distance_matrix(crystal, apply_pbc)
+
+Compute the distance matrix `a` of the crystal, where `a[i, j]` is the
+distance between atom `i` and `j`. This matrix is symmetric. If `apply_pbc = true`,
+periodic boundary conditions are applied when computing the distance.
+
+# Arguments
+-`crystal::Crystal`: crystal structure
+-`apply_pbc::Bool`: whether or not to apply periodic boundary conditions when computing the distance
+
+# Returns
+-`dm::Array{Float64, 2}`: symmetric, square distance matrix with zeros on the diagonal
+"""
+function distance_matrix(crystal::Crystal, apply_pbc::Bool)
+    dm = zeros(crystal.atoms.n, crystal.atoms.n)
+    for i = 1:crystal.atoms.n
+        for j = (i+1):crystal.atoms.n
+            dm[i, j] = distance(crystal.atoms, crystal.box, i, j, apply_pbc)
+            dm[j, i] = dm[i, j] # symmetric
+        end
+    end
+    return dm
+end

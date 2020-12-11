@@ -12,6 +12,7 @@ makedocs(
             "boxes" => "box.md",
             "crystals" => "crystal.md",
             "computing distances" => "distance.md",
+            "bonding" => "bonds.md"
             ],
     format = Documenter.HTML(assets = ["assets/flux.css"])
 )
