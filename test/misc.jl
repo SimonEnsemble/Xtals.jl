@@ -7,7 +7,7 @@ using LightGraphs
 using CSV
 
 @testset "Misc Tests" begin
-    am = read_atomic_masses()
+    am = get_atomic_masses()
     @test isapprox(am[:H], 1.00794, atol=0.001)
     @test isapprox(am[:Co], 58.9332, atol=0.001)
 
@@ -23,7 +23,7 @@ using CSV
     @test isapprox(atoms, atoms_read)
     rm(test_xyz_filename * ".xyz")
 
-    @test read_cpk_colors()[:Li] == (204,128,255)
+    @test get_cpk_colors()[:Li] == (204,128,255)
 
     atoms, bonds, bond_types = read_mol("example.mol")
     @test (atoms.species[1] == :O) && (atoms.species[end] == :H) & (length(atoms.species) == 31) && (atoms.n == 31)
