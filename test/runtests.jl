@@ -1,4 +1,4 @@
-TRAVIS = true # set false for better UX on local machines. must be true for CI
+TRAVIS = true # set false for better UX in Atom. must be true for CI
 
 testfiles = [
     "box.jl",
@@ -14,9 +14,8 @@ testfiles = [
 using Test
 using LightGraphs
 if !TRAVIS
-    using Logging
+    using Logging, Revise
     global_logger(ConsoleLogger(stdout, Logging.Info))
-    using Revise
 end
 using Xtals
 

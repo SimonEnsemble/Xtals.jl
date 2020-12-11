@@ -71,20 +71,29 @@ function set_default_file_paths(;print_paths::Bool=true)
     end
 end
 
-# this runs everytime Xtals is loaded, so if the user changes directory
-#   then the path_to_data will change as well
+
+include("matter.jl")
+include("box.jl")
+include("crystal.jl")
+include("distance.jl")
+include("misc.jl")
+include("cordero.jl")
+include("bonds.jl")
+include("repfactors.jl")
+
+
+# runs every time the module is imported
 function __init__()
+    # if the user changes directory, path_to_data will change as well
     set_default_file_paths(print_paths=false)
 end
 
 
-include("matter.jl")
-include("box.jl")
-include("distance.jl")
-include("misc.jl")
-include("crystal.jl")
-include("bonds.jl")
-include("repfactors.jl")
+# runs once, when the module is precompiled
+function __precompile__()
+    # set the default bonding rules from internal cordero parameters
+    set_bonding_rules(bondingrules())
+end
 
 
 export
@@ -112,6 +121,7 @@ export
 
     # bonds.jl
     infer_bonds!, write_bond_information, BondingRule, bond_sanity_check,
-    remove_bonds!, infer_geometry_based_bonds!, cordero_parameters
+    remove_bonds!, infer_geometry_based_bonds!, get_bonding_rules,
+    set_bonding_rules, read_bonding_rules, write_bonding_rules, add_bonding_rules
 
 end # module Xtals

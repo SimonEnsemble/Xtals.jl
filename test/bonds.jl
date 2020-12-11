@@ -1,7 +1,5 @@
 module Bonds_test
-using Xtals
-using LightGraphs
-using Test
+using Xtals, LightGraphs, Test
 
 function visual_check(xtal::String)
     c = Crystal(xtal)
@@ -58,7 +56,7 @@ end
     visual_check("FIQCEN_clean.cif")
 
     # reduce covalant radius to see Cu-Cu bond disappear
-    cordero_params = cordero_parameters()
+    cordero_params = Xtals.cordero_parameters()
     cordero_params[:Cu] = Dict(:radius_Å => 1.15, :esd_pm => 4.)
     remove_bonds!(c)
 

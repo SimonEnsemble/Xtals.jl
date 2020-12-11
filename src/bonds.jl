@@ -20,10 +20,16 @@ end
 
 
 """
+Global BondingRule array
+"""
+BONDING_RULES = BondingRule[]
+
+
+"""
     bond_rules = bondingrules()
 
-Returns the default bonding rules. Use `append!` and/or `prepend!` to add to the default bonding rules.
-Default rules are determined from the data in `cordero.csv`
+Calculates bonding rules. Use `append!` and/or `prepend!` to add to the default bonding rules.
+Default rules are determined from Cordero covalent radius parameters.
 
 # Example
 ```
@@ -67,6 +73,80 @@ function bondingrules(;
         end
     end
     return bondingrules
+end
+
+
+"""
+    get_bonding_rules()
+Returns the current global bonding rule set.
+"""
+function get_bonding_rules()::Array{BondingRule}
+    return BONDING_RULES
+end
+
+
+"""
+    set_bonding_rules(bonding_rules)
+Sets the global bonding rules, overriding the current global rule set.
+# Arguments
+- `bonding_rules::Array{BondingRule}` : the new global bonding rule set
+"""
+function set_bonding_rules(bonding_rules::Array{BondingRule})
+    global BONDING_RULES = bonding_rules
+end
+
+
+"""
+    write_bonding_rules("file.csv")
+Writes bonding rules to a CSV file that can be loaded with [`read_bonding_rules`](@ref)
+# Arguments
+- `filename::String` : The name of the output file
+- `bonding_rules::Array{BondingRule}` : (Optional) The rules to write to file. If not specified, the global rules are written.
+"""
+function write_bonding_rules(filename::String,
+        bonding_rules::Union{Array{BondingRule},Nothing}=nothing)
+    bonding_rules = bonding_rules == nothing ? get_bonding_rules() : bonding_rules
+    f = open(filename, "w")
+    for r ∈ bonding_rules
+        @printf(f, "%s,%s,%f,%f\n", r.species_i, r.species_j, r.min_dist, r.max_dist)
+    end
+    close(f)
+end
+
+
+"""
+    read_bonding_rules("file.csv")
+Reads a CSV file of bonding rules and returns a BondingRule array.
+# Arguments
+- `filename::String` : name of file in data directory containing bonding rules
+"""
+function read_bonding_rules(filename::String)::Array{BondingRule}
+    rules = BondingRule[]
+    open(filename) do input_file
+        for line in eachline(input_file)
+            push!(rules, BondingRule(split(line, ",")...))
+        end
+    end
+    return rules
+end
+
+
+"""
+    add_bonding_rules(bonding_rules)
+Adds `bonding_rules` to the beginning of the global bonding rules list
+# Arguments
+- `bonding_rules::Array{BondingRule}` : the array of bonding rules to add
+"""
+function add_bonding_rules(bonding_rules::Array{BondingRule})
+    set_bonding_rules(vcat(bonding_rules, get_bonding_rules()))
+end
+
+
+# for pretty-printing the bonding rules
+function show(io::IO, bonding_rules::Array{BondingRule})
+    for r in bonding_rules
+        println("%s\t%s\t%.3f\t%.3f", r.species_i, r.species_j, r.min_dist, r.max_dist)
+    end
 end
 
 
@@ -174,73 +254,6 @@ function infer_bonds!(crystal::Crystal, include_bonds_across_periodic_boundaries
             end
         end
     end
-end
-
-
-"""
-    cordero_params = cordero_parameters()
-
-Create a dictionary with the Cordero covalent radius and estimated standard deviation for each element, using the data in `PATH_TO_DATA/cordero.csv`
-
-    cordero_params = cordero_parameters("my_params.csv")
-
-Create a dictionary with the Cordero covalent radius and estimated standard deviation for each element specified in `PATH_TO_DATA/my_params.csv`
-
-# Arguments
--`cordero_data::String`: name of file containing covalent radii and estimated standard deviations.
-
-# Returns
--`cordero_params::Dict{Symbol, Dict{Symbol, Float64}}`: A dictionary with elements as keys and dictionaries of respective cordero covalent radii and e.s.d.s as the values.
-
-# Example
-```julia
-cordero_params = cordero_parameters()
-cordero_params[:N][:radius_Å] # 0.71
-cordero_params[:N][:esd_pm] # 1.0
-```
-"""
-function cordero_parameters(; cordero_data::String="cordero.csv")
-    # read Cordero data
-    df = CSV.read(joinpath(PATH_TO_DATA, cordero_data), DataFrame, comment="#")
-    # parse into params dict
-    cordero_params = Dict{Symbol, Dict{Symbol, Float64}}()
-    for atom in eachrow(df)
-        cordero_params[Symbol(atom[:atom])] = Dict(:radius_Å => atom.covalent_radius_A, :esd_pm => atom.esd_pm)
-    end
-    # Carbon, Iron, Manganese, and Cobalt have multiple entries due to hybridization/spin
-    # Generic Carbon approximation; sp3 hybridization is the largest r, sp2 is the largest esd. Mix-n-match.
-    cordero_params[:C] = Dict(:radius_Å=> cordero_params[:C_sp3][:radius_Å], :esd_pm => cordero_params[:C_sp2][:esd_pm])
-    # Generic Mn, Fe, Co approx's. High-spin r and esd is larger for each. Use high-spin.
-    for x in [:Mn, :Fe, :Co]
-        cordero_params[x] = cordero_params[Symbol(string(x) * "_hi")]
-    end
-    return cordero_params
-end
-
-
-"""
-    dm = distance_matrix(crystal, apply_pbc)
-
-Compute the distance matrix `a` of the crystal, where `a[i, j]` is the
-distance between atom `i` and `j`. This matrix is symmetric. If `apply_pbc = true`,
-periodic boundary conditions are applied when computing the distance.
-
-# Arguments
--`crystal::Crystal`: crystal structure
--`apply_pbc::Bool`: whether or not to apply periodic boundary conditions when computing the distance
-
-# Returns
--`dm::Array{Float64, 2}`: symmetric, square distance matrix with zeros on the diagonal
-"""
-function distance_matrix(crystal::Crystal, apply_pbc::Bool)
-    dm = zeros(crystal.atoms.n, crystal.atoms.n)
-    for i = 1:crystal.atoms.n
-        for j = (i+1):crystal.atoms.n
-            dm[i, j] = distance(crystal.atoms, crystal.box, i, j, apply_pbc)
-            dm[j, i] = dm[i, j] # symmetric
-        end
-    end
-    return dm
 end
 
 
