@@ -109,7 +109,7 @@ export
     nearest_image!, distance, overlap, remove_duplicates,
 
     # misc.jl
-    read_xyz, write_xyz, read_mol,
+    read_xyz, write_xyz, read_mol, write_mol2,
 
     # cpk_colors.jl
     read_cpk_colors, get_cpk_colors,

@@ -112,3 +112,44 @@ function read_mol(filename::String)
 
     return atoms, bonds, bond_types
 end
+
+
+"""
+	write_mol2(xtal, filename="my_xtal.mol2")
+
+Write a `Crystal` to disk in the mol2 format.  Includes atoms, bonds, and unit cell.
+
+# Arguments
+- `xtal::Crystal` : the crystal to export
+- `filename::String` : (Optional) the name of the file to save to.  By default, file is named automatically from `xtal.name`
+"""
+function write_mol2(xtal::Crystal; filename::String="")
+	if filename == ""
+		filename = split(xtal.name, ".cif")[1] * ".mol2"
+	end
+	# open buffer
+	f = open(filename, "w")
+	# start the MOLECULE data record
+	@printf(f, "@<TRIPOS>MOLECULE\n%s\n", xtal.name)
+	@printf(f, "%d %d\n", xtal.atoms.n, ne(xtal.bonds))
+	@printf(f, "SMALL\nNO_CHARGES\n\n")
+	# now the ATOM record
+	@printf(f, "@<TRIPOS>ATOM\n")
+	coords = Cart(xtal.atoms.coords, xtal.box)
+	for i in 1:xtal.atoms.n
+		@printf(f, "%d X %f %f %f %s\n", i, coords.x[:, i]..., xtal.atoms.species[i])
+	end
+	# BOND record
+	if ne(xtal.bonds) ≠ 0
+		@printf(f, "\n@<TRIPOS>BOND\n")
+	end
+	for (i, e) in enumerate(edges(xtal.bonds))
+		@printf(f, "%d %d %d 1\n", i, src(e), dst(e))
+	end
+	# unit cell (CRYSIN)
+	@assert xtal.symmetry.is_p1 "Crystal must be in P1 symmetry."
+	@printf(f, "\n@<TRIPOS>CRYSIN\n")
+	@printf(f, "%f %f %f %f %f %f 1 1\n", xtal.box.a, xtal.box.b, xtal.box.c, xtal.box.α, xtal.box.β, xtal.box.γ)
+	# flush the buffer
+	close(f)
+end
