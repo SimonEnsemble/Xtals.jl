@@ -316,11 +316,9 @@ function Crystal(filename::String;
                        haskey(name_to_column, "_geom_bond_atom_site_label_2")
                     while i <= length(lines) && length(split(lines[i])) == length(name_to_column)
                         line = split(lines[i])
-
                         atom_one_idx = label_num_to_idx[line[name_to_column["_geom_bond_atom_site_label_1"]]]
                         atom_two_idx = label_num_to_idx[line[name_to_column["_geom_bond_atom_site_label_2"]]]
-                        add_edge!(bonds, atom_one_idx, atom_two_idx)
-
+                        make_bond!(bonds, atom_one_idx, atom_two_idx, apply_pbc=true)#, coords=coords) ## TODO how to get distances w/o box? (line 413)
                         # iterate to next line in file
                         i += 1
                     end
@@ -1032,34 +1030,31 @@ function Base.isapprox(c1::Crystal, c2::Crystal; atol::Real=0.0)
     return box_flag && charges_flag && atoms_flag && symmetry_flag
 end
 
-function Base.getindex(crystal::Crystal, ids::Union{BitArray{1}, Array{Int, 1},
-                                                    UnitRange{Int}})
-#    if ne(crystal.bonds) != 0
-#        error("indexing a crystal with bonds is not supported.")
-#    end
 
+function Base.getindex(crystal::Crystal,
+        ids::Union{BitArray{1}, Array{Int, 1}, UnitRange{Int}})
     old_to_new = Dict(ids[i] => i for i in 1:length(ids))
     bonds = MetaGraph(length(ids))
     for edge in collect(edges(crystal.bonds))
         if edge.src in ids && edge.dst in ids
-            add_edge!(bonds, old_to_new[edge.src], old_to_new[edge.dst])
+            make_bond!(bonds, old_to_new[edge.src], old_to_new[edge.dst], apply_pbc=true)
         end
     end
-
+    @info "getindex"
     if crystal.charges.n == 0
         return Crystal(crystal.name, crystal.box, crystal.atoms[ids],
             crystal.charges, bonds, crystal.symmetry)
-    elseif (crystal.charges.n == crystal.atoms.n) && isapprox(crystal.charges.coords,
-                                                              crystal.atoms.coords)
+    elseif (crystal.charges.n == crystal.atoms.n) &&
+            isapprox(crystal.charges.coords, crystal.atoms.coords)
         return Crystal(crystal.name, crystal.box, crystal.atoms[ids],
             crystal.charges[ids], bonds, crystal.symmetry)
     else
         error("for getindex(crystal), crystal must have 0 charges or an equal number of charges and atoms
         that share coordinates")
     end
-
     return crystal
 end
+
 
 function Base.lastindex(crystal::Crystal)
     if (crystal.atoms.n == crystal.charges.n) || (crystal.charges.n == 0)
@@ -1086,7 +1081,7 @@ function Base.:+(crystals::Crystal...; check_overlap::Bool=true)
         nf_n_atoms = crystal.atoms.n
         add_vertices!(crystal.bonds, nf_n_atoms)
         for edge in collect(edges(f.bonds))
-            add_edge!(crystal.bonds, nf_n_atoms + edge.src, nf_n_atoms + edge.dst)
+            make_bond!(crystal, nf_n_atoms + edge.src, nf_n_atoms + edge.dst, true)
         end
 
         crystal = Crystal(split(crystal.name, ".")[1] * "_" * split(f.name, ".")[1],
