@@ -532,28 +532,20 @@ write_bond_information(crystal::Crystal; center_at_origin::Bool=false) =
     make_bond!(xtal.bonds, i, j)
 Creates a bond between the `i`th and `j` atoms
 """
-function make_bond!(bonds::MetaGraph, i::Int, j::Int;
-        coords::Union{Cart,Frac,Nothing}=nothing,
-        cross_boundary::Union{Bool,Nothing}=nothing,
-        type::Symbol=:single,
-        box::Union{Box,Nothing}=nothing,
-        apply_pbc::Union{Bool,Nothing}=nothing)
+function make_bond!(bonds::MetaGraph, i::Int, j::Int, coords::Frac;
+        box::Union{Box,Nothing}=nothing, type::Symbol=:single)
     add_edge!(bonds, i, j)
-    set_prop!(bonds, i, j, :cross_boundary, cross_boundary)
     set_prop!(bonds, i, j, :type, type)
-    if !isnothing(coords)
-        if typeof(coords) == Cart
-            set_prop!(bonds, i, j, :distance, distance(coords, i, j))
-        elseif !isnothing(box) && !isnothing(apply_pbc)
-            set_prop!(bonds, i, j, :distance, distance(coords, box, i, j, apply_pbc))
-        else
-            @error "Must provide Cartesian coords or box & apply_pbc"
-        end
-    else
+    if !isnothing(box)
+        dist = distance(coords, box, i, j, true)
+        set_prop!(bonds, i, j, :cross_boundary,
+            isapprox(distance(coords, box, i, j, false), dist)
+        set_prop!(bonds, i, j, :distance, dist)
+    else # no box when reading bonds from file
+        set_prop!(bonds, i, j, :cross_boundary, missing)
         set_prop!(bonds, i, j, :distance, missing)
     end
 end
 
-make_bond!(xtal::Crystal, i::Int, j::Int, apply_pbc::Bool) =
-    make_bond!(xtal.bonds, i, j, coords=xtal.atoms.coords, box=xtal.box,
-        apply_pbc=apply_pbc)
+make_bond!(xtal::Crystal, i::Int, j::Int, kwargs...) =
+    make_bond!(xtal.bonds, i, j, xtal.atoms.coords, box=xtal.box, kwargs...)
