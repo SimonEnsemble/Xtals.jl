@@ -549,3 +549,17 @@ end
 
 make_bond!(xtal::Crystal, i::Int, j::Int, kwargs...) =
     make_bond!(xtal.bonds, i, j, xtal.atoms.coords, box=xtal.box, kwargs...)
+
+
+"""
+Loop through xtal and calculate any missing distances
+"""
+calc_missing_bond_distances!(xtal::Crystal)
+    for bond in collect(edges(xtal.bonds))
+        if bond.distance == missing
+            i = src(bond)
+            j = dst(bond)
+            set_prop!(xtal.bonds, i, j, :distance, distance(xtal, i, j, true))
+        end
+    end
+end

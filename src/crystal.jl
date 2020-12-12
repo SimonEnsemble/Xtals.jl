@@ -465,6 +465,9 @@ function Crystal(filename::String;
         end
     end
 
+    # if crystal has bonds, make sure distances aren't missing
+    calc_missing_bond_distances!(crystal)
+
     return crystal
 end
 
