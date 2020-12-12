@@ -75,7 +75,7 @@ see [here](https://chem.libretexts.org/Courses/University_of_Arkansas_Little_Roc
 
 # Returns
 - `atoms::Atoms{Cart}`: the set of atoms read from the `.mol` file.
-- `bonds::SimpleGraph`: the bonding graph of the atoms read from the `.mol` file.
+- `bonds::MetaGraph`: the bonding graph of the atoms read from the `.mol` file.
 - `bond_types::Array{Int, 1}`: the array of bond types.
 """
 function read_mol(filename::String)
@@ -98,7 +98,7 @@ function read_mol(filename::String)
         end
     end
 
-    bonds = SimpleGraph(n_atoms)
+    bonds = MetaGraph(n_atoms)
     bond_types = [-1 for i = 1:n_bonds]
     for b = 1:n_bonds
         line_bond_b = split(lines[n_atoms + 4 + b])

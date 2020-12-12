@@ -12,7 +12,7 @@ testfiles = [
     ]
 
 using Test
-using LightGraphs
+using LightGraphs, MetaGraphs
 if !TRAVIS
     using Logging, Revise
     global_logger(ConsoleLogger(stdout, Logging.Info))

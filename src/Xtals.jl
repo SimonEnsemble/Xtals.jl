@@ -1,11 +1,6 @@
 module Xtals
 
-using CSV
-using DataFrames
-using Printf
-using LinearAlgebra
-using LightGraphs
-using PyCall
+using CSV, DataFrames, Printf, LinearAlgebra, LightGraphs, PyCall, MetaGraphs
 
 # atoms are considered to overlap if this close.
 const R²_OVERLAP = 0.1 # Units: Angstrom²

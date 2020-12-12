@@ -22,13 +22,13 @@ struct Crystal
     box::Box
     atoms::Atoms{Frac}
     charges::Charges{Frac}
-    bonds::SimpleGraph
+    bonds::MetaGraph
     symmetry::SymmetryInfo
 end
 
 # default constructor without bond info or symmetry info
 Crystal(name::String, box::Box, atoms::Atoms{Frac}, charges::Charges{Frac}) = Crystal(
-    name, box, atoms, charges, SimpleGraph(atoms.n), SymmetryInfo())
+    name, box, atoms, charges, MetaGraph(atoms.n), SymmetryInfo())
 
 const NET_CHARGE_TOL = 1e-4 # net charge tolerance
 
@@ -76,7 +76,7 @@ across periodic unit cell boundaries; if `false`, bonds are only inferred within
 - `box::Box`: unit cell (Bravais Lattice)
 - `atoms::Atoms`: list of Atoms in crystal unit cell
 - `charges::Charges`: list of point charges in crystal unit cell
-- `bonds::SimpleGraph`: Unweighted, undirected graph showing all of the atoms
+- `bonds::MetaGraph`: Unweighted, undirected graph showing all of the atoms
     that are bonded within the crystal
 - `symmetry::SymmetryInfo`: symmetry inforomation
 """
@@ -114,8 +114,8 @@ function Crystal(filename::String;
     # default for symmetry rules is P1.
     # These will be overwritten if the user chooses to read in non-P1
     operations = Array{String, 2}(undef, 3, 0)
-    # creating empty SimpleGraph, might not have any information read in
-    bonds = SimpleGraph()
+    # creating empty MetaGraph, might not have any information read in
+    bonds = MetaGraph()
     # used for remembering whether fractional/cartesian coordinates are read in
     # placed here so it will be defined for the if-stmt after the box is defined
     fractional = false
@@ -271,7 +271,7 @@ function Crystal(filename::String;
                         i += 1
                     end
                     # set up graph of correct size
-                    bonds = SimpleGraph(length(species))
+                    bonds = MetaGraph(length(species))
                     # finish reading in atom_site information, skip to next
                     #   iteration of outer while-loop
                     # prevents skipping a line after finishing reading atoms
@@ -303,7 +303,7 @@ function Crystal(filename::String;
                         i += 1
                     end
                     # set up graph of correct size
-                    bonds = SimpleGraph(length(species))
+                    bonds = MetaGraph(length(species))
                     # finish reading in atom_site information, skip to next
                     #   iteration of outer while-loop
                     # prevents skipping a line after finishing reading atoms
@@ -387,7 +387,7 @@ function Crystal(filename::String;
         γ = parse(Float64, line[3]) * pi / 180.0
 
         n_atoms = parse(Int, split(lines[3])[1])
-        bonds = SimpleGraph(n_atoms)
+        bonds = MetaGraph(n_atoms)
 
         # Read in atoms and fractional coordinates
         for i = 1:n_atoms
@@ -552,7 +552,7 @@ function replicate(crystal::Crystal, repfactors::Tuple{Int, Int, Int})
         end
     end
 
-    return Crystal(crystal.name, box, atoms, charges, SimpleGraph(n_atoms), crystal.symmetry)
+    return Crystal(crystal.name, box, atoms, charges, MetaGraph(n_atoms), crystal.symmetry)
 end
 
 # doc string in Misc.jl
@@ -950,7 +950,7 @@ function remove_duplicate_atoms_and_charges(crystal::Crystal, r_tol::Float64=0.1
     end
     atoms = remove_duplicates(crystal.atoms, crystal.box, true, r_tol=r_tol, q_tol=q_tol)
     charges = remove_duplicates(crystal.charges, crystal.box, true, r_tol=r_tol, q_tol=q_tol)
-    return Crystal(crystal.name, crystal.box, atoms, charges, SimpleGraph(crystal.atoms.n), crystal.symmetry)
+    return Crystal(crystal.name, crystal.box, atoms, charges, MetaGraph(crystal.atoms.n), crystal.symmetry)
 end
 
 inside(crystal::Crystal) = inside(crystal.atoms.coords) && inside(crystal.charges.coords)
@@ -1039,7 +1039,7 @@ function Base.getindex(crystal::Crystal, ids::Union{BitArray{1}, Array{Int, 1},
 #    end
 
     old_to_new = Dict(ids[i] => i for i in 1:length(ids))
-    bonds = SimpleGraph(length(ids))
+    bonds = MetaGraph(length(ids))
     for edge in collect(edges(crystal.bonds))
         if edge.src in ids && edge.dst in ids
             add_edge!(bonds, old_to_new[edge.src], old_to_new[edge.dst])
