@@ -1,9 +1,9 @@
 """
-    covalent_radii = cordero_parameters()
+    covalent_radii = get_covalent_radii()
 
 Create a dictionary with the Cordero covalent radius and estimated standard deviation for each element, using the data in `PATH_TO_DATA/cordero.csv`
 
-    covalent_radii = cordero_parameters("my_params.csv")
+    covalent_radii = get_covalent_radii("my_params.csv")
 
 Create a dictionary with the Cordero covalent radius and estimated standard deviation for each element specified in `PATH_TO_DATA/my_params.csv`
 
@@ -15,12 +15,12 @@ Create a dictionary with the Cordero covalent radius and estimated standard devi
 
 # Example
 ```julia
-covalent_radii = cordero_parameters()
+covalent_radii = get_covalent_radii()
 covalent_radii[:N][:radius_Å] # 0.71
 covalent_radii[:N][:esd_pm] # 1.0
 ```
 """
-function cordero_parameters(; cordero_data::Union{String,Nothing}=nothing)
+function get_covalent_radii(; cordero_data::Union{String,Nothing}=nothing)
     if cordero_data == nothing
         df = COVALENT_RADII
     else

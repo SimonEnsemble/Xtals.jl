@@ -37,13 +37,13 @@ bond_rules = bondingrules()
 prepend!(bond_rules, BondingRule(:Cu, :*, 0.1, 2.6))
 ```
 
-    bond_rules = bondingrules(covalent_radii=covalent_radii(), σ=3., min_tol=0.25)
+    bond_rules = bondingrules(covalent_radii=get_covalent_radii(), σ=3., min_tol=0.25)
 
 Returns a set of bonding rules based on the given Cordero parameters and tolerances.
 
 # Arguments
 
-`covalent_radii::Union{Dict{Symbol, Dict{Symbol, Float64}}, Nothing}`: Covalent radii and estimated uncertainty. See [`cordero_parameters()`](@ref)
+`covalent_radii::Union{Dict{Symbol, Dict{Symbol, Float64}}, Nothing}`: Covalent radii and estimated uncertainty. See [`get_covalent_radii()`](@ref)
 `σ::Float`: Number of Cordero estimated standard deviations to use for tolerance on covalent radii.
 `min_tol::Float`: Minimum tolerance for covalent radii.
 
@@ -54,7 +54,7 @@ function bondingrules(;
         covalent_radii::Union{Dict{Symbol, Dict{Symbol, Float64}}, Nothing}=nothing,
         σ::Float64=3., min_tol::Float64=0.25)::Array{BondingRule}
     if covalent_radii == nothing
-        covalent_radii = cordero_parameters()
+        covalent_radii = get_covalent_radii()
     end
     bondingrules = BondingRule[]
     # loop over parameterized atoms
@@ -231,7 +231,7 @@ The bonding rules are hierarchical, i.e. the first bonding rule takes precedence
 -`crystal::Crystal`: The crystal that bonds will be added to
 -`include_bonds_across_periodic_boundaries::Bool`: Whether to check across the periodic boundary when calculating bonds
 -`bonding_rules::Array{BondingRule, 1}`: The array of bonding rules that will be used to fill the bonding information. They are applied in the order that they appear.
--`covalent_radii::Dict{Symbol, Dict{Symbol, Float64}}`: Cordero parameters to use for calculating bonding rules. See [`cordero_parameters`](@ref)
+-`covalent_radii::Dict{Symbol, Dict{Symbol, Float64}}`: Cordero parameters to use for calculating bonding rules. See [`covalent_radii`](@ref)
 -`σ::Float64`: Number of Cordero estimated standard deviations to use if calculating bonding rules from covalent radii.
 -`min_tol::Float64`: Minimum covalent radius tolerance if calculating bonding rules from covalent radii.
 """
@@ -245,7 +245,7 @@ function infer_bonds!(crystal::Crystal, include_bonds_across_periodic_boundaries
         for j in i+1:crystal.atoms.n
             if is_bonded(crystal, i, j, bonding_rules;
                 include_bonds_across_periodic_boundaries=include_bonds_across_periodic_boundaries)
-                make_bond!(crystal, i, j, include_bonds_across_periodic_boundaries)
+                make_bond!(crystal, i, j)
             end
         end
     end
@@ -331,7 +331,7 @@ end
 """
     ids_bonded = bonded_atoms(crystal, i, dm; r=6., σ=3.)
 
-Returns the ids of atoms that are bonded to atom `i` by determining bonds using a Voronoi method and covalent radius data (see [`cordero_parameters`](@ref))
+Returns the ids of atoms that are bonded to atom `i` by determining bonds using a Voronoi method and covalent radius data (see [`covalent_radii`](@ref))
 
 # Arguments
 -`crystal::Crystal`: Crystal structure in which the bonded atoms will be determined
@@ -339,7 +339,7 @@ Returns the ids of atoms that are bonded to atom `i` by determining bonds using 
 -`dm::Array{Float64, 2}`: The distance matrix, see [`distance_matrix`](@ref)
 -`r::Float64`: The maximum distance used to determine the neighborhood of atom `i`
 -`σ::Float64`: Sets the number of e.s.d.s for the margin of error on covalent radii
--`covalent_radii::Dict{Symbol, Dict{Symbol, Float64}}`: Cordero parameter dictionary. See [`cordero_parameters`](@ref)
+-`covalent_radii::Dict{Symbol, Dict{Symbol, Float64}}`: Cordero parameter dictionary. See [`covalent_radii`](@ref)
 -`min_tol::Float64`: The minimum covalent radius tolerance in Å
 
 # Returns
@@ -383,7 +383,7 @@ Infers bonds by first finding which atoms share a Voronoi face, and then bond th
 -`r::Float`: voronoi radius, Å
 -`σ::Float`: number of estimated standard deviations to use for covalent radius tolerance
 -`min_tol::Float`: minimum tolerance for calculated bond distances, Å
--`covalent_radii::Dict{Symbol, Dict{Symbol, Float64}}`: See [`cordero_parameters`](@ref)
+-`covalent_radii::Dict{Symbol, Dict{Symbol, Float64}}`: See [`covalent_radii`](@ref)
 """
 function infer_geometry_based_bonds!(crystal::Crystal,
         include_bonds_across_periodic_boundaries::Bool;
@@ -391,12 +391,12 @@ function infer_geometry_based_bonds!(crystal::Crystal,
         covalent_radii::Union{Nothing,Dict{Symbol,Dict{Symbol,Float64}}}=nothing)
     @assert ne(crystal.bonds) == 0 @sprintf("The crystal %s already has bonds. Remove them with the `remove_bonds!` function before inferring new ones.", crystal.name)
     if covalent_radii == nothing
-        covalent_radii = cordero_parameters()
+        covalent_radii = get_covalent_radii()
     end
     dm = distance_matrix(crystal, include_bonds_across_periodic_boundaries)
     for i = 1:crystal.atoms.n
         for j in bonded_atoms(crystal, i, dm, r, σ, min_tol, covalent_radii)
-            make_bond!(crystal, i, j, include_bonds_across_periodic_boundaries)
+            make_bond!(crystal, i, j)
         end
     end
 end
@@ -539,7 +539,7 @@ function make_bond!(bonds::MetaGraph, i::Int, j::Int, coords::Frac;
     if !isnothing(box)
         dist = distance(coords, box, i, j, true)
         set_prop!(bonds, i, j, :cross_boundary,
-            isapprox(distance(coords, box, i, j, false), dist)
+            !isapprox(distance(coords, box, i, j, false), dist))
         set_prop!(bonds, i, j, :distance, dist)
     else # no box when reading bonds from file
         set_prop!(bonds, i, j, :cross_boundary, missing)
@@ -554,9 +554,9 @@ make_bond!(xtal::Crystal, i::Int, j::Int, kwargs...) =
 """
 Loop through xtal and calculate any missing distances
 """
-calc_missing_bond_distances!(xtal::Crystal)
+function calc_missing_bond_distances!(xtal::Crystal)
     for bond in collect(edges(xtal.bonds))
-        if bond.distance == missing
+        if ismissing(get_prop(xtal.bonds, bond, :distance))
             i = src(bond)
             j = dst(bond)
             set_prop!(xtal.bonds, i, j, :distance, distance(xtal, i, j, true))
