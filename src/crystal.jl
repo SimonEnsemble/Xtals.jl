@@ -318,7 +318,7 @@ function Crystal(filename::String;
                         line = split(lines[i])
                         atom_one_idx = label_num_to_idx[line[name_to_column["_geom_bond_atom_site_label_1"]]]
                         atom_two_idx = label_num_to_idx[line[name_to_column["_geom_bond_atom_site_label_2"]]]
-                        make_bond!(bonds, atom_one_idx, atom_two_idx, apply_pbc=true)#, coords=coords) ## TODO how to get distances w/o box? (line 413)
+                        make_bond!(bonds, atom_one_idx, atom_two_idx, coords)
                         # iterate to next line in file
                         i += 1
                     end
@@ -464,6 +464,9 @@ function Crystal(filename::String;
             @error "Must specify either :cordero or :voronoi for infer_bonds kwarg"
         end
     end
+
+    # if crystal has bonds, make sure distances aren't missing
+    calc_missing_bond_distances!(crystal)
 
     return crystal
 end
@@ -1037,10 +1040,9 @@ function Base.getindex(crystal::Crystal,
     bonds = MetaGraph(length(ids))
     for edge in collect(edges(crystal.bonds))
         if edge.src in ids && edge.dst in ids
-            make_bond!(bonds, old_to_new[edge.src], old_to_new[edge.dst], apply_pbc=true)
+            make_bond!(bonds, old_to_new[edge.src], old_to_new[edge.dst], crystal.atoms.coords)
         end
     end
-    @info "getindex"
     if crystal.charges.n == 0
         return Crystal(crystal.name, crystal.box, crystal.atoms[ids],
             crystal.charges, bonds, crystal.symmetry)
@@ -1081,7 +1083,7 @@ function Base.:+(crystals::Crystal...; check_overlap::Bool=true)
         nf_n_atoms = crystal.atoms.n
         add_vertices!(crystal.bonds, nf_n_atoms)
         for edge in collect(edges(f.bonds))
-            make_bond!(crystal, nf_n_atoms + edge.src, nf_n_atoms + edge.dst, true)
+            make_bond!(crystal, nf_n_atoms + edge.src, nf_n_atoms + edge.dst)
         end
 
         crystal = Crystal(split(crystal.name, ".")[1] * "_" * split(f.name, ".")[1],

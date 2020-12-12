@@ -83,13 +83,8 @@ include("cpk_colors.jl")
 function __init__()
     # if the user changes directory, path_to_data will change as well
     set_default_file_paths(print_paths=false)
-end
-
-
-# runs once, when the module is precompiled
-function __precompile__()
     # set the default bonding rules from internal cordero parameters
-    set_bonding_rules(bondingrules())
+    set_bonding_rules(bondingrules()) # wanted to precompile, but didn't work
 end
 
 

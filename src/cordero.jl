@@ -1,9 +1,9 @@
 """
-    cordero_params = cordero_parameters()
+    covalent_radii = get_covalent_radii()
 
 Create a dictionary with the Cordero covalent radius and estimated standard deviation for each element, using the data in `PATH_TO_DATA/cordero.csv`
 
-    cordero_params = cordero_parameters("my_params.csv")
+    covalent_radii = get_covalent_radii("my_params.csv")
 
 Create a dictionary with the Cordero covalent radius and estimated standard deviation for each element specified in `PATH_TO_DATA/my_params.csv`
 
@@ -11,35 +11,35 @@ Create a dictionary with the Cordero covalent radius and estimated standard devi
 -`cordero_data::String`: name of file containing covalent radii and estimated standard deviations.
 
 # Returns
--`cordero_params::Dict{Symbol, Dict{Symbol, Float64}}`: A dictionary with elements as keys and dictionaries of respective cordero covalent radii and e.s.d.s as the values.
+-`covalent_radii::Dict{Symbol, Dict{Symbol, Float64}}`: A dictionary with elements as keys and dictionaries of respective cordero covalent radii and e.s.d.s as the values.
 
 # Example
 ```julia
-cordero_params = cordero_parameters()
-cordero_params[:N][:radius_Å] # 0.71
-cordero_params[:N][:esd_pm] # 1.0
+covalent_radii = get_covalent_radii()
+covalent_radii[:N][:radius_Å] # 0.71
+covalent_radii[:N][:esd_pm] # 1.0
 ```
 """
-function cordero_parameters(; cordero_data::Union{String,Nothing}=nothing)
+function get_covalent_radii(; cordero_data::Union{String,Nothing}=nothing)
     if cordero_data == nothing
-        df = CORDERO_PARAMS
+        df = COVALENT_RADII
     else
         # read Cordero data
         df = CSV.read(joinpath(PATH_TO_DATA, cordero_data), DataFrame, comment="#")
     end
     # parse into params dict
-    cordero_params = Dict{Symbol, Dict{Symbol, Float64}}()
+    covalent_radii = Dict{Symbol, Dict{Symbol, Float64}}()
     for atom in eachrow(df)
-        cordero_params[Symbol(atom[:atom])] = Dict(:radius_Å => atom.covalent_radius_A, :esd_pm => atom.esd_pm)
+        covalent_radii[Symbol(atom[:atom])] = Dict(:radius_Å => atom.covalent_radius_A, :esd_pm => atom.esd_pm)
     end
     # Carbon, Iron, Manganese, and Cobalt have multiple entries due to hybridization/spin
     # Generic Carbon approximation; sp3 hybridization is the largest r, sp2 is the largest esd. Mix-n-match.
-    cordero_params[:C] = Dict(:radius_Å=> cordero_params[:C_sp3][:radius_Å], :esd_pm => cordero_params[:C_sp2][:esd_pm])
+    covalent_radii[:C] = Dict(:radius_Å=> covalent_radii[:C_sp3][:radius_Å], :esd_pm => covalent_radii[:C_sp2][:esd_pm])
     # Generic Mn, Fe, Co approx's. High-spin r and esd is larger for each. Use high-spin.
     for x in [:Mn, :Fe, :Co]
-        cordero_params[x] = cordero_params[Symbol(string(x) * "_hi")]
+        covalent_radii[x] = covalent_radii[Symbol(string(x) * "_hi")]
     end
-    return cordero_params
+    return covalent_radii
 end
 
 
@@ -60,7 +60,7 @@ function _CorderoParams(headers::Array{Symbol}, data::String)::DataFrame
 end
 
 # Cordero bond radii, DOI: 10.1039/B801115J Table 2.
-CORDERO_PARAMS = _CorderoParams([:atom, :covalent_radius_A, :esd_pm],
+COVALENT_RADII = _CorderoParams([:atom, :covalent_radius_A, :esd_pm],
 """H,0.31,5
 He,0.28,1
 Li,1.28,7

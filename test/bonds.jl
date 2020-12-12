@@ -56,13 +56,13 @@ end
     visual_check("FIQCEN_clean.cif")
 
     # reduce covalant radius to see Cu-Cu bond disappear
-    cordero_params = Xtals.cordero_parameters()
-    cordero_params[:Cu] = Dict(:radius_Å => 1.15, :esd_pm => 4.)
+    covalent_radii = Xtals.get_covalent_radii()
+    covalent_radii[:Cu] = Dict(:radius_Å => 1.15, :esd_pm => 4.)
     remove_bonds!(c)
 
     @test ne(c.bonds) == 0
 
-    infer_geometry_based_bonds!(c, true, cordero_params=cordero_params)
+    infer_geometry_based_bonds!(c, true, covalent_radii=covalent_radii)
 
     @test c.atoms.species[neighbors(c.bonds, 1)] == [:O, :O, :O, :O]
 end
