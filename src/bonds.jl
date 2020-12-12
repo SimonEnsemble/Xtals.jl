@@ -174,9 +174,7 @@ function is_bonded(crystal::Crystal, i::Int64, j::Int64, bonding_rules::Array{Bo
         include_bonds_across_periodic_boundaries::Bool=true)
     species_i = crystal.atoms.species[i]
     species_j = crystal.atoms.species[j]
-
     r = distance(crystal.atoms, crystal.box, i, j, include_bonds_across_periodic_boundaries)
-
     # loop over possible bonding rules
     for br in bonding_rules
         # determine if the atom species correspond to the species in `bonding_rules`
@@ -190,7 +188,6 @@ function is_bonded(crystal::Crystal, i::Int64, j::Int64, bonding_rules::Array{Bo
         elseif (species_i == br.species_i && species_j == br.species_j) || (species_j == br.species_i && species_i == br.species_j)
             species_match = true
         end
-
         if species_match
             # determine if the atoms are close enough to bond
             if br.min_dist < r && br.max_dist > r
@@ -211,7 +208,8 @@ Remove all bonds from a crystal structure, `crystal::Crystal`.
 """
 function remove_bonds!(crystal::Crystal)
     while ne(crystal.bonds) > 0
-        rem_edge!(crystal.bonds, collect(edges(crystal.bonds))[1].src, collect(edges(crystal.bonds))[1].dst)
+        rem_edge!(crystal.bonds, collect(edges(crystal.bonds))[1].src,
+            collect(edges(crystal.bonds))[1].dst)
     end
 end
 
@@ -249,8 +247,9 @@ function infer_bonds!(crystal::Crystal, include_bonds_across_periodic_boundaries
     for i in 1:crystal.atoms.n
         # loop over every unique pair of atoms
         for j in i+1:crystal.atoms.n
-            if is_bonded(crystal, i, j, bonding_rules; include_bonds_across_periodic_boundaries=include_bonds_across_periodic_boundaries)
-                add_edge!(crystal.bonds, i, j)
+            if is_bonded(crystal, i, j, bonding_rules;
+                include_bonds_across_periodic_boundaries=include_bonds_across_periodic_boundaries)
+                make_bond!(crystal, i, j, include_bonds_across_periodic_boundaries)
             end
         end
     end
@@ -283,11 +282,9 @@ function neighborhood(crystal::Crystal, i::Int, r::Float64, dm::Array{Float64, 2
     # get indices of atoms within a distance r of atom i
     #  the greater than zero part is to not include itself
     ids_neighbors = findall((dm[:, i] .> 0.0) .& (dm[:, i] .< r))
-
     # rs is the list of distance of these neighbors from atom i
     rs = [dm[i, id_n] for id_n in ids_neighbors]
     @assert all(rs .< r)
-
     # xs is a list of Cartesian coords of the neighborhood
     #  coords of atom i are subtracted off
     #  first entry is coords of atom i, the center, the zero vector
@@ -318,11 +315,10 @@ Of the neighboring atoms, find those that share a Voronoi face.
 # Returns
 -`ids_shared_voro_face::Array{Int, 1}`: indices of atoms that share a Voronoi face with a specific atom
 """
-function _shared_voronoi_faces(ids_neighbors::Array{Int, 1}, xs::Array{Array{Float64, 1}, 1})
+function _shared_voronoi_faces(ids_neighbors::Array{Int,1}, xs::Array{Array{Float64,1},1})
     scipy = pyimport("scipy.spatial")
     # first element of xs is the point itself, the origin
     @assert length(ids_neighbors) == (length(xs) - 1)
-
     voro = scipy.Voronoi(xs)
     rps = voro.ridge_points # connection with atom zero are connection with atom i
     ids_shared_voro_face = Int[] # corresponds to xs, not to atoms of crystal
@@ -363,10 +359,12 @@ function bonded_atoms(crystal::Crystal, i::Int, dm::Array{Float64, 2},
     for j in ids_shared_voro_faces
         species_j = crystal.atoms.species[j]
         # sum of covalent radii
-        radii_sum = cordero_params[species_j][:radius_Å] + cordero_params[species_i][:radius_Å]
+        radii_sum = cordero_params[species_j][:radius_Å] +
+            cordero_params[species_i][:radius_Å]
         # margin = σ e.s.d.s, unless that's too small
         margin = max(min_tol,
-            σ * (cordero_params[species_j][:esd_pm] + cordero_params[species_i][:esd_pm]) / 100)
+            σ * (cordero_params[species_j][:esd_pm] +
+            cordero_params[species_i][:esd_pm]) / 100)
         max_dist = radii_sum + margin
         min_dist = radii_sum - margin
         if dm[i, j] ≤ max_dist && dm[i, j] ≥ min_dist
@@ -391,9 +389,10 @@ Infers bonds by first finding which atoms share a Voronoi face, and then bond th
 -`min_tol::Float`: minimum tolerance for calculated bond distances, Å
 -`cordero_params::Dict{Symbol, Dict{Symbol, Float64}}`: See [`cordero_parameters`](@ref)
 """
-function infer_geometry_based_bonds!(crystal::Crystal, include_bonds_across_periodic_boundaries::Bool;
-                                     r::Float64=6., σ::Float64=3., min_tol::Float64=0.25,
-                                     cordero_params::Union{Nothing, Dict{Symbol, Dict{Symbol, Float64}}}=nothing)
+function infer_geometry_based_bonds!(crystal::Crystal,
+        include_bonds_across_periodic_boundaries::Bool;
+        r::Float64=6., σ::Float64=3., min_tol::Float64=0.25,
+        cordero_params::Union{Nothing,Dict{Symbol,Dict{Symbol,Float64}}}=nothing)
     @assert ne(crystal.bonds) == 0 @sprintf("The crystal %s already has bonds. Remove them with the `remove_bonds!` function before inferring new ones.", crystal.name)
     if cordero_params == nothing
         cordero_params = cordero_parameters()
@@ -401,7 +400,7 @@ function infer_geometry_based_bonds!(crystal::Crystal, include_bonds_across_peri
     dm = distance_matrix(crystal, include_bonds_across_periodic_boundaries)
     for i = 1:crystal.atoms.n
         for j in bonded_atoms(crystal, i, dm, r, σ, min_tol, cordero_params)
-            add_edge!(crystal.bonds, i, j)
+            make_bond!(crystal, i, j, include_bonds_across_periodic_boundaries)
         end
     end
 end
@@ -463,7 +462,6 @@ function compare_bonds_in_crystal(fi::Crystal, fj::Crystal; atol::Float64=0.0)
     if ne(fi.bonds) != ne(fj.bonds)
         return false
     end
-
     num_in_common = 0
     for edge_i in collect(edges(fi.bonds))
         for edge_j in collect(edges(fj.bonds))
@@ -497,23 +495,25 @@ Writes the bond information from a crystal to the selected filename.
 -`filename::String`: The filename the bond information will be saved to. If left out, will default to crystal name.
 - `center_at_origin::Bool`: center the coordinates at the origin of the crystal
 """
-function write_bond_information(crystal::Crystal, filename::String; center_at_origin::Bool=false)
+function write_bond_information(crystal::Crystal, filename::String;
+        center_at_origin::Bool=false)
     if ne(crystal.bonds) == 0
-        @warn("Crystal %s has no bonds present. To get bonding information for this crystal run `infer_bonds!` with an array of bonding rules\n", crystal.name)
+        @warn("Crystal %s has no bonds present. To get bonding information for this
+        crystal run `infer_bonds!` with an array of bonding rules\n", crystal.name)
     end
     if ! occursin(".vtk", filename)
         filename *= ".vtk"
     end
-
     vtk_file = open(filename, "w")
-
-    @printf(vtk_file, "# vtk DataFile Version 2.0\n%s bond information\nASCII\nDATASET POLYDATA\nPOINTS %d double\n", crystal.name, nv(crystal.bonds))
-
+    @printf(vtk_file, "# vtk DataFile Version 2.0\n%s bond information\nASCII\n
+        DATASET POLYDATA\nPOINTS %d double\n", crystal.name, nv(crystal.bonds))
     for i = 1:crystal.atoms.n
         if center_at_origin
-            @printf(vtk_file, "%0.5f\t%0.5f\t%0.5f\n", (crystal.box.f_to_c * (crystal.atoms.coords.xf[:, i] - [0.5, 0.5, 0.5]))...)
+            @printf(vtk_file, "%0.5f\t%0.5f\t%0.5f\n", (crystal.box.f_to_c *
+                (crystal.atoms.coords.xf[:, i] - [0.5, 0.5, 0.5]))...)
         else
-            @printf(vtk_file, "%0.5f\t%0.5f\t%0.5f\n", (crystal.box.f_to_c * crystal.atoms.coords.xf[:, i])...)
+            @printf(vtk_file, "%0.5f\t%0.5f\t%0.5f\n", (crystal.box.f_to_c *
+                crystal.atoms.coords.xf[:, i])...)
         end
     end
     @printf(vtk_file, "\nLINES %d %d\n", ne(crystal.bonds), 3 * ne(crystal.bonds))
@@ -521,9 +521,43 @@ function write_bond_information(crystal::Crystal, filename::String; center_at_or
         @printf(vtk_file, "2\t%d\t%d\n", edge.src - 1, edge.dst - 1)
     end
     close(vtk_file)
-    @printf("Saving bond information for crystal %s to %s.\n", crystal.name, joinpath(pwd(), filename))
+    @printf("Saving bond information for crystal %s to %s.\n", crystal.name,
+        joinpath(pwd(), filename))
 end
 
-write_bond_information(crystal::Crystal; center_at_origin::Bool=false) = write_bond_information(crystal, split(crystal.name, ".")[1] * "_bonds.vtk", center_at_origin=center_at_origin)
+write_bond_information(crystal::Crystal; center_at_origin::Bool=false) =
+    write_bond_information(crystal, split(crystal.name, ".")[1] * "_bonds.vtk",
+        center_at_origin=center_at_origin)
 
 # TODO remove bonds with atom i?
+
+
+"""
+    make_bond!(xtal.bonds, i, j)
+Creates a bond between the `i`th and `j` atoms
+"""
+function make_bond!(bonds::MetaGraph, i::Int, j::Int;
+        coords::Union{Cart,Frac,Nothing}=nothing,
+        cross_boundary::Union{Bool,Nothing}=nothing,
+        type::Symbol=:single,
+        box::Union{Box,Nothing}=nothing,
+        apply_pbc::Union{Bool,Nothing}=nothing)
+    add_edge!(bonds, i, j)
+    set_prop!(bonds, i, j, :cross_boundary, cross_boundary)
+    set_prop!(bonds, i, j, :type, type)
+    if !isnothing(coords)
+        if typeof(coords) == Cart
+            set_prop!(bonds, i, j, :distance, distance(coords, i, j))
+        elseif !isnothing(box) && !isnothing(apply_pbc)
+            set_prop!(bonds, i, j, :distance, distance(coords, box, i, j, apply_pbc))
+        else
+            @error "Must provide Cartesian coords or box & apply_pbc"
+        end
+    else
+        set_prop!(bonds, i, j, :distance, missing)
+    end
+end
+
+make_bond!(xtal::Crystal, i::Int, j::Int, apply_pbc::Bool) =
+    make_bond!(xtal.bonds, i, j, coords=xtal.atoms.coords, box=xtal.box,
+        apply_pbc=apply_pbc)
