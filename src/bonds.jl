@@ -236,13 +236,9 @@ The bonding rules are hierarchical, i.e. the first bonding rule takes precedence
 -`min_tol::Float64`: Minimum covalent radius tolerance if calculating bonding rules from covalent radii.
 """
 function infer_bonds!(crystal::Crystal, include_bonds_across_periodic_boundaries::Bool;
-        bonding_rules::Union{Array{BondingRule, 1}, Nothing}=nothing,
-        cordero_params::Union{Dict{Symbol, Dict{Symbol, Float64}}, Nothing}=nothing,
-        σ::Float64=3., min_tol::Float64=0.25)
+        bonding_rules::Union{Array{BondingRule, 1}, Nothing}=nothing)
     @assert ne(crystal.bonds) == 0 @sprintf("The crystal %s already has bonds. Remove them with the `remove_bonds!` function before inferring new ones.", crystal.name)
-    if bonding_rules == nothing
-        bonding_rules = bondingrules(cordero_params=cordero_params, σ=σ, min_tol=min_tol)
-    end
+    bonding_rules = bonding_rules == nothing ? get_bonding_rules() : bonding_rules
     # loop over every atom
     for i in 1:crystal.atoms.n
         # loop over every unique pair of atoms
