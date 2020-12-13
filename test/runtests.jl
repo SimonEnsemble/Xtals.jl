@@ -11,8 +11,7 @@ testfiles = [
     "paths.jl" # last, to not interfere with reading test data
     ]
 
-using Test
-using LightGraphs, MetaGraphs
+using Test, LightGraphs, MetaGraphs
 if !TRAVIS
     using Logging, Revise
     global_logger(ConsoleLogger(stdout, Logging.Info))
@@ -39,4 +38,9 @@ if !TRAVIS
     cd(joinpath(home, "../test"))
 end
 
+if !isdir("temp")
+    mkdir("temp")
+end
+
+@info "\n\n\t\tXtals.jl\n\n\n"
 runtest.(testfiles)

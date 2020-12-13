@@ -6,8 +6,8 @@ function visual_check(xtal::String)
     c = replicate(c, (2, 2, 2))
     strip_numbers_from_atom_labels!(c)
     infer_geometry_based_bonds!(c, true) # must
-    write_xyz(c)
-    write_bond_information(c)
+    write_xyz(c, "temp/c.xyz")
+    write_bond_information(c, "temp/$(c.name)")
     @info c.name * " see .vtk and .xyz to visually check bonds"
 end
 
@@ -37,8 +37,8 @@ end
     @test length(conn_comps) == 2 # interpenetrated
 
     # debugging outputs (delete me)
-    write_bond_information.([c, c1], ["c", "c1"])
-    write_xyz(c, "c")
+    write_bond_information.([c, c1], ["temp/c", "temp/c1"])
+    write_xyz(c, "temp/c")
 
     @test c1.bonds == c.bonds # consistency between two different bonding schemes
 
@@ -103,12 +103,12 @@ end
     @test xtal5.bonds ≠ xtal6.bonds
 end
 @testset ".mol/.cif bonds vs. inferred" begin
-    mol_atoms, mol_bonds = read_mol("example.mol")
+    mol_atoms, mol_bonds = read_mol("data/example.mol")
     box = unit_cube()
     xtal = Crystal("example.mol", box, Frac(mol_atoms, box), Charges{Frac}(0))
     infer_bonds!(xtal, false)
     @test mol_bonds == xtal.bonds
-    mol_atoms, mol_bonds = read_mol("cof-102.mol")
+    mol_atoms, mol_bonds = read_mol("data/cof-102.mol")
     xtal = Crystal("cof-102.cif")
     infer_bonds!(xtal, false) # source mol file has no periodic bonds
     @test mol_bonds == xtal.bonds
@@ -121,5 +121,11 @@ end
     set_prop!(xtal.bonds, src(e), dst(e), :distance, missing)
     Xtals.calc_missing_bond_distances!(xtal)
     @test xtal.bonds == bonds
+    xtal2 = Crystal("cof-102.cif")
+    infer_bonds!(xtal2, false)
+    Xtals.drop_cross_pb_bonds!(xtal)
+    @test xtal.bonds == xtal2.bonds
+    Xtals.write_mol2(xtal, filename="temp/cof-102_no_pb.mol2")
 end
 end
+# visual_check

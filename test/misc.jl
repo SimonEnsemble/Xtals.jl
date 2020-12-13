@@ -21,7 +21,7 @@ using Xtals, Test, DataFrames, LightGraphs, CSV
 
     @test get_cpk_colors()[:Li] == (204,128,255)
 
-    atoms, bonds, bond_types = read_mol("example.mol")
+    atoms, bonds, bond_types = read_mol("data/example.mol")
     @test (atoms.species[1] == :O) && (atoms.species[end] == :H) & (length(atoms.species) == 31) && (atoms.n == 31)
     @test ne(bonds) == 32
     @test nv(bonds) == 31
@@ -29,7 +29,7 @@ using Xtals, Test, DataFrames, LightGraphs, CSV
     @test neighbors(bonds, 1) == [2, 5]
 
     xtal = Crystal("SBMOF-1.cif", infer_bonds=:cordero, periodic_boundaries=true)
-    write_mol2(xtal, filename="test.mol2")
-    @test isfile("test.mol2")
+    write_mol2(xtal, filename="temp/test.mol2")
+    @test isfile("temp/test.mol2")
 end
 end
