@@ -147,7 +147,8 @@ function write_mol2(xtal::Crystal; filename::String="")
 	# unit cell (CRYSIN)
 	@assert xtal.symmetry.is_p1 "Crystal must be in P1 symmetry."
 	@printf(f, "\n@<TRIPOS>CRYSIN\n")
-	@printf(f, "%f %f %f %f %f %f 1 1\n", xtal.box.a, xtal.box.b, xtal.box.c, xtal.box.α, xtal.box.β, xtal.box.γ)
+	@printf(f, "%f %f %f %f %f %f 1 1\n", xtal.box.a, xtal.box.b, xtal.box.c,
+		xtal.box.α, xtal.box.β, xtal.box.γ)
 	# flush the buffer
 	close(f)
 end

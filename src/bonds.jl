@@ -565,3 +565,17 @@ function calc_missing_bond_distances!(xtal::Crystal)
         end
     end
 end
+
+
+"""
+Gets rid of the bonds across unit cell boundaries
+"""
+function drop_cross_pb_bonds!(bonds::MetaGraph)
+    for bond in collect(edges(bonds))
+        if get_prop(bonds, bond, :cross_boundary)
+            rem_edge!(bonds, src(bond), dst(bond))
+        end
+    end
+end
+
+drop_cross_pb_bonds!(xtal::Crystal) = drop_cross_pb_bonds!(xtal.bonds)
