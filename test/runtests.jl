@@ -36,9 +36,10 @@ if !TRAVIS
     set_path_to_data(joinpath(home, "../test/data"),
         relpath_xtals=true, print=true)
     cd(joinpath(home, "../test"))
-    if !isdir("temp")
-        mkdir("temp")
-    end
+end
+
+if !isdir("temp")
+    mkdir("temp")
 end
 
 @info "\n\n\t\tXtals.jl\n\n\n"
