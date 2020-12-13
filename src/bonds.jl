@@ -249,6 +249,7 @@ function infer_bonds!(crystal::Crystal, include_bonds_across_periodic_boundaries
             end
         end
     end
+    bond_sanity_check(crystal)
 end
 
 
@@ -399,6 +400,7 @@ function infer_geometry_based_bonds!(crystal::Crystal,
             make_bond!(crystal, i, j)
         end
     end
+    bond_sanity_check(crystal)
 end
 
 
@@ -415,7 +417,7 @@ if sanity checks fail, refer to [`write_bond_information`](@ref) to write a .vtk
 Print warnings when sanity checks fail.
 Return `true` if sanity checks pass, `false` otherwise.
 """
-function bond_sanity_check(crystal::Crystal)
+function bond_sanity_check(crystal::Crystal)::Bool
     for a = 1:crystal.atoms.n
         ns = neighbors(crystal.bonds, a)
         # is the graph fully connected?
