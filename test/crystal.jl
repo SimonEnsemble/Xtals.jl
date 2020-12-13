@@ -313,5 +313,20 @@ end
     xtal1 = Crystal("SBMOF-1_overlap.cif", remove_duplicates=true)
     @test isapprox(xtal1, Crystal("SBMOF-1.cif"))
     @test_throws ErrorException Crystal("SBMOF-1_overlap_diff_atom.cif", remove_duplicates=true) # duplicate but diff atom, so not repairable
+
+    @test_throws ErrorException Crystal("example.mol")
+    @test_throws ErrorException Crystal("SBMOF-1.cif", infer_bonds=:cordero)
+    @test_throws ErrorException Crystal("SBMOF-1.cif", infer_bonds=:bogus, periodic_boundaries=true)
+    infer_bonds!(xtal1, true)
+    @test_throws ErrorException replicate(xtal1, (1,1,1))
+
+    # test verbose printing in chemical_formula
+    Xtals.chemical_formula(xtal1, verbose=true)
+    @test true
+
+    @test xtal1 == apply_symmetry_operations(xtal1)
+
+    println(xtal1)
+    @test true
 end
 end

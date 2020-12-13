@@ -93,5 +93,13 @@ using Test
                             0.0 -10.0;
                             0.0 -40.0])
                   )
+
+     xtal = Crystal("SBMOF-1.cif")
+     write_vtk(xtal.box, "test.vtk", verbose=true)
+     @test isfile("test.vtk")
+
+     # effective test of Base.show(io::IO, box::Box)
+     println(xtal.box)
+     @test true
 end
 end

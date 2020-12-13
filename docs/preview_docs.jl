@@ -1,4 +1,4 @@
-using Documenter, Revise
+using Documenter
 using Xtals
 
 makedocs(

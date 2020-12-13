@@ -3,12 +3,9 @@
 
 Create a dictionary with the Cordero covalent radius and estimated standard deviation for each element, using the data in `PATH_TO_DATA/cordero.csv`
 
-    covalent_radii = get_covalent_radii("my_params.csv")
+    covalent_radii = get_covalent_radii()
 
 Create a dictionary with the Cordero covalent radius and estimated standard deviation for each element specified in `PATH_TO_DATA/my_params.csv`
-
-# Arguments
--`cordero_data::String`: name of file containing covalent radii and estimated standard deviations.
 
 # Returns
 -`covalent_radii::Dict{Symbol, Dict{Symbol, Float64}}`: A dictionary with elements as keys and dictionaries of respective cordero covalent radii and e.s.d.s as the values.
@@ -20,16 +17,10 @@ covalent_radii[:N][:radius_Å] # 0.71
 covalent_radii[:N][:esd_pm] # 1.0
 ```
 """
-function get_covalent_radii(; cordero_data::Union{String,Nothing}=nothing)
-    if cordero_data == nothing
-        df = COVALENT_RADII
-    else
-        # read Cordero data
-        df = CSV.read(joinpath(PATH_TO_DATA, cordero_data), DataFrame, comment="#")
-    end
+function get_covalent_radii()
     # parse into params dict
     covalent_radii = Dict{Symbol, Dict{Symbol, Float64}}()
-    for atom in eachrow(df)
+    for atom in eachrow(COVALENT_RADII)
         covalent_radii[Symbol(atom[:atom])] = Dict(:radius_Å => atom.covalent_radius_A, :esd_pm => atom.esd_pm)
     end
     # Carbon, Iron, Manganese, and Cobalt have multiple entries due to hybridization/spin
