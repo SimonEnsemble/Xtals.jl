@@ -120,6 +120,7 @@ export
     # bonds.jl
     infer_bonds!, write_bond_information, BondingRule, bond_sanity_check,
     remove_bonds!, infer_geometry_based_bonds!, get_bonding_rules,
-    set_bonding_rules, read_bonding_rules, write_bonding_rules, add_bonding_rules
+    set_bonding_rules, read_bonding_rules, write_bonding_rules, add_bonding_rules,
+    drop_cross_pb_bonds!
 
 end # module Xtals

@@ -31,6 +31,8 @@ function runtest(testfile::String)
     end
 end
 
+@info "\n\n\t\tXtals.jl\n\n\n"
+
 if !TRAVIS
     home = dirname(pathof(Xtals))
     set_path_to_data(joinpath(home, "../test/data"),
@@ -42,5 +44,4 @@ if !isdir("temp")
     mkdir("temp")
 end
 
-@info "\n\n\t\tXtals.jl\n\n\n"
 runtest.(testfiles)
