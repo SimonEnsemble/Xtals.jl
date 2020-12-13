@@ -18,6 +18,10 @@ struct BondingRule
     max_dist::Float64
 end
 
+BondingRule(species_i::String, species_j::String, min_dist::String,
+    max_dist::String) = BondingRule(Symbol.([species_i, species_j])...,
+        parse.([Float64, Float64], [min_dist, max_dist])...)
+
 
 """
 Global BondingRule array
@@ -124,7 +128,7 @@ function read_bonding_rules(filename::String)::Array{BondingRule}
     rules = BondingRule[]
     open(filename) do input_file
         for line in eachline(input_file)
-            push!(rules, BondingRule(split(line, ",")...))
+            push!(rules, BondingRule(String.(split(line, ","))...))
         end
     end
     return rules
@@ -138,7 +142,8 @@ Adds `bonding_rules` to the beginning of the global bonding rules list
 - `bonding_rules::Array{BondingRule}` : the array of bonding rules to add
 """
 function add_bonding_rules(bonding_rules::Array{BondingRule})
-    set_bonding_rules(vcat(bonding_rules, get_bonding_rules()))
+    br = get_bonding_rules()
+    set_bonding_rules(vcat(bonding_rules, br))
 end
 
 
@@ -437,48 +442,6 @@ function bond_sanity_check(crystal::Crystal)::Bool
         end
     end
     return true
-end
-
-
-# TODO remove? why is this needed?
-"""
-    bonds_equal = compare_bonds_in_crystal(crystal1, crystal2, atol=0.0)
-
-Returns whether the bonds defined in crystal1 are the same as the bonds
-defined in crystal2. It checks whether the atoms in the same positions
-have the same bonds.
-
-# Arguments
--`crystal1::Crystal`: The first crystal
--`crystal2::Crystal`: The second crystal
--`atol::Float64`: absolute tolerance for the comparison of coordinates in the crystal
-
-# Returns
--`bonds_equal::Bool`: Wether the bonds in crystal1 and crystal2 are equal
-"""
-function compare_bonds_in_crystal(fi::Crystal, fj::Crystal; atol::Float64=0.0)
-    if ne(fi.bonds) != ne(fj.bonds)
-        return false
-    end
-    num_in_common = 0
-    for edge_i in collect(edges(fi.bonds))
-        for edge_j in collect(edges(fj.bonds))
-            # either the bond matches going src-src dst-dst
-            if  (fi.atoms.species[edge_i.src] == fj.atoms.species[edge_j.src] &&
-                 fi.atoms.species[edge_i.dst] == fj.atoms.species[edge_j.dst] &&
-                 isapprox(fi.atoms.xf[:, edge_i.src], fj.atoms.xf[:, edge_j.src]; atol=atol) &&
-                 isapprox(fi.atoms.xf[:, edge_i.dst], fj.atoms.xf[:, edge_j.dst]; atol=atol)) ||
-                # or the bond matches going src-dst dst-src
-                (fi.atoms.species[edge_i.src] == fj.atoms.species[edge_j.dst] &&
-                 fi.atoms.species[edge_i.dst] == fj.atoms.species[edge_j.src] &&
-                 isapprox(fi.atoms.xf[:, edge_i.src], fj.atoms.xf[:, edge_j.dst]; atol=atol) &&
-                 isapprox(fi.atoms.xf[:, edge_i.dst], fj.atoms.xf[:, edge_j.src]; atol=atol))
-                num_in_common += 1
-                break
-            end
-        end
-    end
-    return num_in_common == ne(fi.bonds) && num_in_common == ne(fj.bonds)
 end
 
 
