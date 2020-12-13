@@ -4,7 +4,7 @@ dist: xenial
 
 language: julia
 
-coveralls: true
+codecov: true
 
 julia:
   - 1.5
@@ -15,10 +15,12 @@ addons:
     - libhdf5-serial-dev
 
 script:
-  - julia --project --check-bounds=yes -e 'import Pkg; Pkg.build(); ENV["PYTHON"]=""; Pkg.build("PyCall"); Pkg.add("Conda"); using Conda; Conda.add("scipy"); Pkg.test("Xtals")'
+  - julia --project -e 'import Pkg; Pkg.build(); ENV["PYTHON"]=""; Pkg.build("PyCall"); Pkg.add("Conda"); using Conda; Conda.add("scipy")'
+  - julia --project --check-bounds=yes -e 'Pkg.test("Xtals", coverage=true)'
 
 after_success:
-  - julia --project -e 'import Pkg; Pkg.add("Documenter");'
+  - julia --project -e 'import Pkg; Pkg.add("Documenter"); Pkg.add("Coverage")'
+  - julia --project -e 'using Coverage; Codecov.submit(process_folder())'
   - julia --project ./docs/make.jl
 
 notifications:
