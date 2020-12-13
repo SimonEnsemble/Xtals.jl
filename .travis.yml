@@ -16,7 +16,7 @@ addons:
 
 script:
   - julia --project -e 'import Pkg; Pkg.build(); ENV["PYTHON"]=""; Pkg.build("PyCall"); Pkg.add("Conda"); using Conda; Conda.add("scipy")'
-  - julia --project --check-bounds=yes -e 'Pkg.test("Xtals", coverage=true)'
+  - julia --project --check-bounds=yes -e 'import Pkg; Pkg.test("Xtals", coverage=true)'
 
 after_success:
   - julia --project -e 'import Pkg; Pkg.add("Documenter"); Pkg.add("Coverage")'
