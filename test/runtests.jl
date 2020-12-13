@@ -1,4 +1,4 @@
-TRAVIS = false # set false for better UX in Atom. must be true for CI
+TRAVIS = true # set false for better UX in Atom. must be true for CI
 
 testfiles = [
     "box.jl",
