@@ -67,7 +67,7 @@ function bondingrules(;
             radii_sum = covalent_radii[atom1][:radius_Å] + covalent_radii[atom2][:radius_Å]
             margin = max(min_tol,
                 σ * (covalent_radii[atom1][:esd_pm] + covalent_radii[atom2][:esd_pm]) / 100)
-            min_dist = radii_sum - margin
+            min_dist = radii_sum - 2 * margin
             max_dist = radii_sum + margin
             push!(bondingrules, BondingRule(atom1, atom2, min_dist, max_dist))
         end
