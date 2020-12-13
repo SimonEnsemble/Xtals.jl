@@ -455,13 +455,13 @@ function Crystal(filename::String;
 
     if !ismissing(infer_bonds)
         if ismissing(periodic_boundaries)
-            @error "Must specify periodic_boundaries when using infer_bonds kwarg"
+            error("Must specify periodic_boundaries when using infer_bonds kwarg")
         elseif infer_bonds == :cordero
             infer_bonds!(crystal, periodic_boundaries)
         elseif infer_bonds == :voronoi
             infer_geometry_based_bonds!(crystal, periodic_boundaries)
         else
-            @error "Must specify either :cordero or :voronoi for infer_bonds kwarg"
+            error("Must specify either :cordero or :voronoi for infer_bonds kwarg")
         end
     end
 

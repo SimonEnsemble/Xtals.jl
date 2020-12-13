@@ -1,24 +1,3 @@
-"""
-    atomic_masses = read_atomic_masses()
-
-Read the `data/atomicmasses.csv` file to construct a dictionary of atoms and their atomic
-masses in amu.
-
-# Returns
-- `atomic_masses::Dict{Symbol, Float64}`: A dictionary containing the atomic masses of each atom stored in `data/atomicmasses.csv`
-"""
-function read_atomic_masses()
-	if ! isfile(joinpath(PATH_TO_DATA, "atomicmasses.csv"))
-        error("Cannot find atomicmasses.csv file in your data folder\n")
-    end
-    atomic_masses = Dict{Symbol, Float64}()
-    for row in eachrow(df_am)
-		atomic_masses[Symbol(row[:atom])] = row[:mass]
-    end
-    return atomic_masses
-end
-
-
 # makes a dataframe from stringified atomicmasses.csv
 function _AtomicMasses(headers::Array{Symbol}, data::String)
     species = Symbol[]

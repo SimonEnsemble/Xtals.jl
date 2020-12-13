@@ -19,9 +19,7 @@ read a list of atomic species and their corresponding coordinates from an .xyz f
 function read_xyz(filename::AbstractString)
     f = open(filename)
     lines = readlines(f)
-    if length(lines) == 0
-        return Symbol[], Float64[]
-    end
+    @assert length(lines) > 0
     n = parse(Int, lines[1]) # get number of atoms
     species = Symbol[]
     x = zeros(Float64, 3, n)

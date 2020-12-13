@@ -1,10 +1,6 @@
 module Misc_Test
 
-using Xtals
-using Test
-using DataFrames
-using LightGraphs
-using CSV
+using Xtals, Test, DataFrames, LightGraphs, CSV
 
 @testset "Misc Tests" begin
     am = get_atomic_masses()
@@ -31,5 +27,9 @@ using CSV
     @test nv(bonds) == 31
     @test (bond_types[1] == 1) && (bond_types[3] == 2)
     @test neighbors(bonds, 1) == [2, 5]
+
+    xtal = Crystal("SBMOF-1.cif", infer_bonds=:cordero, periodic_boundaries=true)
+    write_mol2(xtal, filename="test.mol2")
+    @test isfile("test.mol2")
 end
 end

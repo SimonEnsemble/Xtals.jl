@@ -1,23 +1,3 @@
-"""
-    atom_colors = read_cpk_colors()
-
-Read in CPK color scheme for atoms. Return `atom_colors::Dict{Symbol, Tuple{Int, Int, Int}}` such that
-`atom_colors[":C"]` gives RGB code for carbon as a tuple, `(144, 144, 144)`.
-https://en.wikipedia.org/wiki/CPK_coloring
-
-# Returns
-- `atom_colors::Dict{Symbol, Tuple{Int, Int, Int}}`: A dictionary linking an element symbol to its' corresponding CPK color in RGB
-"""
-function read_cpk_colors(filename::String="cpk_atom_colors.csv")
-    atom_colors = Dict{Symbol, Tuple{Int, Int, Int}}()
-    df_colors = CSV.read(joinpath(PATH_TO_DATA, filename), DataFrame)
-    for row in eachrow(df_colors)
-        atom_colors[Symbol(row[:atom])] = (row[:R], row[:G], row[:B])
-    end
-    return atom_colors
-end
-
-
 # makes dict from stringified cpk_atom_colors.csv
 function _CPKColors(headers::Array{Symbol}, data::String)::Dict{Symbol,Tuple{Int,Int,Int}}
     atom_colors = Dict{Symbol, Tuple{Int, Int, Int}}()

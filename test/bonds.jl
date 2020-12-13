@@ -1,5 +1,5 @@
 module Bonds_test
-using Xtals, LightGraphs, Test
+using Xtals, LightGraphs, Test, MetaGraphs
 
 function visual_check(xtal::String)
     c = Crystal(xtal)
@@ -67,50 +67,59 @@ end
     @test c.atoms.species[neighbors(c.bonds, 1)] == [:O, :O, :O, :O]
 end
 @testset "bond inference options" begin
-  xtal1 = Crystal("SBMOF-1_overlap.cif", remove_duplicates=true)
-  # infer_bonds option tests
-  xtal2 = deepcopy(xtal1) # no bonds
-  infer_bonds!(xtal1, true)
-  infer_bonds!(xtal2, false)
-  xtal3 = Crystal("SBMOF-1_overlap.cif", remove_duplicates=true,
+    xtal1 = Crystal("SBMOF-1_overlap.cif", remove_duplicates=true)
+    # infer_bonds option tests
+    xtal2 = deepcopy(xtal1) # no bonds
+    infer_bonds!(xtal1, true)
+    infer_bonds!(xtal2, false)
+    xtal3 = Crystal("SBMOF-1_overlap.cif", remove_duplicates=true,
     infer_bonds=:cordero, periodic_boundaries=true)
-  xtal4 = Crystal("SBMOF-1_overlap.cif", remove_duplicates=true,
+    xtal4 = Crystal("SBMOF-1_overlap.cif", remove_duplicates=true,
     infer_bonds=:cordero, periodic_boundaries=false)
-  xtal5 = Crystal("SBMOF-1_overlap.cif", remove_duplicates=true,
+    xtal5 = Crystal("SBMOF-1_overlap.cif", remove_duplicates=true,
     infer_bonds=:voronoi, periodic_boundaries=true)
-  xtal6 = Crystal("SBMOF-1_overlap.cif", remove_duplicates=true,
+    xtal6 = Crystal("SBMOF-1_overlap.cif", remove_duplicates=true,
     infer_bonds=:voronoi, periodic_boundaries=false)
-  # xtal1  : default bonding rules, periodic boundaries
-  # xtal2 : default bonding rules, no periodic boundaries
-  # xtal3 : default bonding rules, periodic boundaries
-  # xtal4 : default bonding rules, no periodic boundaries
-  # xtal5 : voronoi bonding rules, periodic boundaries
-  # xtal6 : voronoi bonding rules, no periodic boundaries
-  @test xtal1.bonds ≠ xtal2.bonds
-  @test xtal1.bonds == xtal3.bonds
-  @test xtal1.bonds ≠ xtal4.bonds
-  # @test xtal1.bonds == xtal5.bonds # TODO examine test failure
-  @test xtal1.bonds ≠ xtal6.bonds
-  @test xtal2.bonds ≠ xtal3.bonds
-  @test xtal2.bonds == xtal4.bonds
-  @test xtal2.bonds ≠ xtal5.bonds
-  #@test xtal2.bonds == xtal6.bonds # TODO examine test failure
-  @test xtal3.bonds ≠ xtal4.bonds
-  #@test xtal3.bonds == xtal5.bonds # TODO examine test failure
-  @test xtal3.bonds ≠ xtal6.bonds
-  @test xtal4.bonds ≠ xtal5.bonds
-  #@test xtal4.bonds == xtal6.bonds # TODO examine test failure
-  @test xtal5.bonds ≠ xtal6.bonds
+    # xtal1  : default bonding rules, periodic boundaries
+    # xtal2 : default bonding rules, no periodic boundaries
+    # xtal3 : default bonding rules, periodic boundaries
+    # xtal4 : default bonding rules, no periodic boundaries
+    # xtal5 : voronoi bonding rules, periodic boundaries
+    # xtal6 : voronoi bonding rules, no periodic boundaries
+    @test xtal1.bonds ≠ xtal2.bonds
+    @test xtal1.bonds == xtal3.bonds
+    @test xtal1.bonds ≠ xtal4.bonds
+    # @test xtal1.bonds == xtal5.bonds # TODO examine test failure
+    @test xtal1.bonds ≠ xtal6.bonds
+    @test xtal2.bonds ≠ xtal3.bonds
+    @test xtal2.bonds == xtal4.bonds
+    @test xtal2.bonds ≠ xtal5.bonds
+    #@test xtal2.bonds == xtal6.bonds # TODO examine test failure
+    @test xtal3.bonds ≠ xtal4.bonds
+    #@test xtal3.bonds == xtal5.bonds # TODO examine test failure
+    @test xtal3.bonds ≠ xtal6.bonds
+    @test xtal4.bonds ≠ xtal5.bonds
+    #@test xtal4.bonds == xtal6.bonds # TODO examine test failure
+    @test xtal5.bonds ≠ xtal6.bonds
 end
 @testset ".mol/.cif bonds vs. inferred" begin
-  mol_atoms, mol_bonds = read_mol("example.mol")
-  box = unit_cube()
-  xtal = Crystal("example.mol", box, Frac(mol_atoms, box), Charges{Frac}(0))
-  infer_bonds!(xtal, false)
-  @test mol_bonds == xtal.bonds
-  mol_atoms, mol_bonds = read_mol("cof-102.mol")
-  xtal = Crystal("cof-102.cif")
-  infer_bonds!(xtal, false) # source mol file has no periodic bonds
-  @test mol_bonds == xtal.bonds
+    mol_atoms, mol_bonds = read_mol("example.mol")
+    box = unit_cube()
+    xtal = Crystal("example.mol", box, Frac(mol_atoms, box), Charges{Frac}(0))
+    infer_bonds!(xtal, false)
+    @test mol_bonds == xtal.bonds
+    mol_atoms, mol_bonds = read_mol("cof-102.mol")
+    xtal = Crystal("cof-102.cif")
+    infer_bonds!(xtal, false) # source mol file has no periodic bonds
+    @test mol_bonds == xtal.bonds
+end
+@testset "metadata" begin
+    xtal = Crystal("cof-102.cif")
+    infer_bonds!(xtal, true)
+    bonds = deepcopy(xtal.bonds)
+    e = collect(edges(xtal.bonds))[1]
+    set_prop!(xtal.bonds, src(e), dst(e), :distance, missing)
+    Xtals.calc_missing_bond_distances!(xtal)
+    @test xtal.bonds == bonds
 end
 end
