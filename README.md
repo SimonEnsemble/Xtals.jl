@@ -1,7 +1,7 @@
 # Xtals.jl
 
 [![Build Status](https://travis-ci.org/SimonEnsemble/Xtals.jl.svg?branch=master)](https://travis-ci.org/SimonEnsemble/Xtals.jl)
-[![Coverage Status](https://coveralls.io/repos/github/SimonEnsemble/Xtals.jl/badge.svg?branch=master)](https://coveralls.io/github/SimonEnsemble/Xtals.jl?branch=master)
+[![codecov.io](https://codecov.io/github/SimonEnsemble/Xtals.jl/coverage.svg?branch=master)](https://codecov.io/github/SimonEnsemble/Xtals.jl/?branch=master)
 [![](https://img.shields.io/badge/docs-latest-blue.svg)](https://SimonEnsemble.github.io/Xtals.jl/dev)
 [![](https://img.shields.io/badge/docs-stable-green.svg)](https://SimonEnsemble.github.io/Xtals.jl/stable)
 
