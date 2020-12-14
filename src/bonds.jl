@@ -535,7 +535,10 @@ Gets rid of the bonds across unit cell boundaries
 """
 function drop_cross_pb_bonds!(bonds::MetaGraph)
     for bond in collect(edges(bonds))
-        if get_prop(bonds, bond, :cross_boundary)
+        p = get_prop(bonds, bond, :cross_boundary)
+        if ismissing(p)
+            @warn "Bond w/ missing :cross_boundary attribute"
+        elseif p
             rem_edge!(bonds, src(bond), dst(bond))
         end
     end
