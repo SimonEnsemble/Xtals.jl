@@ -173,6 +173,7 @@ Checks to see if atoms `i` and `j` in `crystal` are bonded according to the `bon
 
 # Returns
 -`are_atoms_bonded::Bool`: Whether atoms `i` and `j` are bonded according to `bonding_rules`
+-`r::Float64`: The distance between atomic centers.  For non-bonded pairs, r=0.
 
 """
 function is_bonded(crystal::Crystal, i::Int64, j::Int64, bonding_rules::Array{BondingRule, 1};
@@ -196,13 +197,13 @@ function is_bonded(crystal::Crystal, i::Int64, j::Int64, bonding_rules::Array{Bo
         if species_match
             # determine if the atoms are close enough to bond
             if br.min_dist < r && br.max_dist > r
-                return true
+                return true, r
             else
-                return false # found relevant bonding rule, don't apply others
+                return false, 0. # found relevant bonding rule, don't apply others
             end
         end
     end
-    return false # no bonding rule applied
+    return false, 0. # no bonding rule applied
 end
 
 
@@ -248,9 +249,15 @@ function infer_bonds!(crystal::Crystal, include_bonds_across_periodic_boundaries
     for i in 1:crystal.atoms.n
         # loop over every unique pair of atoms
         for j in i+1:crystal.atoms.n
-            if is_bonded(crystal, i, j, bonding_rules;
+            bonded, distance = is_bonded(crystal, i, j, bonding_rules;
                 include_bonds_across_periodic_boundaries=include_bonds_across_periodic_boundaries)
-                make_bond!(crystal, i, j)
+            if bonded
+                add_edge!(crystal.bonds, i, j)
+                set_prop!(crystal.bonds, i, j, :distance, r)
+                if include_bonds_across_periodic_boundaries
+                    set_prop!(bonds, i, j, :cross_boundary,
+                        !isapprox(distance(coords, box, i, j, false), distance))
+                end
             end
         end
     end
@@ -402,7 +409,7 @@ function infer_geometry_based_bonds!(crystal::Crystal,
     dm = distance_matrix(crystal, include_bonds_across_periodic_boundaries)
     for i = 1:crystal.atoms.n
         for j in bonded_atoms(crystal, i, dm, r, σ, min_tol, covalent_radii)
-            make_bond!(crystal, i, j)
+            add_edge!(crystal.bonds, i, j)
         end
     end
     bond_sanity_check(crystal)
@@ -489,31 +496,6 @@ end
 write_bond_information(crystal::Crystal; center_at_origin::Bool=false) =
     write_bond_information(crystal, split(crystal.name, ".")[1] * "_bonds.vtk",
         center_at_origin=center_at_origin)
-
-# TODO remove bonds with atom i?
-
-
-"""
-    make_bond!(xtal.bonds, i, j)
-Creates a bond between the `i`th and `j` atoms
-"""
-function make_bond!(bonds::MetaGraph, i::Int, j::Int, coords::Frac;
-        box::Union{Box,Nothing}=nothing, type::Symbol=:single)
-    add_edge!(bonds, i, j)
-    set_prop!(bonds, i, j, :type, type)
-    if !isnothing(box)
-        dist = distance(coords, box, i, j, true)
-        set_prop!(bonds, i, j, :cross_boundary,
-            !isapprox(distance(coords, box, i, j, false), dist))
-        set_prop!(bonds, i, j, :distance, dist)
-    else # no box when reading bonds from file
-        set_prop!(bonds, i, j, :cross_boundary, missing)
-        set_prop!(bonds, i, j, :distance, missing)
-    end
-end
-
-make_bond!(xtal::Crystal, i::Int, j::Int, kwargs...) =
-    make_bond!(xtal.bonds, i, j, xtal.atoms.coords, box=xtal.box, kwargs...)
 
 
 """
