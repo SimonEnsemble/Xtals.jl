@@ -851,15 +851,15 @@ function write_cif(crystal::Crystal, filename::String; fractional_coords::Bool=t
         @printf(cif_file, "data_%s_PM\n", split(crystal.name, ".")[1])
     end
 
-    @printf(cif_file, "_symmetry_space_group_name_H-M\t'%s'\n", crystal.symmetry.space_group)
+    @printf(cif_file, "_symmetry_space_group_name_H-M    '%s'\n", crystal.symmetry.space_group)
 
-    @printf(cif_file, "_cell_length_a\t%f\n", crystal.box.a)
-    @printf(cif_file, "_cell_length_b\t%f\n", crystal.box.b)
-    @printf(cif_file, "_cell_length_c\t%f\n", crystal.box.c)
+    @printf(cif_file, "_cell_length_a    %f\n", crystal.box.a)
+    @printf(cif_file, "_cell_length_b    %f\n", crystal.box.b)
+    @printf(cif_file, "_cell_length_c    %f\n", crystal.box.c)
 
-    @printf(cif_file, "_cell_angle_alpha\t%f\n", crystal.box.α * 180.0 / pi)
-    @printf(cif_file, "_cell_angle_beta\t%f\n", crystal.box.β * 180.0 / pi)
-    @printf(cif_file, "_cell_angle_gamma\t%f\n", crystal.box.γ * 180.0 / pi)
+    @printf(cif_file, "_cell_angle_alpha    %f\n", crystal.box.α * 180.0 / pi)
+    @printf(cif_file, "_cell_angle_beta    %f\n", crystal.box.β * 180.0 / pi)
+    @printf(cif_file, "_cell_angle_gamma    %f\n", crystal.box.γ * 180.0 / pi)
 
     @printf(cif_file, "_symmetry_Int_Tables_number 1\n\n")
     @printf(cif_file, "loop_\n_symmetry_equiv_pos_as_xyz\n")
@@ -888,7 +888,7 @@ function write_cif(crystal::Crystal, filename::String; fractional_coords::Bool=t
     idx_to_label = Array{AbstractString, 1}(undef, crystal.atoms.n)
     for i = 1:crystal.atoms.n
         # print label and type symbol
-        @printf(cif_file, "%s\t%s\t", string(crystal.atoms.species[i]) *
+        @printf(cif_file, "%s    %s    ", string(crystal.atoms.species[i]) *
                 (number_atoms ? string(label_numbers[crystal.atoms.species[i]]) : ""),
                 crystal.atoms.species[i])
         # store label for this atom idx
@@ -897,15 +897,15 @@ function write_cif(crystal::Crystal, filename::String; fractional_coords::Bool=t
         # increment label
         label_numbers[crystal.atoms.species[i]] += 1
         if fractional_coords
-            @printf(cif_file, "%f\t%f\t%f", crystal.atoms.coords.xf[:, i]...)
+            @printf(cif_file, "%f    %f    %f", crystal.atoms.coords.xf[:, i]...)
         else
-            @printf(cif_file, "%f\t%f\t%f", (crystal.box.f_to_c * crystal.atoms.coords.xf[:, i])...)
+            @printf(cif_file, "%f    %f    %f", (crystal.box.f_to_c * crystal.atoms.coords.xf[:, i])...)
         end
         if has_charges(crystal)
             if high_precision_charges
-                @printf(cif_file, "\t%.10f\n", crystal.charges.q[i])
+                @printf(cif_file, "    %.10f\n", crystal.charges.q[i])
             else
-                @printf(cif_file, "\t%f\n", crystal.charges.q[i])
+                @printf(cif_file, "    %f\n", crystal.charges.q[i])
             end
         else
             @printf(cif_file, "\n")
@@ -923,7 +923,7 @@ function write_cif(crystal::Crystal, filename::String; fractional_coords::Bool=t
         for edge in collect(edges(crystal.bonds))
             dxf = crystal.atoms.coords.xf[:, edge.src] - crystal.atoms.coords.xf[:, edge.dst]
             nearest_image!(dxf)
-            @printf(cif_file, "%s\t%s\t%0.5f\n", idx_to_label[edge.src], idx_to_label[edge.dst],
+            @printf(cif_file, "%s    %s    %0.5f\n", idx_to_label[edge.src], idx_to_label[edge.dst],
                     norm(dxf))
         end
     end
