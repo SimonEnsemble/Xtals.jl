@@ -503,7 +503,7 @@ Loop through xtal and calculate any missing distances
 """
 function calc_missing_bond_distances!(xtal::Crystal)
     for bond in collect(edges(xtal.bonds))
-        if ismissing(get_prop(xtal.bonds, bond, :distance))
+        if !(:distance ∈ keys(props(xtal.bonds, bond)))
             i = src(bond)
             j = dst(bond)
             set_prop!(xtal.bonds, i, j, :distance, distance(xtal.atoms, xtal.box, i, j, true))
