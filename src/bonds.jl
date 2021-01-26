@@ -249,14 +249,14 @@ function infer_bonds!(crystal::Crystal, include_bonds_across_periodic_boundaries
     for i in 1:crystal.atoms.n
         # loop over every unique pair of atoms
         for j in i+1:crystal.atoms.n
-            bonded, distance = is_bonded(crystal, i, j, bonding_rules;
+            bonded, dist = is_bonded(crystal, i, j, bonding_rules;
                 include_bonds_across_periodic_boundaries=include_bonds_across_periodic_boundaries)
             if bonded
                 add_edge!(crystal.bonds, i, j)
-                set_prop!(crystal.bonds, i, j, :distance, distance)
+                set_prop!(crystal.bonds, i, j, :distance, dist)
                 if include_bonds_across_periodic_boundaries
                     set_prop!(bonds, i, j, :cross_boundary,
-                        !isapprox(distance(crystal.atoms, crystal.box, i, j, false), distance))
+                        !isapprox(distance(crystal.atoms, crystal.box, i, j, false), dist))
                 end
             end
         end
