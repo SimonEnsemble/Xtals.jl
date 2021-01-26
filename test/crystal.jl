@@ -3,6 +3,7 @@ module Crystal_Test
 using Xtals
 using LinearAlgebra
 using Test
+using MetaGraphs
 
 # for test only
 # if the multi sets are equal, then when you remove duplicates,
@@ -328,5 +329,16 @@ end
 
     println(xtal1)
     @test true
+    
+    # slicing
+    xtal = Crystal("SBMOF-1.cif")
+    infer_bonds!(xtal, false)
+    set_prop!(xtal.bonds, 1, 5, :bogus, "hi")
+    ids = [1, 2, 5]
+    xtal_sliced = xtal[ids]
+    @test xtal_sliced.atoms.species == xtal.atoms.species[ids]
+    @test isapprox(xtal_sliced.atoms.coords, xtal.atoms.coords[ids])
+    @test has_edge(xtal_sliced.bonds, 1, 3)
+    @test nv(xtal_sliced.bonds) == 3
 end
 end

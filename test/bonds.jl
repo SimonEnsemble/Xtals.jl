@@ -1,5 +1,8 @@
 module Bonds_test
 using Xtals, LightGraphs, Test, MetaGraphs
+if ! isdir("temp")
+    mkdir("temp")
+end
 
 function visual_check(xtal::String)
     c = Crystal(xtal)

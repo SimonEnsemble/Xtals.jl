@@ -1035,14 +1035,17 @@ function Base.isapprox(c1::Crystal, c2::Crystal; atol::Real=0.0)
 end
 
 
+# slicing of crystal by arrays of Int's
 function Base.getindex(crystal::Crystal,
-        ids::Union{BitArray{1}, Array{Int, 1}, UnitRange{Int}})
+                       ids::Union{Array{Int, 1}, UnitRange{Int}})
+    # mapping from old index to new index
     old_to_new = Dict(ids[i] => i for i in 1:length(ids))
     bonds = MetaGraph(length(ids))
-    for edge in collect(edges(crystal.bonds))
+    for edge in edges(crystal.bonds)
         if edge.src in ids && edge.dst in ids
-            add_edge!(bonds, old_to_new[edge.src], old_to_new[edge.dst],
-                props(bonds, edge.src, edge.dst))
+            add_edge!(bonds, old_to_new[edge.src], old_to_new[edge.dst])
+            set_props!(bonds, old_to_new[edge.src], old_to_new[edge.dst],
+                       props(bonds, edge.src, edge.dst))
         end
     end
     if crystal.charges.n == 0
@@ -1058,6 +1061,9 @@ function Base.getindex(crystal::Crystal,
     end
     return crystal
 end
+
+# slicing of crystal by arrays of Bit's (overload above)
+Base.getindex(crystal::Crystal, ids::Union{BitArray{1}}) = getindex(crystal, [i for i = 1:length(ids) if ids[i]])
 
 
 function Base.lastindex(crystal::Crystal)
