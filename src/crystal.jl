@@ -1041,7 +1041,7 @@ function Base.getindex(crystal::Crystal,
     bonds = MetaGraph(length(ids))
     for edge in collect(edges(crystal.bonds))
         if edge.src in ids && edge.dst in ids
-            make_edge!(bonds, old_to_new[edge.src], old_to_new[edge.dst],
+            add_edge!(bonds, old_to_new[edge.src], old_to_new[edge.dst],
                 props(bonds, edge.src, edge.dst))
         end
     end
@@ -1085,7 +1085,7 @@ function Base.:+(crystals::Crystal...; check_overlap::Bool=true)
         nf_n_atoms = crystal.atoms.n
         add_vertices!(crystal.bonds, nf_n_atoms)
         for edge in collect(edges(f.bonds))
-            make_edge!(crystal.bonds, nf_n_atoms + edge.src, nf_n_atoms + edge.dst,
+            add_edge!(crystal.bonds, nf_n_atoms + edge.src, nf_n_atoms + edge.dst,
                 props(f.bonds, edge))
         end
 
