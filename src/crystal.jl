@@ -318,7 +318,8 @@ function Crystal(filename::String;
                         line = split(lines[i])
                         atom_one_idx = label_num_to_idx[line[name_to_column["_geom_bond_atom_site_label_1"]]]
                         atom_two_idx = label_num_to_idx[line[name_to_column["_geom_bond_atom_site_label_2"]]]
-                        make_bond!(bonds, atom_one_idx, atom_two_idx, coords)
+                        add_edge!(bonds, atom_one_idx, atom_two_idx, :distance,
+                            distance(coords, box, atom_one_idx, atom_two_idx, true))
                         # iterate to next line in file
                         i += 1
                     end
@@ -1040,7 +1041,8 @@ function Base.getindex(crystal::Crystal,
     bonds = MetaGraph(length(ids))
     for edge in collect(edges(crystal.bonds))
         if edge.src in ids && edge.dst in ids
-            make_bond!(bonds, old_to_new[edge.src], old_to_new[edge.dst], crystal.atoms.coords)
+            add_edge!(bonds, old_to_new[edge.src], old_to_new[edge.dst],
+                props(bonds, edge.src, edge.dst))
         end
     end
     if crystal.charges.n == 0
@@ -1083,7 +1085,8 @@ function Base.:+(crystals::Crystal...; check_overlap::Bool=true)
         nf_n_atoms = crystal.atoms.n
         add_vertices!(crystal.bonds, nf_n_atoms)
         for edge in collect(edges(f.bonds))
-            make_bond!(crystal, nf_n_atoms + edge.src, nf_n_atoms + edge.dst)
+            add_edge!(crystal.bonds, nf_n_atoms + edge.src, nf_n_atoms + edge.dst,
+                props(f.bonds, edge))
         end
 
         crystal = Crystal(split(crystal.name, ".")[1] * "_" * split(f.name, ".")[1],
