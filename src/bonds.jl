@@ -256,7 +256,7 @@ function infer_bonds!(crystal::Crystal, include_bonds_across_periodic_boundaries
                 set_prop!(crystal.bonds, i, j, :distance, distance)
                 if include_bonds_across_periodic_boundaries
                     set_prop!(bonds, i, j, :cross_boundary,
-                        !isapprox(distance(coords, box, i, j, false), distance))
+                        !isapprox(distance(crystal.atoms, crystal.box, i, j, false), distance))
                 end
             end
         end
