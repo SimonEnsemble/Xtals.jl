@@ -162,25 +162,39 @@ end
 Checks to see if atoms `i` and `j` in `crystal` are bonded according to the `bonding_rules`.
 
 # Arguments
--`crystal::Crystal`: The crystal that bonds will be added to
--`i::Int`: Index of the first atom
--`j::Int`: Index of the second atom
--`bonding_rules::Array{BondingRule, 1}`: The array of bonding rules that will
+- `crystal::Crystal`: The crystal that bonds will be added to
+- `i::Int`: Index of the first atom
+- `j::Int`: Index of the second atom
+- `bonding_rules::Array{BondingRule, 1}`: The array of bonding rules that will
     be used to fill the bonding information. They are applied in the order that
     they appear.
--`include_bonds_across_periodic_boundaries::Bool`: Whether to check across the
+- `include_bonds_across_periodic_boundaries::Bool`: Whether to check across the
     periodic boundary when calculating bonds
 
 # Returns
--`are_atoms_bonded::Bool`: Whether atoms `i` and `j` are bonded according to `bonding_rules`
--`r::Float64`: The distance between atomic centers.  For non-bonded pairs, r=0.
-
+- `bonded_flag::Bool`: true iff atoms `i` and `j` are bonded according to `bonding_rules`
+- `r::Float64`: the periodic distance between atomic centers. For non-bonded pairs, `r=NaN`.
+- `cross_boundary_flag::Bool`: true iff the bond is across a periodic boundary.
 """
 function is_bonded(crystal::Crystal, i::Int64, j::Int64, bonding_rules::Array{BondingRule, 1};
-        include_bonds_across_periodic_boundaries::Bool=true)
+                   include_bonds_across_periodic_boundaries::Bool=true)
     species_i = crystal.atoms.species[i]
     species_j = crystal.atoms.species[j]
-    r = distance(crystal.atoms, crystal.box, i, j, include_bonds_across_periodic_boundaries)
+    # compute vector between the two atoms.
+    dxf = crystal.atoms.coords.xf[:, i] - crystal.atoms.coords.xf[:, j]
+    # apply nearest image convention
+    #  on the way, determine if the edge is in the home unit cell or across periodic boundary.
+    cross_boundary_flag = false
+    if include_bonds_across_periodic_boundaries
+        for i in eachindex(dxf)
+            @inbounds if abs(dxf[i]) > 0.5
+                cross_boundary_flag = true
+                @inbounds dxf[i] -= sign(dxf[i])
+            end
+        end
+    end
+    # convert dxf to Cartesian coordinates; compute periodic distance
+    r = norm(crystal.box.f_to_c * dxf)
     # loop over possible bonding rules
     for br in bonding_rules
         # determine if the atom species correspond to the species in `bonding_rules`
@@ -197,13 +211,15 @@ function is_bonded(crystal::Crystal, i::Int64, j::Int64, bonding_rules::Array{Bo
         if species_match
             # determine if the atoms are close enough to bond
             if br.min_dist < r && br.max_dist > r
-                return true, r
+                return true, r, cross_boundary_flag
             else
-                return false, 0. # found relevant bonding rule, don't apply others
+                # return (don't continue!) b/c we found relevant bonding rule, don't apply others
+                return false, NaN, cross_boundary_flag
             end
         end
     end
-    return false, 0. # no bonding rule applied
+    # no bonding rule was applied; therefore not bonded.
+    return false, NaN, cross_boundary_flag
 end
 
 
@@ -222,7 +238,7 @@ end
 
 """
     infer_bonds!(crystal, include_bonds_across_periodic_boundaries,
-                    bonding_rules=[BondingRule(:H, :*, 0.4, 1.2), BondingRule(:*, :*, 0.4, 1.9)])
+                 bonding_rules=nothing)
 
 Populate the bonds in the crystal object based on the bonding rules. If a
 pair doesn't have a suitable rule then they will not be considered bonded.
@@ -236,28 +252,22 @@ The bonding rules are hierarchical, i.e. the first bonding rule takes precedence
 # Arguments
 -`crystal::Crystal`: The crystal that bonds will be added to
 -`include_bonds_across_periodic_boundaries::Bool`: Whether to check across the periodic boundary when calculating bonds
--`bonding_rules::Array{BondingRule, 1}`: The array of bonding rules that will be used to fill the bonding information. They are applied in the order that they appear.
--`covalent_radii::Dict{Symbol, Dict{Symbol, Float64}}`: Cordero parameters to use for calculating bonding rules. See [`covalent_radii`](@ref)
--`σ::Float64`: Number of Cordero estimated standard deviations to use if calculating bonding rules from covalent radii.
--`min_tol::Float64`: Minimum covalent radius tolerance if calculating bonding rules from covalent radii.
+-`bonding_rules::Union{Array{BondingRule, 1}, Nothing}=nothing`: The array of bonding rules that will be used to fill the bonding information. They are applied in the order that they appear. if `nothing`, default bonding rules will be applied; see [`get_bonding_rules`](@ref)
 """
 function infer_bonds!(crystal::Crystal, include_bonds_across_periodic_boundaries::Bool;
-        bonding_rules::Union{Array{BondingRule, 1}, Nothing}=nothing)
+                      bonding_rules::Union{Array{BondingRule, 1}, Nothing}=nothing)
     @assert ne(crystal.bonds) == 0 @sprintf("The crystal %s already has bonds. Remove them with the `remove_bonds!` function before inferring new ones.", crystal.name)
     bonding_rules = bonding_rules == nothing ? get_bonding_rules() : bonding_rules
     # loop over every atom
     for i in 1:crystal.atoms.n
         # loop over every unique pair of atoms
         for j in i+1:crystal.atoms.n
-            bonded, dist = is_bonded(crystal, i, j, bonding_rules;
-                include_bonds_across_periodic_boundaries=include_bonds_across_periodic_boundaries)
-            if bonded
+            bonding_flag, r, cross_boundary_flag = is_bonded(crystal, i, j, bonding_rules;
+                                                             include_bonds_across_periodic_boundaries=include_bonds_across_periodic_boundaries)
+            if bonding_flag
                 add_edge!(crystal.bonds, i, j)
-                set_prop!(crystal.bonds, i, j, :distance, dist)
-                if include_bonds_across_periodic_boundaries
-                    set_prop!(crystal.bonds, i, j, :cross_boundary,
-                        !isapprox(distance(crystal.atoms, crystal.box, i, j, false), dist))
-                end
+                set_prop!(crystal.bonds, i, j, :distance, r)
+                set_prop!(crystal.bonds, i, j, :cross_boundary, cross_boundary_flag)
             end
         end
     end
