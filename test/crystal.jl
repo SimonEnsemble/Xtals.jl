@@ -340,5 +340,8 @@ end
     @test isapprox(xtal_sliced.atoms.coords, xtal.atoms.coords[ids])
     @test has_edge(xtal_sliced.bonds, 1, 3)
     @test nv(xtal_sliced.bonds) == 3
+    ids = falses(xtal.atoms.n)
+    ids[1] = ids[2] = ids[5] = true
+    @test isapprox(xtal_sliced, xtal[ids])
 end
 end

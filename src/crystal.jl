@@ -1031,7 +1031,8 @@ function Base.isapprox(c1::Crystal, c2::Crystal; atol::Real=0.0)
     sym1 = c1.symmetry
     sym2 = c2.symmetry
     symmetry_flag = (sym1.is_p1 == sym2.is_p1) && (sym1.space_group == sym1.space_group) && (sym1.operations == sym2.operations)
-    return box_flag && charges_flag && atoms_flag && symmetry_flag
+    bonds_flag = c1.bonds == c2.bonds
+    return box_flag && charges_flag && atoms_flag && symmetry_flag && bonds_flag
 end
 
 
