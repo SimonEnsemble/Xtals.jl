@@ -952,7 +952,7 @@ function remove_duplicate_atoms_and_charges(crystal::Crystal, r_tol::Float64=0.1
     end
     atoms = remove_duplicates(crystal.atoms, crystal.box, true, r_tol=r_tol, q_tol=q_tol)
     charges = remove_duplicates(crystal.charges, crystal.box, true, r_tol=r_tol, q_tol=q_tol)
-    return Crystal(crystal.name, crystal.box, atoms, charges, MetaGraph(crystal.atoms.n), crystal.symmetry)
+    return Crystal(crystal.name, crystal.box, atoms, charges, MetaGraph(atoms.n), crystal.symmetry)
 end
 
 inside(crystal::Crystal) = inside(crystal.atoms.coords) && inside(crystal.charges.coords)
