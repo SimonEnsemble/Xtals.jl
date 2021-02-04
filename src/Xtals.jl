@@ -115,7 +115,7 @@ export
     # crystal.jl
     Crystal, strip_numbers_from_atom_labels!, assign_charges,
     chemical_formula, molecular_weight, crystal_density, write_cif, has_charges,
-    apply_symmetry_operations,
+    apply_symmetry_operations, assert_P1_symmetry,
 
     # bonds.jl
     infer_bonds!, write_bond_information, BondingRule, bond_sanity_check,
