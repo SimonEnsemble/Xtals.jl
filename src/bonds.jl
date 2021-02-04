@@ -477,7 +477,7 @@ Writes the bond information from a crystal to the selected filename.
 - `bond_filter::Pair{Symbol, Function}`: a key-value pair of an edge attribute and a predicate function. Bonds with attributes that cause the predicate to return false are excluded from writing.
 """
 function write_bond_information(crystal::Crystal, filename::String;
-        center_at_origin::Bool=false, bond_filter::Pair{Symbol, F}=:FILTER=>:NOTHING) where F
+        center_at_origin::Bool=false, bond_filter::Union{Pair{Symbol, F}, Nothing}=nothing) where F
     if ne(crystal.bonds) == 0
         @warn("Crystal %s has no bonds present. To get bonding information for this
         crystal run `infer_bonds!` with an array of bonding rules\n", crystal.name)
@@ -486,42 +486,40 @@ function write_bond_information(crystal::Crystal, filename::String;
         filename *= ".vtk"
     end
     # filter bonds
-    xtal = deepcopy(crystal)
-    if bond_filter ≠ (:FILTER=>:NOTHING)
+    idx_keep_bonds = trues(ne(crystal.bonds))
+    if !isnothing(bond_filter)
         attr = bond_filter[1]
         pred = bond_filter[2]
-        for bond ∈ edges(xtal.bonds)
-            prop = get_prop(xtal.bonds, bond, attr)
+        for (b, bond) ∈ enumerate(edges(crystal.bonds))
+            prop = get_prop(crystal.bonds, bond, attr)
             if !pred(prop)
-                rem_edge!(xtal.bonds, bond)
+                idx_keep_bonds[b] = false
             end
         end
     end
     # write output
     vtk_file = open(filename, "w")
     @printf(vtk_file, "# vtk DataFile Version 2.0\n%s bond information\nASCII\n
-        DATASET POLYDATA\nPOINTS %d double\n", xtal.name, nv(xtal.bonds))
-    for i = 1:xtal.atoms.n
+        DATASET POLYDATA\nPOINTS %d double\n", crystal.name, nv(crystal.bonds))
+    for i = 1:crystal.atoms.n
         if center_at_origin
-            @printf(vtk_file, "%0.5f\t%0.5f\t%0.5f\n", (xtal.box.f_to_c *
-                (xtal.atoms.coords.xf[:, i] - [0.5, 0.5, 0.5]))...)
+            @printf(vtk_file, "%0.5f\t%0.5f\t%0.5f\n", (crystal.box.f_to_c *
+                (crystal.atoms.coords.xf[:, i] - [0.5, 0.5, 0.5]))...)
         else
-            @printf(vtk_file, "%0.5f\t%0.5f\t%0.5f\n", (xtal.box.f_to_c *
-                xtal.atoms.coords.xf[:, i])...)
+            @printf(vtk_file, "%0.5f\t%0.5f\t%0.5f\n", (crystal.box.f_to_c *
+                crystal.atoms.coords.xf[:, i])...)
         end
     end
-    @printf(vtk_file, "\nLINES %d %d\n", ne(xtal.bonds), 3 * ne(xtal.bonds))
-    for edge in collect(edges(xtal.bonds))
-        @printf(vtk_file, "2\t%d\t%d\n", edge.src - 1, edge.dst - 1)
+    @printf(vtk_file, "\nLINES %d %d\n", sum(idx_keep_bonds), 3 * sum(idx_keep_bonds))
+    for (e, edge) in enumerate(edges(crystal.bonds))
+        if idx_keep_bonds[e]
+            @printf(vtk_file, "2\t%d\t%d\n", edge.src - 1, edge.dst - 1)
+        end
     end
     close(vtk_file)
-    @printf("Saving bond information for crystal %s to %s.\n", xtal.name,
+    @printf("Saving bond information for crystal %s to %s.\n", crystal.name,
         joinpath(pwd(), filename))
 end
-
-write_bond_information(crystal::Crystal; center_at_origin::Bool=false) =
-    write_bond_information(crystal, split(crystal.name, ".")[1] * "_bonds.vtk",
-        center_at_origin=center_at_origin)
 
 
 """
