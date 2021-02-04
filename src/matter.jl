@@ -67,8 +67,6 @@ origin(T::DataType) = T([0.0, 0.0, 0.0])
 """
     translate_by!(coords, dx)
     translate_by!(coords, dx, box)
-    translate_by!(molecule, dx)
-    translate_by!(molecule, dx, box)
 
 translate `coords` by the vector `dx`. that is, add the vector `dx`.
 
@@ -79,9 +77,6 @@ modifies coordinates in place.
 `box` is needed when mixing `Frac` and `Cart` coords.
 
 note that periodic boundary conditions are *not* subsequently applied here.
-
-if applied to a `molecule::Molecule`, the coords of atoms, charges, and center of mass
-are all translated.
 """
 function translate_by!(coords::Cart, dx::Cart)
     coords.x .= broadcast(+, coords.x, dx.x)
@@ -195,10 +190,8 @@ Base.lastindex(charges::Charges) = charges.n
 """
     nc = net_charge(charges)
     nc = net_charge(crystal)
-    nc = net_charge(molecule)
 
-find the sum of charges in `charges::Charges` or charges in `crystal::Crystal` or `molecule::Molecule`.
-(if there are no charges, the net charge is zero.)
+find the sum of charges in `charges::Charges`. (if there are no charges, the net charge is zero.)
 """
 function net_charge(charges::Charges)
     if charges.n == 0

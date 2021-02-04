@@ -101,7 +101,7 @@ export
     cartesian_coords,
 
     # distance.jl
-    nearest_image!, distance, overlap, remove_duplicates,
+    nearest_image!, distance, overlap, remove_duplicates, pairwise_distances,
 
     # misc.jl
     read_xyz, write_xyz, read_mol, write_mol2,
