@@ -8,7 +8,7 @@ Create a dictionary with the Cordero covalent radius and estimated standard devi
 Create a dictionary with the Cordero covalent radius and estimated standard deviation for each element specified in `PATH_TO_DATA/my_params.csv`
 
 # Returns
--`covalent_radii::Dict{Symbol, Dict{Symbol, Float64}}`: A dictionary with elements as keys and dictionaries of respective cordero covalent radii and e.s.d.s as the values.
+- `covalent_radii::Dict{Symbol, Dict{Symbol, Float64}}`: A dictionary with elements as keys and dictionaries of respective cordero covalent radii and e.s.d.s as the values.
 
 # Example
 ```julia

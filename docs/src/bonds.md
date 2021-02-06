@@ -41,6 +41,8 @@ bond information.
 
 ```@docs
 BondingRule
+Xtals.bondingrules
+Xtals.get_covalent_radii
 get_bonding_rules
 set_bonding_rules
 add_bonding_rules
