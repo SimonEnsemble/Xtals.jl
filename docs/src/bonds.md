@@ -39,8 +39,12 @@ and crystals.  The `read_bonds_from_file` keyword argument for [`Crystal`](@ref)
 enables loading these bonds when reading the data.  [`read_mol`](@ref) also returns
 bond information.
 
+## Detailed Docs
+
 ```@docs
 BondingRule
+Xtals.bondingrules
+Xtals.get_covalent_radii
 get_bonding_rules
 set_bonding_rules
 add_bonding_rules

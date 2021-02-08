@@ -1,5 +1,8 @@
 module Bonds_test
 using Xtals, LightGraphs, Test, MetaGraphs
+if ! isdir("temp")
+    mkdir("temp")
+end
 
 function visual_check(xtal::String)
     c = Crystal(xtal)
@@ -143,6 +146,11 @@ end
     xtal = Crystal("SBMOF-1.cif")
     write_bond_information(xtal, "temp/nothing.vtk", center_at_origin=true)
     @test isfile("temp/nothing.vtk")
+    xtal = Crystal("IRMOF-1.cif")
+    infer_bonds!(xtal, true)
+    write_xyz(xtal, "temp/IRMOF-1.xyz")
+    write_bond_information(xtal, "temp/all_bonds.vtk")
+    write_bond_information(xtal, "temp/no_pb.vtk", bond_filter=:cross_boundary=>p->!p)
 end
 end
 # visual_check

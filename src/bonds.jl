@@ -6,10 +6,10 @@
 A rule for determining if two atoms within a crystal are bonded.
 
 # Attributes
--`species_i::Symbol`: One of the atoms types for this bond rule
--`species_j::Symbol`: The other atom type for this bond rule
--`min_dist`: The minimum distance between the atoms for bonding to occur
--`max_dist`: The maximum distance between the atoms for bonding to occur
+- `species_i::Symbol`: One of the atoms types for this bond rule
+- `species_j::Symbol`: The other atom type for this bond rule
+- `min_dist`: The minimum distance between the atoms for bonding to occur
+- `max_dist`: The maximum distance between the atoms for bonding to occur
 """
 struct BondingRule
     species_i::Symbol
@@ -31,28 +31,18 @@ BONDING_RULES = BondingRule[]
 
 """
     bond_rules = bondingrules()
-
-Calculates bonding rules. Use `append!` and/or `prepend!` to add to the default bonding rules.
-Default rules are determined from Cordero covalent radius parameters.
-
-# Example
-```
-bond_rules = bondingrules()
-prepend!(bond_rules, BondingRule(:Cu, :*, 0.1, 2.6))
-```
-
     bond_rules = bondingrules(covalent_radii=get_covalent_radii(), σ=3., min_tol=0.25)
 
 Returns a set of bonding rules based on the given Cordero parameters and tolerances.
 
 # Arguments
 
-`covalent_radii::Union{Dict{Symbol, Dict{Symbol, Float64}}, Nothing}`: Covalent radii and estimated uncertainty. See [`get_covalent_radii()`](@ref)
-`σ::Float`: Number of Cordero estimated standard deviations to use for tolerance on covalent radii.
-`min_tol::Float`: Minimum tolerance for covalent radii.
+- `covalent_radii::Union{Dict{Symbol, Dict{Symbol, Float64}}, Nothing}`: Covalent radii and estimated uncertainty. See [`get_covalent_radii()`](@ref)
+- `σ::Float`: Number of Cordero estimated standard deviations to use for tolerance on covalent radii.
+- `min_tol::Float`: Minimum tolerance for covalent radii.
 
 # Returns
--`bondingrules::Array{BondingRule, 1}`: The default bonding rules: `[BondingRule(:*, :*, 0.4, 1.2), BondingRule(:*, :*, 0.4, 1.9)]`
+- `bondingrules::Array{BondingRule, 1}`: The default bonding rules: `[BondingRule(:*, :*, 0.4, 1.2), BondingRule(:*, :*, 0.4, 1.9)]`
 """
 function bondingrules(;
         covalent_radii::Union{Dict{Symbol, Dict{Symbol, Float64}}, Nothing}=nothing,
@@ -82,7 +72,8 @@ end
 
 """
     get_bonding_rules()
-Returns the current global bonding rule set.
+Returns the current global bonding rule set.  Each [`BondingRule`](@ref) specifies the distance interval over which a specific pair of atomic species are to be considered chemically bonded.
+The default set of bonding rules is built via [`bondingrules`](@ref) using the default parameters at package initialization.
 """
 function get_bonding_rules()::Array{BondingRule}
     return BONDING_RULES
@@ -162,25 +153,39 @@ end
 Checks to see if atoms `i` and `j` in `crystal` are bonded according to the `bonding_rules`.
 
 # Arguments
--`crystal::Crystal`: The crystal that bonds will be added to
--`i::Int`: Index of the first atom
--`j::Int`: Index of the second atom
--`bonding_rules::Array{BondingRule, 1}`: The array of bonding rules that will
+- `crystal::Crystal`: The crystal that bonds will be added to
+- `i::Int`: Index of the first atom
+- `j::Int`: Index of the second atom
+- `bonding_rules::Array{BondingRule, 1}`: The array of bonding rules that will
     be used to fill the bonding information. They are applied in the order that
     they appear.
--`include_bonds_across_periodic_boundaries::Bool`: Whether to check across the
+- `include_bonds_across_periodic_boundaries::Bool`: Whether to check across the
     periodic boundary when calculating bonds
 
 # Returns
--`are_atoms_bonded::Bool`: Whether atoms `i` and `j` are bonded according to `bonding_rules`
--`r::Float64`: The distance between atomic centers.  For non-bonded pairs, r=0.
-
+- `bonded_flag::Bool`: true iff atoms `i` and `j` are bonded according to `bonding_rules`
+- `r::Float64`: the periodic distance between atomic centers. For non-bonded pairs, `r=NaN`.
+- `cross_boundary_flag::Bool`: true iff the bond is across a periodic boundary.
 """
 function is_bonded(crystal::Crystal, i::Int64, j::Int64, bonding_rules::Array{BondingRule, 1};
-        include_bonds_across_periodic_boundaries::Bool=true)
+                   include_bonds_across_periodic_boundaries::Bool=true)
     species_i = crystal.atoms.species[i]
     species_j = crystal.atoms.species[j]
-    r = distance(crystal.atoms, crystal.box, i, j, include_bonds_across_periodic_boundaries)
+    # compute vector between the two atoms.
+    dxf = crystal.atoms.coords.xf[:, i] - crystal.atoms.coords.xf[:, j]
+    # apply nearest image convention
+    #  on the way, determine if the edge is in the home unit cell or across periodic boundary.
+    cross_boundary_flag = false
+    if include_bonds_across_periodic_boundaries
+        for i in eachindex(dxf)
+            @inbounds if abs(dxf[i]) > 0.5
+                cross_boundary_flag = true
+                @inbounds dxf[i] -= sign(dxf[i])
+            end
+        end
+    end
+    # convert dxf to Cartesian coordinates; compute periodic distance
+    r = norm(crystal.box.f_to_c * dxf)
     # loop over possible bonding rules
     for br in bonding_rules
         # determine if the atom species correspond to the species in `bonding_rules`
@@ -197,13 +202,15 @@ function is_bonded(crystal::Crystal, i::Int64, j::Int64, bonding_rules::Array{Bo
         if species_match
             # determine if the atoms are close enough to bond
             if br.min_dist < r && br.max_dist > r
-                return true, r
+                return true, r, cross_boundary_flag
             else
-                return false, 0. # found relevant bonding rule, don't apply others
+                # return (don't continue!) b/c we found relevant bonding rule, don't apply others
+                return false, NaN, cross_boundary_flag
             end
         end
     end
-    return false, 0. # no bonding rule applied
+    # no bonding rule was applied; therefore not bonded.
+    return false, NaN, cross_boundary_flag
 end
 
 
@@ -221,8 +228,7 @@ end
 
 
 """
-    infer_bonds!(crystal, include_bonds_across_periodic_boundaries,
-                    bonding_rules=[BondingRule(:H, :*, 0.4, 1.2), BondingRule(:*, :*, 0.4, 1.9)])
+    infer_bonds!(crystal, include_bonds_across_periodic_boundaries, bonding_rules=nothing)
 
 Populate the bonds in the crystal object based on the bonding rules. If a
 pair doesn't have a suitable rule then they will not be considered bonded.
@@ -234,30 +240,24 @@ as long as they are close enough.
 The bonding rules are hierarchical, i.e. the first bonding rule takes precedence over the latter ones.
 
 # Arguments
--`crystal::Crystal`: The crystal that bonds will be added to
--`include_bonds_across_periodic_boundaries::Bool`: Whether to check across the periodic boundary when calculating bonds
--`bonding_rules::Array{BondingRule, 1}`: The array of bonding rules that will be used to fill the bonding information. They are applied in the order that they appear.
--`covalent_radii::Dict{Symbol, Dict{Symbol, Float64}}`: Cordero parameters to use for calculating bonding rules. See [`covalent_radii`](@ref)
--`σ::Float64`: Number of Cordero estimated standard deviations to use if calculating bonding rules from covalent radii.
--`min_tol::Float64`: Minimum covalent radius tolerance if calculating bonding rules from covalent radii.
+- `crystal::Crystal`: The crystal that bonds will be added to
+- `include_bonds_across_periodic_boundaries::Bool`: Whether to check across the periodic boundary when calculating bonds
+- `bonding_rules::Union{Array{BondingRule, 1}, Nothing}=nothing`: The array of bonding rules that will be used to fill the bonding information. They are applied in the order that they appear. if `nothing`, default bonding rules will be applied; see [`get_bonding_rules`](@ref)
 """
 function infer_bonds!(crystal::Crystal, include_bonds_across_periodic_boundaries::Bool;
-        bonding_rules::Union{Array{BondingRule, 1}, Nothing}=nothing)
+                      bonding_rules::Union{Array{BondingRule, 1}, Nothing}=nothing)
     @assert ne(crystal.bonds) == 0 @sprintf("The crystal %s already has bonds. Remove them with the `remove_bonds!` function before inferring new ones.", crystal.name)
     bonding_rules = bonding_rules == nothing ? get_bonding_rules() : bonding_rules
     # loop over every atom
     for i in 1:crystal.atoms.n
         # loop over every unique pair of atoms
         for j in i+1:crystal.atoms.n
-            bonded, dist = is_bonded(crystal, i, j, bonding_rules;
-                include_bonds_across_periodic_boundaries=include_bonds_across_periodic_boundaries)
-            if bonded
+            bonding_flag, r, cross_boundary_flag = is_bonded(crystal, i, j, bonding_rules;
+                                                             include_bonds_across_periodic_boundaries=include_bonds_across_periodic_boundaries)
+            if bonding_flag
                 add_edge!(crystal.bonds, i, j)
-                set_prop!(crystal.bonds, i, j, :distance, dist)
-                if include_bonds_across_periodic_boundaries
-                    set_prop!(crystal.bonds, i, j, :cross_boundary,
-                        !isapprox(distance(crystal.atoms, crystal.box, i, j, false), dist))
-                end
+                set_prop!(crystal.bonds, i, j, :distance, r)
+                set_prop!(crystal.bonds, i, j, :cross_boundary, cross_boundary_flag)
             end
         end
     end
@@ -273,19 +273,19 @@ A neighborhood is defined as all atoms within a distance `r` from atom `i`.
 The distance matrix `dm` is used to find the distances of all other atoms in the crystal from atom `i`.
 
 # Arguments
--`crystal::Crystal`: crystal structure
--`i::Int`: Index of the atom (in `crystal`) which the neighborhood is to be characterized.
--`r::Float64`: The maximum distance the neighborhood will be characterized.
--`dm::Array{Float64, 2}`: The distance matrix, see [`distance_matrix`](@ref)
+- `crystal::Crystal`: crystal structure
+- `i::Int`: Index of the atom (in `crystal`) which the neighborhood is to be characterized.
+- `r::Float64`: The maximum distance the neighborhood will be characterized.
+- `dm::Array{Float64, 2}`: The distance matrix, see [`distance_matrix`](@ref)
 
 # Returns
--`ids_neighbors::Array{Int, 1}`: indices of `crystal.atoms` within the neighborhood of atom `i`.
--`xs::Array{Array{Float64, 1}, 1}`: array of Cartesian positions of the atoms surrounding atom `i`.
+- `ids_neighbors::Array{Int, 1}`: indices of `crystal.atoms` within the neighborhood of atom `i`.
+- `xs::Array{Array{Float64, 1}, 1}`: array of Cartesian positions of the atoms surrounding atom `i`.
     The nearest image convention has been applied to find the nearest periodic image. Also, the coordinates of atom `i`
     have been subtracted off from these coordinates so that atom `i` lies at the origin of this new coordinate system.
     The first vector in `xs` is `[0, 0, 0]` corresponding to atom `i`.
     The choice of type is for the Voronoi decomposition in Scipy.
--`rs::Array{Float64, 1}`: list of distances of the neighboring atoms from atom `i`.
+- `rs::Array{Float64, 1}`: list of distances of the neighboring atoms from atom `i`.
 """
 function neighborhood(crystal::Crystal, i::Int, r::Float64, dm::Array{Float64, 2})
     # get indices of atoms within a distance r of atom i
@@ -318,11 +318,11 @@ end
 Of the neighboring atoms, find those that share a Voronoi face.
 
 # Arguments
--`ids_neighbors::Array{Int, 1}`: indices of atoms within the neighborhood of a specific atom.
--`xs::Array{Array{Float64, 1}, 1}`: array of Cartesian position of the atoms within the neighborhood of a specific atom, relative to the specific atom.
+- `ids_neighbors::Array{Int, 1}`: indices of atoms within the neighborhood of a specific atom.
+- `xs::Array{Array{Float64, 1}, 1}`: array of Cartesian position of the atoms within the neighborhood of a specific atom, relative to the specific atom.
 
 # Returns
--`ids_shared_voro_face::Array{Int, 1}`: indices of atoms that share a Voronoi face with a specific atom
+- `ids_shared_voro_face::Array{Int, 1}`: indices of atoms that share a Voronoi face with a specific atom
 """
 function _shared_voronoi_faces(ids_neighbors::Array{Int,1}, xs::Array{Array{Float64,1},1})
     scipy = pyimport("scipy.spatial")
@@ -347,16 +347,16 @@ end
 Returns the ids of atoms that are bonded to atom `i` by determining bonds using a Voronoi method and covalent radius data (see [`covalent_radii`](@ref))
 
 # Arguments
--`crystal::Crystal`: Crystal structure in which the bonded atoms will be determined
--`i::Int`: Index of the atom we want to determine the bonds of
--`dm::Array{Float64, 2}`: The distance matrix, see [`distance_matrix`](@ref)
--`r::Float64`: The maximum distance used to determine the neighborhood of atom `i`
--`σ::Float64`: Sets the number of e.s.d.s for the margin of error on covalent radii
--`covalent_radii::Dict{Symbol, Dict{Symbol, Float64}}`: Cordero parameter dictionary. See [`covalent_radii`](@ref)
--`min_tol::Float64`: The minimum covalent radius tolerance in Å
+- `crystal::Crystal`: Crystal structure in which the bonded atoms will be determined
+- `i::Int`: Index of the atom we want to determine the bonds of
+- `dm::Array{Float64, 2}`: The distance matrix, see [`distance_matrix`](@ref)
+- `r::Float64`: The maximum distance used to determine the neighborhood of atom `i`
+- `σ::Float64`: Sets the number of e.s.d.s for the margin of error on covalent radii
+- `covalent_radii::Dict{Symbol, Dict{Symbol, Float64}}`: Cordero parameter dictionary. See [`covalent_radii`](@ref)
+- `min_tol::Float64`: The minimum covalent radius tolerance in Å
 
 # Returns
--`ids_bonded::Array{Int, 1}`: A list of indices of atoms bonded to atom `i`
+- `ids_bonded::Array{Int, 1}`: A list of indices of atoms bonded to atom `i`
 """
 function bonded_atoms(crystal::Crystal, i::Int, dm::Array{Float64, 2},
         r::Float64, σ::Float64, min_tol::Float64,
@@ -391,12 +391,12 @@ Infers bonds by first finding which atoms share a Voronoi face, and then bond th
  between them is less than the sum of the covalent radius of the two atoms (plus a tolerance).
 
 # Arguments
--`crystal::Crystal`: The crystal structure
--`include_bonds_across_periodic_boundaries::Bool`: Whether to check across the periodic boundaries
--`r::Float`: voronoi radius, Å
--`σ::Float`: number of estimated standard deviations to use for covalent radius tolerance
--`min_tol::Float`: minimum tolerance for calculated bond distances, Å
--`covalent_radii::Dict{Symbol, Dict{Symbol, Float64}}`: See [`covalent_radii`](@ref)
+- `crystal::Crystal`: The crystal structure
+- `include_bonds_across_periodic_boundaries::Bool`: Whether to check across the periodic boundaries
+- `r::Float`: voronoi radius, Å
+- `σ::Float`: number of estimated standard deviations to use for covalent radius tolerance
+- `min_tol::Float`: minimum tolerance for calculated bond distances, Å
+- `covalent_radii::Dict{Symbol, Dict{Symbol, Float64}}`: See [`covalent_radii`](@ref)
 """
 function infer_geometry_based_bonds!(crystal::Crystal,
         include_bonds_across_periodic_boundaries::Bool;
@@ -455,16 +455,19 @@ end
 """
     write_bond_information(crystal, filename)
     write_bond_information(crystal, center_at_origin=false)
+    write_bond_information(xtal, filename, :cross_boundary => p -> p, "bonds.vtk") # cross boundary bonds only
+    write_bond_information(xtal, filename, :distance => d -> d < 1.0, "bonds.vtk") # distance less than 1.0
 
 Writes the bond information from a crystal to the selected filename.
 
 # Arguments
--`crystal::Crystal`: The crystal to have its bonds written to a vtk file
--`filename::String`: The filename the bond information will be saved to. If left out, will default to crystal name.
+- `crystal::Crystal`: The crystal to have its bonds written to a vtk file
+- `filename::String`: The filename the bond information will be saved to. If left out, will default to crystal name.
 - `center_at_origin::Bool`: center the coordinates at the origin of the crystal
+- `bond_filter::Pair{Symbol, Function}`: a key-value pair of an edge attribute and a predicate function. Bonds with attributes that cause the predicate to return false are excluded from writing.
 """
 function write_bond_information(crystal::Crystal, filename::String;
-        center_at_origin::Bool=false)
+        center_at_origin::Bool=false, bond_filter::Union{Pair{Symbol, F}, Nothing}=nothing) where F
     if ne(crystal.bonds) == 0
         @warn("Crystal %s has no bonds present. To get bonding information for this
         crystal run `infer_bonds!` with an array of bonding rules\n", crystal.name)
@@ -472,6 +475,19 @@ function write_bond_information(crystal::Crystal, filename::String;
     if ! occursin(".vtk", filename)
         filename *= ".vtk"
     end
+    # filter bonds
+    idx_keep_bonds = trues(ne(crystal.bonds))
+    if !isnothing(bond_filter)
+        attr = bond_filter[1]
+        pred = bond_filter[2]
+        for (b, bond) ∈ enumerate(edges(crystal.bonds))
+            prop = get_prop(crystal.bonds, bond, attr)
+            if !pred(prop)
+                idx_keep_bonds[b] = false
+            end
+        end
+    end
+    # write output
     vtk_file = open(filename, "w")
     @printf(vtk_file, "# vtk DataFile Version 2.0\n%s bond information\nASCII\n
         DATASET POLYDATA\nPOINTS %d double\n", crystal.name, nv(crystal.bonds))
@@ -484,18 +500,16 @@ function write_bond_information(crystal::Crystal, filename::String;
                 crystal.atoms.coords.xf[:, i])...)
         end
     end
-    @printf(vtk_file, "\nLINES %d %d\n", ne(crystal.bonds), 3 * ne(crystal.bonds))
-    for edge in collect(edges(crystal.bonds))
-        @printf(vtk_file, "2\t%d\t%d\n", edge.src - 1, edge.dst - 1)
+    @printf(vtk_file, "\nLINES %d %d\n", sum(idx_keep_bonds), 3 * sum(idx_keep_bonds))
+    for (e, edge) in enumerate(edges(crystal.bonds))
+        if idx_keep_bonds[e]
+            @printf(vtk_file, "2\t%d\t%d\n", edge.src - 1, edge.dst - 1)
+        end
     end
     close(vtk_file)
     @printf("Saving bond information for crystal %s to %s.\n", crystal.name,
         joinpath(pwd(), filename))
 end
-
-write_bond_information(crystal::Crystal; center_at_origin::Bool=false) =
-    write_bond_information(crystal, split(crystal.name, ".")[1] * "_bonds.vtk",
-        center_at_origin=center_at_origin)
 
 
 """
