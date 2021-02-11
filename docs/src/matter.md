@@ -15,10 +15,10 @@ e.g. within a crystal.
 construct coordinates of `n` particles by passing a `n` by `3` array
 ```julia
 coord = Cart([1.0, 2.0, 5.0])  # construct cartesian coordinate of a particle
-coord.x                        # 3 x 1 array, [1, 2, 3]
+coord.x                        # 3 x 1 array, [1.0, 2.0, 5.0]
 
 coord = Frac([0.1, 0.2, 0.5])  # construct fractional coordinate of a particle
-coord.xf                       # 3 x 1 array, [0.1, 0.2, 0.3]
+coord.xf                       # 3 x 1 array, [0.1, 0.2, 0.5]
 ```
 
 the coordinates of multiple particles are stored column-wise:
