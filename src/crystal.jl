@@ -472,8 +472,6 @@ function Crystal(filename::String;
     return crystal
 end
 
-overlap(crystal::Crystal) = overlap(crystal.atoms.coords, crystal.box, true)
-
 function _check_overlap(crystal::Crystal)
     overlap_flag, overlapping_pairs = overlap(crystal)
     if overlap_flag
@@ -588,6 +586,9 @@ neutral(crystal::Crystal, tol::Float64=1e-5) = neutral(crystal.charges, tol)
 """
 has_charges(crystal::Crystal) = crystal.charges.n > 0
 
+# e.g. `:Ca23` -> `:Ca`
+strip_number_from_label(atom_label::Symbol) = Symbol(atom_label[1:findfirst(.! isletter.([c for c in atom_label])) - 1])
+
 """
     strip_numbers_from_atom_labels!(crystal)
 
@@ -602,14 +603,7 @@ e.g. C12 --> C
 """
 function strip_numbers_from_atom_labels!(crystal::Crystal)
     for i = 1:crystal.atoms.n
-        # atom species in string format
-		species = string(crystal.atoms.species[i])
-		for j = 1:length(species)
-			if ! isletter(species[j])
-                crystal.atoms.species[i] = Symbol(species[1:j-1])
-				break
-			end
-		end
+        crystal.atoms.species[i] = strip_number_from_label(crystal.atoms.species[i])
 	end
 end
 

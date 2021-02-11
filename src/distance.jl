@@ -83,31 +83,43 @@ end
 pairwise_distances(coords::Cart, box::Box, apply_pbc::Bool) = pairwise_distances(Frac(coords, box), box, apply_pbc)
 
 """
-    overlap_flag, overlap_pairs = overlap(frac_coords, box, apply_pbc; tol=0.1)
-    overlap_flag, overlap_pairs = overlap(crystal)
+    overlap_flag, overlap_pairs = overlap(crystal; use_covalent_radii=true, tol=0.1, apply_pbc=true)
 
-determine if any coordinates overlap. here, two coordinates are defined to overlap if their (Cartesian) distance
-is less than `tol`.
+determine if any atoms in a crystal overlap. 
+here, two atoms are defined to overlap if their (Cartesian) distance
+* case `use_covalent_radii=true`: is less than the sum of the covalent radii of the two atoms minus `tol`
+* case `use_covalent_radii=false`: is less than `tol`
 
 # Arguments
-- `coords::Frac`: the fractional coordinates (`Frac>:Coords`)
-- `box::Box`: unit cell information
+- `xtal::Crystal`: the crystal
 - `apply_pbc::Bool`: `true` if we wish to apply periodic boundary conditions, `false` otherwise
-- `tol::Float64`: tolerance for overlap; if distance between particles less than this, overlap occurs
+- `tol::Float64`: tolerance for overlap (Å)
 
 # Returns
 * `overlap_flag::Bool`: `true` if overlap, `false` otherwise
-* `overlap_ids::Array{Tuple{Int, Int}, 1}`: ids of coordinate pairs that are overlapping e.g. `[(4, 5), (7, 8)]`
+* `overlap_ids::Array{Tuple{Int, Int}, 1}`: ids of atom pairs that are overlapping e.g. `[(4, 5), (7, 8)]`
 """
-function overlap(coords::Frac, box::Box, apply_pbc::Bool; tol::Float64=0.1)
+function overlap2(xtal::Crystal; use_covalent_radii::Bool=true, tol::Float64=0.15, apply_pbc::Bool=true)
     overlap_flag = false
     overlap_ids = Array{Tuple{Int, Int}, 1}()
-
-    n = size(coords.xf)[2] # number of coords
-    for i = 1:n
-        for j = i+1:n
-            r = distance(coords, box, i, j, apply_pbc)
-            if r < tol
+    covalent_radii = get_covalent_radii()
+    
+    # loop over pairs of atoms in the crystal.
+    for i = 1:xtal.atoms.n
+        for j = i+1:xtal.atoms.n
+            # compute distance between the pair of atoms
+            r = distance(xtal.atoms.coords, xtal.box, i, j, apply_pbc)
+            
+            # pair is considered overlapping if closer than r_overlap
+            r_overlap = tol
+            
+            if use_covalent_radii
+                r_i = covalent_radii[xtal.atoms.species[i]][:radius_Å]
+                r_j = covalent_radii[xtal.atoms.species[j]][:radius_Å]
+                tol_ij = (covalent_radii[xtal.atoms.species[i]][:esd_pm] + covalent_radii[xtal.atoms.species[j]][:esd_pm]) / 100.0
+                r_overlap = r_i + r_j - 2.0 * tol_ij
+            end
+            if r < r_overlap
                 push!(overlap_ids, (i, j))
                 overlap_flag = true
             end
