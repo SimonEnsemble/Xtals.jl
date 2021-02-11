@@ -60,7 +60,7 @@ function bondingrules(;
             end
             radii_sum = covalent_radii[atom1][:radius_Å] + covalent_radii[atom2][:radius_Å]
             margin = max(min_tol,
-                σ * (covalent_radii[atom1][:esd_pm] + covalent_radii[atom2][:esd_pm]) / 100)
+                σ * (covalent_radii[atom1][:esd_Å] + covalent_radii[atom2][:esd_Å]) / 100)
             min_dist = radii_sum - 2 * margin
             max_dist = radii_sum + margin
             push!(bondingrules, BondingRule(atom1, atom2, min_dist, max_dist))
@@ -372,8 +372,8 @@ function bonded_atoms(crystal::Crystal, i::Int, dm::Array{Float64, 2},
             covalent_radii[species_i][:radius_Å]
         # margin = σ e.s.d.s, unless that's too small
         margin = max(min_tol,
-            σ * (covalent_radii[species_j][:esd_pm] +
-            covalent_radii[species_i][:esd_pm]) / 100)
+            σ * (covalent_radii[species_j][:esd_Å] +
+            covalent_radii[species_i][:esd_Å]) / 100)
         max_dist = radii_sum + margin
         min_dist = radii_sum - margin
         if dm[i, j] ≤ max_dist && dm[i, j] ≥ min_dist
