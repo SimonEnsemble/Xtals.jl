@@ -60,7 +60,7 @@ end
 
     # reduce covalant radius to see Cu-Cu bond disappear
     covalent_radii = Xtals.get_covalent_radii()
-    covalent_radii[:Cu] = Dict(:radius_Å => 1.15, :esd_pm => 4.)
+    covalent_radii[:Cu] = Dict(:radius_Å => 1.15, :esd_Å => 4.)
     remove_bonds!(c)
 
     @test ne(c.bonds) == 0

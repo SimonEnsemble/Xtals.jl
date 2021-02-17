@@ -39,7 +39,7 @@ const NET_CHARGE_TOL = 1e-4 # net charge tolerance
         convert_to_p1=true, read_bonds_from_file=false, wrap_coords=true,
         include_zero_charges=false,
         remove_duplicates=false,
-        species_col=["_atom_site_label", "_atom_site_type_symbol"]
+        species_col=["_atom_site_type_symbol", "_atom_site_label"]
         ) # read from file
 
     crystal = Crystal(name, box, atoms, charges) # construct from matter, no bonds, P1-symmetry assumed
