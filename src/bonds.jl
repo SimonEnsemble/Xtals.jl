@@ -18,9 +18,8 @@ struct BondingRule
     max_dist::Float64
 end
 
-BondingRule(species_i::String, species_j::String, min_dist::String,
-    max_dist::String) = BondingRule(Symbol.([species_i, species_j])...,
-        parse.([Float64, Float64], [min_dist, max_dist])...)
+BondingRule(species_i::String, species_j::String, min_dist::String, max_dist::String) = BondingRule(
+            Symbol.([species_i, species_j])..., parse.([Float64, Float64], [min_dist, max_dist])...)
 
 
 """
@@ -36,7 +35,6 @@ BONDING_RULES = BondingRule[]
 Returns a set of bonding rules based on the given Cordero parameters and tolerances.
 
 # Arguments
-
 - `covalent_radii::Union{Dict{Symbol, Dict{Symbol, Float64}}, Nothing}`: Covalent radii and estimated uncertainty. See [`get_covalent_radii()`](@ref)
 - `σ::Float`: Number of Cordero estimated standard deviations to use for tolerance on covalent radii.
 - `min_tol::Float`: Minimum tolerance for covalent radii.
@@ -45,25 +43,25 @@ Returns a set of bonding rules based on the given Cordero parameters and toleran
 - `bondingrules::Array{BondingRule, 1}`: The default bonding rules: `[BondingRule(:*, :*, 0.4, 1.2), BondingRule(:*, :*, 0.4, 1.9)]`
 """
 function bondingrules(;
-        covalent_radii::Union{Dict{Symbol, Dict{Symbol, Float64}}, Nothing}=nothing,
-        σ::Float64=3., min_tol::Float64=0.25)::Array{BondingRule}
-    if covalent_radii == nothing
+                     covalent_radii::Union{Dict{Symbol, Dict{Symbol, Float64}}, Nothing}=nothing,
+                     σ::Float64=3., min_tol::Float64=0.25)::Array{BondingRule}
+    if isnothing(covalent_radii)
         covalent_radii = get_covalent_radii()
     end
     bondingrules = BondingRule[]
     # loop over parameterized atoms
-    for (i, atom1) in enumerate(keys(covalent_radii))
+    for (i, atom_i) in enumerate(keys(covalent_radii))
         # make rules for the atom with every other atom (and itself)
-        for (j, atom2) in enumerate(keys(covalent_radii))
+        for (j, atom_j) in enumerate(keys(covalent_radii))
             if j < i
                 continue # already did this atom in outer loop (don't duplicate)
             end
-            radii_sum = covalent_radii[atom1][:radius_Å] + covalent_radii[atom2][:radius_Å]
+            radii_sum = covalent_radii[atom_i][:radius_Å] + covalent_radii[atom_j][:radius_Å]
             margin = max(min_tol,
-                σ * (covalent_radii[atom1][:esd_Å] + covalent_radii[atom2][:esd_Å]) / 100)
+                         σ * (covalent_radii[atom_i][:esd_Å] + covalent_radii[atom_j][:esd_Å]) / 100)
             min_dist = radii_sum - 2 * margin
             max_dist = radii_sum + margin
-            push!(bondingrules, BondingRule(atom1, atom2, min_dist, max_dist))
+            push!(bondingrules, BondingRule(atom_i, atom_j, min_dist, max_dist))
         end
     end
     return bondingrules
@@ -72,6 +70,7 @@ end
 
 """
     get_bonding_rules()
+
 Returns the current global bonding rule set.  Each [`BondingRule`](@ref) specifies the distance interval over which a specific pair of atomic species are to be considered chemically bonded.
 The default set of bonding rules is built via [`bondingrules`](@ref) using the default parameters at package initialization.
 """

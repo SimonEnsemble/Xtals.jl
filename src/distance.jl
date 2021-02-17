@@ -83,23 +83,26 @@ end
 pairwise_distances(coords::Cart, box::Box, apply_pbc::Bool) = pairwise_distances(Frac(coords, box), box, apply_pbc)
 
 """
-    overlap_flag, overlap_pairs = overlap(crystal; use_covalent_radii=true, tol=0.1, apply_pbc=true)
+    overlap_flag, overlap_pairs = overlap(crystal; r_crit=nothing, apply_pbc=true)
 
-determine if any atoms in a crystal overlap. 
-here, two atoms are defined to overlap if their (Cartesian) distance
-* case `use_covalent_radii=true`: is less than the sum of the covalent radii of the two atoms minus `tol`
-* case `use_covalent_radii=false`: is less than `tol`
+determine the pairs of atoms (if any) in a crystal that overlap.
+
+two atoms are defined to overlap if their (Cartesian) distance is less than `r_crit` Å.
+
+if `isnothing(r_crit)`, we use covalent radii to determine overlap.
+covalent radii are obtained from [`get_covalent_radii`](@ref).
+if covalent radii not available for an atom, we use 0.3 Å
 
 # Arguments
 - `xtal::Crystal`: the crystal
+- `r_crit::Union{Float64, Nothing}`: atoms overlap if a distances less than `r_crit` apart. if `isnothing(r_crit)`, use covalent radii.
 - `apply_pbc::Bool`: `true` if we wish to apply periodic boundary conditions, `false` otherwise
-- `tol::Float64`: tolerance for overlap (Å)
 
 # Returns
 * `overlap_flag::Bool`: `true` if overlap, `false` otherwise
 * `overlap_ids::Array{Tuple{Int, Int}, 1}`: ids of atom pairs that are overlapping e.g. `[(4, 5), (7, 8)]`
 """
-function overlap2(xtal::Crystal; use_covalent_radii::Bool=true, tol::Float64=0.15, apply_pbc::Bool=true)
+function overlap(xtal::Crystal; r_crit::Union{Float64, Nothing}=nothing, apply_pbc::Bool=true, throw_error_print_warnings::Bool=true)
     overlap_flag = false
     overlap_ids = Array{Tuple{Int, Int}, 1}()
     covalent_radii = get_covalent_radii()
@@ -107,23 +110,53 @@ function overlap2(xtal::Crystal; use_covalent_radii::Bool=true, tol::Float64=0.1
     # loop over pairs of atoms in the crystal.
     for i = 1:xtal.atoms.n
         for j = i+1:xtal.atoms.n
+            atoms_ij_overlap = false
+
             # compute distance between the pair of atoms
             r = distance(xtal.atoms.coords, xtal.box, i, j, apply_pbc)
-            
-            # pair is considered overlapping if closer than r_overlap
-            r_overlap = tol
-            
-            if use_covalent_radii
-                r_i = covalent_radii[xtal.atoms.species[i]][:radius_Å]
-                r_j = covalent_radii[xtal.atoms.species[j]][:radius_Å]
-                tol_ij = (covalent_radii[xtal.atoms.species[i]][:esd_pm] + covalent_radii[xtal.atoms.species[j]][:esd_pm]) / 100.0
-                r_overlap = r_i + r_j - 2.0 * tol_ij
+
+            if isnothing(r_crit)
+                # use covalent radii if available
+                species_i = strip_number_from_label(xtal.atoms.species[i])
+                species_j = strip_number_from_label(xtal.atoms.species[j])
+                
+                # use smallest radii to avoid false overlaps
+                r_i = 0.3
+                r_j = 0.3
+                if species_i in keys(covalent_radii)
+                    r_i = covalent_radii[species_i][:radius_Å] - covalent_radii[species_i][:esd_Å]
+                end
+                if species_j in keys(covalent_radii)
+                    r_j = covalent_radii[species_j][:radius_Å] - covalent_radii[species_j][:esd_Å]
+                end
+                if r < r_i + r_j - 0.25
+                    atoms_ij_overlap = true
+                end
+            else
+                # use provided r_crit
+                if r < r_crit
+                    atoms_ij_overlap = true
+                end
             end
-            if r < r_overlap
+            
+            if atoms_ij_overlap
                 push!(overlap_ids, (i, j))
                 overlap_flag = true
+                if throw_error_print_warnings
+                    @warn @sprintf("atom %d (%s) and %d (%s) in %s are overlapping. r = %f Å\n", i, xtal.atoms.species[i], 
+                                                                                       j, xtal.atoms.species[j],
+                                                                                       xtal.name, r)
+                end
             end
         end
+    end
+    if overlap_flag && throw_error_print_warnings
+        error(xtal.name * " has overlapping pairs of atoms!
+            (this occurs often when applying symmetry rules, if your structure was not in P1 symmetry to begin with.)
+            to investigate or avoid this error, pass `check_overlap=false` to the `Crystal` constructor, 
+            then run `overlap(crystal, throw_error_print_warnings=false)` to find pairs of overlapping atoms for inspection.
+            or pass `remove_duplicates=true` to the `Crystal` constructor to automatically remove the duplicate atoms and charges.
+            you should then visualize your .cif to make sure it is proper.`\n")
     end
     return overlap_flag, overlap_ids
 end

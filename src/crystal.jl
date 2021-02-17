@@ -65,6 +65,7 @@ or construct a `Crystal` data structure directly.
     we check for the first entry of `species_col` in the .cif file; if not present, we then use the second entry, and so on.
 - `infer_bonds::Union{Symbol, Missing}`: if set, bonds are inferred according to the chosen method (:cordero or :voronoi). If set, must specify `periodic_boundaries`. By default, bonds are not inferred.
 - `periodic_boundaries::Union{Bool, Missing}`: use with `infer_bonds` to specify treatment of the unit cell boundary.  Set `true` to treat the unit cell edge as a periodic boundary (allow bonds across it); set `false` to restrict bonding to within the local unit cell.
+- `r_crit_overlap::Union{Float64, Nothing)=nothing`: the critical distance such that, below this distance, two atoms are considered overlapping. passed to [`overlap`](@ref) when doing an overlap check.
 
 across periodic unit cell boundaries; if `false`, bonds are only inferred within the local unit cell; if `missing` (default), bonds are not inferred.
 
@@ -92,7 +93,8 @@ function Crystal(filename::String;
                  remove_duplicates::Bool=false,
                  species_col::Array{String, 1}=["_atom_site_type_symbol", "_atom_site_label"],
                  infer_bonds::Union{Symbol, Missing}=missing,
-                 periodic_boundaries::Union{Bool, Missing}=missing)
+                 periodic_boundaries::Union{Bool, Missing}=missing,
+                 r_crit_overlap::Union{Float64, Nothing}=nothing)
     # Read file extension. Ensure we can read the file type
     extension = split(filename, ".")[end]
     if ! (extension in ["cif", "cssr"])
@@ -451,7 +453,7 @@ function Crystal(filename::String;
     end
 
     if check_overlap
-        _check_overlap(crystal)
+        overlap(crystal, r_crit=r_crit_overlap)
     end
 
     if !ismissing(infer_bonds)
@@ -470,21 +472,6 @@ function Crystal(filename::String;
     calc_missing_bond_distances!(crystal)
 
     return crystal
-end
-
-function _check_overlap(crystal::Crystal)
-    overlap_flag, overlapping_pairs = overlap(crystal)
-    if overlap_flag
-        for (i, j) in overlapping_pairs
-            @warn @sprintf("atom %d (%s) and %d (%s) are overlapping\n", i, crystal.atoms.species[i],
-                j, crystal.atoms.species[j])
-        end
-        error(crystal.name * " has overlapping pairs of atoms!
-            (this occurs often when applying symmetry rules, if your structure was not in P1 symmetry to begin with.)
-            pass `check_overlap=false` then run `overlap(crystal)` to find pairs of overlapping atoms for inspection.
-            or pass `remove_duplicates=true` to the `Crystal` constructor to automatically remove the duplicate atoms and charges.
-            you should then visualize your .cif to make sure it is proper.`\n")
-    end
 end
 
 # documented in matter.jl
@@ -587,7 +574,17 @@ neutral(crystal::Crystal, tol::Float64=1e-5) = neutral(crystal.charges, tol)
 has_charges(crystal::Crystal) = crystal.charges.n > 0
 
 # e.g. `:Ca23` -> `:Ca`
-strip_number_from_label(atom_label::Symbol) = Symbol(atom_label[1:findfirst(.! isletter.([c for c in atom_label])) - 1])
+function strip_number_from_label(atom_label::Symbol)
+    atom_label_string = String(atom_label)
+    character_vector = [c for c in atom_label_string]
+    isletter_vector = isletter.(character_vector)
+    if all(isletter_vector)
+        # nothing to strip
+        return atom_label
+    else
+        return Symbol(atom_label_string[1:findfirst(.! isletter_vector) - 1])
+    end
+end
 
 """
     strip_numbers_from_atom_labels!(crystal)
@@ -1096,7 +1093,7 @@ function Base.:+(crystals::Crystal...; check_overlap::Bool=true)
     end
 
     if check_overlap
-        _check_overlap(crystal)
+        overlap(crystal)
     end
 
     return crystal
