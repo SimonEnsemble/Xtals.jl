@@ -52,9 +52,9 @@ function write_xyz(atoms::Atoms{Cart}, filename::AbstractString; comment::Abstra
     filename = add_extension(filename, ".xyz")
 
     xyzfile = open(filename, "w")
-    @printf(xyzfile, "%d\n%s\n", atoms.n, comment)
+    @printf(xyzfile, "%d\n#%s\n", atoms.n, comment)
     for i = 1:atoms.n
-		@printf(xyzfile, "%s\t%.4f\t%.4f\t%.4f\n", atoms.species[i],
+		@printf(xyzfile, "%s    %.4f    %.4f    %.4f\n", atoms.species[i],
             atoms.coords.x[1, i], atoms.coords.x[2, i], atoms.coords.x[3, i])
     end
     close(xyzfile)
