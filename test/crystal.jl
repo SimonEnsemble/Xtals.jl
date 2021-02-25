@@ -167,6 +167,13 @@ end
     strip_numbers_from_atom_labels!(xtal_cif)
     @test isapprox(xtal_cif, xtal_cssr)
 
+    da_xtalname = "ATIBOU01_clean"
+    xtal_cif = Crystal(da_xtalname * ".cif", include_zero_charges=true)
+    write_cssr(xtal_cif)
+    write_cssr(xtal_cif, joinpath(Xtals.PATH_TO_CRYSTALS, da_xtalname * ".cssr"))
+    xtal_cssr = Crystal(da_xtalname * ".cssr", include_zero_charges=true)
+    @test isapprox(xtal_cssr, xtal_cif, atol=0.0001)
+
     # sanity checks on replicate crystal
     sbmof = Crystal("SBMOF-1.cif")
     strip_numbers_from_atom_labels!(sbmof)
