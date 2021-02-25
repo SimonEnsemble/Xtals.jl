@@ -932,6 +932,16 @@ end
 
 write_cif(crystal::Crystal) = write_cif(crystal, String(split(crystal.name, ".")[1]))
 
+"""
+    write_cssr(xtal, "myxtal.cssr")
+    write_cssr(xtal) # uses xtal.name to guess desired filename.
+
+write crystal structure to `.cssr` format.
+
+# arguments
+* `xtal::Crystal`: crystal to write to file
+* `filename::String`: filename to write to. default is to write `.cssr` file to `pwd()`.  will append `.cssr` if absent from `filename`.
+"""
 function write_cssr(xtal::Crystal, filename::String)
     @assert xtal.symmetry.is_p1 "crystal must be in P1 symmetry"
     if ! occursin(".cssr", filename)
