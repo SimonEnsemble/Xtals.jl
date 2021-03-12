@@ -115,12 +115,15 @@ export
     # crystal.jl
     Crystal, strip_numbers_from_atom_labels!, assign_charges,
     chemical_formula, molecular_weight, crystal_density, write_cif, has_charges,
-    apply_symmetry_operations, assert_P1_symmetry,
+    apply_symmetry_operations, assert_P1_symmetry, write_cssr,
 
     # bonds.jl
     infer_bonds!, write_bond_information, BondingRule, bond_sanity_check,
     remove_bonds!, infer_geometry_based_bonds!, get_bonding_rules,
     set_bonding_rules, read_bonding_rules, write_bonding_rules, add_bonding_rules,
-    drop_cross_pb_bonds!
+    drop_cross_pb_bonds!, bondingrules,
+
+    # cordero.jl
+    get_covalent_radii
 
 end # module Xtals
