@@ -60,10 +60,7 @@ to see current set up, call [`print_file_paths`](@ref)
 """
 function set_default_file_paths(;print_paths::Bool=true)
     # this is the main directory where crystal structures, forcefields, and molecules data is stored
-    set_path_to_data(joinpath(pwd(), "data"), relpath_xtals=true)
-    if print_paths
-        print_file_paths()
-    end
+    set_path_to_data(joinpath(pwd(), "data"), relpath_xtals=true, print=print_paths)
 end
 
 
@@ -72,7 +69,7 @@ include("box.jl")
 include("crystal.jl")
 include("distance.jl")
 include("misc.jl")
-include("cordero.jl")
+include("covalent_radii.jl")
 include("bonds.jl")
 include("repfactors.jl")
 include("atomic_masses.jl")
@@ -123,7 +120,7 @@ export
     set_bonding_rules, read_bonding_rules, write_bonding_rules, add_bonding_rules,
     drop_cross_pb_bonds!, bondingrules,
 
-    # cordero.jl
-    get_covalent_radii
+    # covalent_radii.jl
+    parse_covalent_radii, get_covalent_radii
 
 end # module Xtals
