@@ -69,6 +69,11 @@ using LinearAlgebra
     @test !o_flag
     @test o_ids == []
 
+    xtal = Crystal("IRMOF-1.cif")
+    @test !overlap(xtal, true)[1]
+    xtal = Crystal("IRMOF-1_overlap.cif")
+    @test overlap(xtal, true)[1]
+
     # test distance function (via Avogadro)
     crystal = Crystal("simple_test.cif")
     @test distance(crystal.atoms, crystal.box, 1, 1, true) == 0.0

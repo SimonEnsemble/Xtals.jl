@@ -84,16 +84,20 @@ pairwise_distances(coords::Cart, box::Box, apply_pbc::Bool) = pairwise_distances
 
 """
     overlap_flag, overlap_pairs = overlap(frac_coords, box, apply_pbc; tol=0.1)
-    overlap_flag, overlap_pairs = overlap(crystal)
 
 determine if any coordinates overlap. here, two coordinates are defined to overlap if their (Cartesian) distance
 is less than `tol`.
+
+    overlap_flag, overlap_pairs = overlap(crystal, apply_pbc)
+
+Determine if any of the atoms in `crystal` overlap, as determined by comparing their pairwise distances to the lesser of each pair's covalent radii.
 
 # Arguments
 - `coords::Frac`: the fractional coordinates (`Frac>:Coords`)
 - `box::Box`: unit cell information
 - `apply_pbc::Bool`: `true` if we wish to apply periodic boundary conditions, `false` otherwise
 - `tol::Float64`: tolerance for overlap; if distance between particles less than this, overlap occurs
+- `crystal::Crystal`: a crystal to check for overlapping atoms
 
 # Returns
 * `overlap_flag::Bool`: `true` if overlap, `false` otherwise
@@ -108,6 +112,23 @@ function overlap(coords::Frac, box::Box, apply_pbc::Bool; tol::Float64=0.1)
         for j = i+1:n
             r = distance(coords, box, i, j, apply_pbc)
             if r < tol
+                push!(overlap_ids, (i, j))
+                overlap_flag = true
+            end
+        end
+    end
+    return overlap_flag, overlap_ids
+end
+
+function overlap(xtal::Crystal, apply_pbc::Bool)
+    overlap_flag = false
+    overlap_ids = Array{Tuple{Int, Int}, 1}()
+
+    n = xtal.atoms.n
+    for i = 1:n
+        for j = i+1:n
+            r = distance(xtal.atoms.coords, xtal.box, i, j, apply_pbc)
+            if r < min(get_covalent_radii.(xtal.atoms.species[[i,j]])...)
                 push!(overlap_ids, (i, j))
                 overlap_flag = true
             end
