@@ -7,7 +7,7 @@ language: julia
 codecov: true
 
 julia:
-  - 1.5
+  - 1.6
 
 addons:
   apt:
