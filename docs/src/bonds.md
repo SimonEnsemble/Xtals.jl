@@ -10,7 +10,7 @@ Chemical bonding interactions are represented in the `bonds` attribute of a `Cry
 BondingRule(:C, :C, 1.77)
 ```
 
-The global bonding rules are available via [`get_bonding_rules`](@ref) and may be augmented with [`add_bonding_rules`](@ref), overwritten with [`set_bonding_rules`](@ref), or written to/read from disk with [`write_bonding_rules`](@ref) and [`read_bonding_rules`](@ref).
+The global bonding rules are available via [`get_global`](@ref) and may be augmented with [`add_bonding_rules`](@ref), overwritten with [`set_global`](@ref), or written to/read from disk with [`write_bonding_rules`](@ref) and [`read_bonding_rules`](@ref).
 
 ## Adding Bonds to Crystals
 
@@ -26,10 +26,6 @@ Some chemical information formats, like `.cif` and `.mol`, can store not only th
 
 ```@docs
 BondingRule
-Xtals.bondingrules
-Xtals.get_covalent_radii
-get_bonding_rules
-set_bonding_rules
 add_bonding_rules
 read_bonding_rules
 write_bonding_rules
