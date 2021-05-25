@@ -36,7 +36,7 @@ end
 
 export
     # paths_and_globals.jl
-    print_file_paths, set_global, get_global,
+    print_file_paths, set_global, get_global, global_dict,
 
     # matter.jl
     Coords, Frac, Cart, Atoms, Charges, wrap!, neutral, net_charge,
