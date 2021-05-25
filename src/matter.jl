@@ -6,8 +6,6 @@ abstract type for coordinates.
 """
 abstract type Coords end
 
-#Base.IndexStyle(::Type{<:Coords}) = IndexLinear()
-
 """
 fractional coordinates, a subtype of `Coords`.
 
@@ -64,6 +62,7 @@ Base.size(coords::Frac) = size(coords.xf)
 
 origin(T::DataType) = T([0.0, 0.0, 0.0])
 
+
 """
     translate_by!(coords, dx)
     translate_by!(coords, dx, box)
@@ -91,6 +90,7 @@ function translate_by!(coords::Frac, dxf::Frac)
     coords.xf .= broadcast(+, coords.xf, dxf.xf)
 end
 
+
 """
     wrap!(f::Frac)
     wrap!(crystal::Crystal)
@@ -101,6 +101,7 @@ e.g. -0.1 --> 0.9 and 1.1 -> 0.1
 function wrap!(f::Frac)
     f.xf .= mod.(f.xf, 1.0)
 end
+
 
 ###
 #   Atoms
@@ -148,6 +149,7 @@ Base.:+(a1::Atoms, a2::Atoms) = Atoms(a1.n + a2.n, [a1.species; a2.species], hca
 Base.getindex(atoms::Atoms, ids) = Atoms(atoms.species[ids], atoms.coords[ids])
 Base.lastindex(atoms::Atoms) = atoms.n
 
+
 ###
 #   point charges
 ###
@@ -192,6 +194,7 @@ Base.:+(c1::Charges, c2::Charges) = Charges(c1.n + c2.n, [c1.q; c2.q], hcat(c1.c
 Base.getindex(charges::Charges, ids) = Charges(charges.q[ids], charges.coords[ids])
 Base.lastindex(charges::Charges) = charges.n
 
+
 """
     nc = net_charge(charges)
     nc = net_charge(crystal)
@@ -207,6 +210,7 @@ function net_charge(charges::Charges)
         return sum(charges.q)
     end
 end
+
 
 """
     neutral(charges, tol) # true or false. default tol = 1e-5

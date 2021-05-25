@@ -21,12 +21,6 @@ BondingRule(species_i::String, species_j::String, max_dist::String) = BondingRul
 
 
 """
-Global BondingRule array
-"""
-BONDING_RULES = BondingRule[]
-
-
-"""
     bond_rules = bondingrules()
     bond_rules = bondingrules(covalent_radii=covalent_radii(), pad=0.05)
 
@@ -40,8 +34,8 @@ Returns a set of bonding rules based on the given Cordero parameters and toleran
 # Returns
 - `bondingrules::Array{BondingRule, 1}`: Bonding rules from the specified covalent radii.`
 """
-function bondingrules(;covalent_radii::Dict{Symbol,Float64}=get_covalent_radii(), pad::Float64=0.)::Array{BondingRule}
-    bondingrules = BondingRule[]
+function bondingrules(;covalent_radii::Dict{Symbol,Float64}=get_global(:covalent_radii), pad::Float64=0.)::Array{BondingRule}
+    bond_rules = BondingRule[]
     # loop over parameterized atoms
     for (i, atom1) in enumerate(keys(covalent_radii))
         # make rules for the atom with every other atom (and itself)
@@ -51,31 +45,10 @@ function bondingrules(;covalent_radii::Dict{Symbol,Float64}=get_covalent_radii()
             end
             radii_sum = covalent_radii[atom1] + covalent_radii[atom2]
             max_dist = radii_sum + pad
-            push!(bondingrules, BondingRule(atom1, atom2, max_dist))
+            push!(bond_rules, BondingRule(atom1, atom2, max_dist))
         end
     end
-    return bondingrules
-end
-
-
-"""
-    get_bonding_rules()
-Returns the current global bonding rule set.  Each [`BondingRule`](@ref) specifies the distance within which a specific pair of atomic species are to be considered chemically bonded.
-The default set of bonding rules is built via [`bondingrules`](@ref) using the default parameters at package initialization.
-"""
-function get_bonding_rules()::Array{BondingRule}
-    return BONDING_RULES
-end
-
-
-"""
-    set_bonding_rules(bonding_rules)
-Sets the global bonding rules, overriding the current global rule set.
-# Arguments
-- `bonding_rules::Array{BondingRule}` : the new global bonding rule set
-"""
-function set_bonding_rules(bonding_rules::Array{BondingRule})
-    global BONDING_RULES = bonding_rules
+    return bond_rules
 end
 
 
@@ -87,7 +60,7 @@ Writes bonding rules to a CSV file that can be loaded with [`read_bonding_rules`
 - `bonding_rules::Array{BondingRule}` : (Optional) The rules to write to file. If not specified, the global rules are written.
 """
 function write_bonding_rules(filename::String, bonding_rules::Union{Array{BondingRule},Nothing}=nothing)
-    bonding_rules = isnothing(bonding_rules) ? get_bonding_rules() : bonding_rules
+    bonding_rules = isnothing(bonding_rules) ? get_global(:bonding_rules) : bonding_rules
     f = open(filename, "w")
     for r ∈ bonding_rules
         @printf(f, "%s,%s,%f\n", r.species_i, r.species_j, r.max_dist)
@@ -122,8 +95,8 @@ Adds `bonding_rules` to the beginning of the global bonding rules list
 - `bonding_rules::Array{BondingRule}` : the array of bonding rules to add
 """
 function add_bonding_rules(bonding_rules::Array{BondingRule})
-    br = get_bonding_rules()
-    set_bonding_rules(vcat(bonding_rules, br))
+    br = get_global(:bonding_rules)
+    set_global(:bonding_rules => vcat(bonding_rules, br))
 end
 add_bonding_rules(bonding_rule::BondingRule) = add_bonding_rules([bonding_rule])
 
@@ -238,7 +211,7 @@ The bonding rules are hierarchical, i.e. the first bonding rule takes precedence
 function infer_bonds!(crystal::Crystal, include_bonds_across_periodic_boundaries::Bool;
                       bonding_rules::Union{Array{BondingRule, 1}, Nothing}=nothing)
     @assert ne(crystal.bonds) == 0 @sprintf("The crystal %s already has bonds. Remove them with the `remove_bonds!` function before inferring new ones.", crystal.name)
-    bonding_rules = bonding_rules == nothing ? get_bonding_rules() : bonding_rules
+    bonding_rules = isnothing(bonding_rules) ? get_global(:bonding_rules) : bonding_rules
     # loop over every atom
     for i in 1:crystal.atoms.n
         # loop over every unique pair of atoms
@@ -351,7 +324,7 @@ Returns the ids of atoms that are bonded to atom `i` by determining bonds using 
 function bonded_atoms(crystal::Crystal, i::Int, dm::Array{Float64, 2},
         r::Float64, pad::Float64, covalent_radii::Dict{Symbol, Float64})
     species_i = crystal.atoms.species[i]
-    ids_neighbors, xs, rs = neighborhood(crystal, i, r, dm)
+    ids_neighbors, xs, _ = neighborhood(crystal, i, r, dm)
     ids_shared_voro_faces = _shared_voronoi_faces(ids_neighbors, xs)
     ids_bonded = Int[]
     for j in ids_shared_voro_faces
@@ -387,7 +360,7 @@ function infer_geometry_based_bonds!(crystal::Crystal,
         covalent_radii::Union{Nothing,Dict{Symbol,Float64}}=nothing)
     @assert ne(crystal.bonds) == 0 @sprintf("The crystal %s already has bonds. Remove them with the `remove_bonds!` function before inferring new ones.", crystal.name)
     if isnothing(covalent_radii)
-        covalent_radii = get_covalent_radii()
+        covalent_radii = get_global(:covalent_radii)
     end
     dm = distance_matrix(crystal, include_bonds_across_periodic_boundaries)
     for i = 1:crystal.atoms.n

@@ -1,5 +1,5 @@
 # makes a dataframe from stringified atomicmasses.csv
-function _AtomicMasses(headers::Array{Symbol}, data::String)
+function AtomicMasses(headers::Array{Symbol}, data::String)
     species = Symbol[]
     mass = Float64[]
     for line ∈ split(data,"\n")
@@ -17,14 +17,8 @@ function _AtomicMasses(headers::Array{Symbol}, data::String)
 end
 
 
-# return the global atomic masses dataframe
-function get_atomic_masses()
-	return ATOMIC_MASSES
-end
-
-
 # Global atomic masses dataframe
-ATOMIC_MASSES = _AtomicMasses([:atom, :mass],
+DEFAULT_ATOMIC_MASSES = AtomicMasses([:atom, :mass],
 """VOID,0
 re,0
 He,4.0026

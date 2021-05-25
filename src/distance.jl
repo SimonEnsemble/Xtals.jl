@@ -18,6 +18,7 @@ Warning: this assumes the two molecules are in the box described by fractional c
     end
 end
 
+
 @doc raw"""
     r = distance(coords, box, i, j, apply_pbc)
     r = distance(atoms, box, i, j, apply_pbc) # atoms i and j
@@ -67,6 +68,7 @@ distance(atoms::Atoms{Cart}, i::Int, j::Int) = distance(atoms.coords, i, j)
 distance(atoms::Atoms, box::Box, i::Int, j::Int, apply_pbc::Bool) = distance(atoms.coords, box, i, j, apply_pbc)
 distance(charges::Charges, box::Box, i::Int, j::Int, apply_pbc::Bool) = distance(charges.coords, box, i, j, apply_pbc)
 
+
 function pairwise_distances(coords::Frac, box::Box, apply_pbc::Bool)
     n = length(coords)
     pd = zeros(n, n)
@@ -81,6 +83,7 @@ function pairwise_distances(coords::Frac, box::Box, apply_pbc::Bool)
     return pd
 end
 pairwise_distances(coords::Cart, box::Box, apply_pbc::Bool) = pairwise_distances(Frac(coords, box), box, apply_pbc)
+
 
 """
     overlap_flag, overlap_pairs = overlap(frac_coords, box, apply_pbc; tol=0.1)
@@ -128,7 +131,7 @@ function overlap(xtal::Crystal, apply_pbc::Bool)
     for i = 1:n
         for j = i+1:n
             r = distance(xtal.atoms.coords, xtal.box, i, j, apply_pbc)
-            if r < min(get_covalent_radii.(xtal.atoms.species[[i,j]])...)
+            if r < min([get_global(:covalent_radii)[xtal.atoms.species[k]] for k ∈ [i,j]]...)
                 push!(overlap_ids, (i, j))
                 overlap_flag = true
             end
@@ -136,6 +139,7 @@ function overlap(xtal::Crystal, apply_pbc::Bool)
     end
     return overlap_flag, overlap_ids
 end
+
 
 """
     atoms = remove_duplicates(atoms, box, apply_pbc, r_tol=0.1)

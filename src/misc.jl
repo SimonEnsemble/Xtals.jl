@@ -5,6 +5,7 @@ function add_extension(filename::String, extension::String)
     return filename
 end
 
+
 """
     atoms = read_xyz("molecule.xyz")
 
@@ -32,6 +33,7 @@ function read_xyz(filename::AbstractString)
     close(f)
     return Atoms(species, Cart(x))
 end
+
 
 """
     write_xyz(atoms, filename; comment="")
@@ -97,7 +99,7 @@ function read_mol(filename::String)
     end
 
     bonds = MetaGraph(n_atoms)
-    bond_types = [-1 for i = 1:n_bonds]
+    bond_types = [-1 for _ ∈ 1:n_bonds]
     for b = 1:n_bonds
         line_bond_b = split(lines[n_atoms + 4 + b])
 

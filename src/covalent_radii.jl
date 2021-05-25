@@ -11,47 +11,16 @@ function parse_covalent_radii(data::String)::Dict{Symbol,Float64}
     for line ∈ split(data,"\n")
         fields = split(line, ",")
         if length(fields) == 2
-            symbol, radius = fields
-            radius_dict[Symbol(symbol)] = parse(Float64, radius)
+            radius_dict[Symbol(fields[1])] = parse(Float64, fields[2])
         end
     end
     return radius_dict
 end
 
 
-"""
-    cov_rad = covalent_radii(:N)
-
-Get the covalent radius of a particular element from the global covalent radius dictionary.
-
-    cov_rad = covalent_radii()
-
-Get a copy of the global covalent radius dictionary.
-
-# Arguments
-- `symbol::Union{Nothing,Symbol}` : If `nothing`, the complete dictionary of covalent radii is returned.  If a symbol, returns the radius for the specified element.
-
-# Examples
-```
-# single query
-cov_rad = covalent_radii(:N) # 0.86
-
-# whole dictionary
-cov_rad = covalent_radii()
-cov_rad[:N] # 0.86
-```
-"""
-function get_covalent_radii(symbol::Union{Nothing,Symbol}=nothing)
-    if !isnothing(symbol)
-        return COVALENT_RADIUS[symbol]
-    else
-        return copy(COVALENT_RADIUS)
-    end
-end
-
 # Cordero bond radii, DOI: 10.1039/B801115J Table 2.
 # Overridden w/ larger values from DOI 10.1039/c9ra07327b Table 5
-global COVALENT_RADIUS = parse_covalent_radii(
+global DEFAULT_COVALENT_RADII = parse_covalent_radii(
     """
     H,0.38
     He,0.28

@@ -100,7 +100,7 @@ function Crystal(filename::String;
     end
 
     # read all lines of crystal structure file
-    _f = open(joinpath(PATH_TO_CRYSTALS, filename), "r")
+    _f = open(joinpath(get_global(:path_to_crystals), filename), "r")
     lines = readlines(_f)
     close(_f)
 
@@ -669,7 +669,7 @@ Calculates the molecular weight of a unit cell of the crystal in amu using infor
 - `mass_of_crystal::Float64`: The molecular weight of a unit cell of the crystal in amu
 """
 function molecular_weight(crystal::Crystal)
-    atomic_masses = get_atomic_masses()
+    atomic_masses = get_global(:atomic_masses)
 
     mass = 0.0
 	for i = 1:crystal.atoms.n
@@ -742,58 +742,7 @@ function apply_symmetry_operations(crystal::Crystal)
     return Crystal(crystal.name, crystal.box, atoms, charges)
 end
 
- # """
- #     symmetry_equal = is_symmetry_equal(crystal1.symmetry, crystal2.symmetry)
- #
- # Returns true if both symmetry rules can create the same set from the same set
- # of coordinates. Returns false if they don't contain the same number of rules or
- # if they create different sets of points.
- #
- # # Arguments
- # - `sym1::Array{AbstractString, 2}`: Array of strings that represent
- #     symmetry operations
- # - `sym2::Array{AbstractString, 2}`: Array of strings that represent
- #     symmetry operations
- #
- # # Returns
- # - `is_equal::Bool`: True if they are the same set of symmetry rules
- #     False if they are different
- # """
- # function is_symmetry_equal(sym1::Array{AbstractString, 2}, sym2::Array{AbstractString, 2})
- #     # need same number of symmetry operations
- #     if size(sym1, 2) != size(sym2, 2)
- #         return false
- #     end
- #     # define a test array that operations will be performed on
- #     test_array = [0.0 0.25 0.0  0.0  0.0  0.25 0.25 0.25;
- #                   0.0 0.0  0.25 0.0  0.25 0.0  0.25 0.25;
- #                   0.0 0.0  0.0  0.25 0.25 0.25 0.25 0.25]
- #     # set up both arrays for storing replicated coords
- #     sym1_applied_to_test = Array{Float64, 2}(undef, 3, 0)
- #     sym2_applied_to_test = Array{Float64, 2}(undef, 3, 0)
- #
- #     # loop over all positions in the test_array
- #     for i in 1:size(test_array, 2)
- #         # loop over f1 symmetry rules
- #         for j in 1:size(sym1, 2)
- #             sym1_applied_to_test = [sym1_applied_to_test [Base.invokelatest.(
- #                 eval(Meta.parse("(x, y, z) -> " * sym1[k, j])), test_array[:, i]...) for k in 1:3]]
- #         end
- #         # loop over f2 symmetry rules
- #         for j in 1:size(sym2, 2)
- #             sym2_applied_to_test = [sym2_applied_to_test [Base.invokelatest.(
- #                 eval(Meta.parse("(x, y, z) -> " * sym2[k, j])), test_array[:, i]...) for k in 1:3]]
- #         end
- #     end
- #
- #     # convert to sets for using issetequal, symmetry rules might be in a a different order
- #     sym1_set = Set([sym1_applied_to_test[:, i] for i in 1:size(sym1_applied_to_test, 2)])
- #     sym2_set = Set([sym2_applied_to_test[:, i] for i in 1:size(sym2_applied_to_test, 2)])
- #
- #     # return if the sets of coords are equal
- #     return issetequal(sym1_set, sym2_set)
- # end
- #
+
 """
     assert_P1_symmetry(crystal::Crystal)
 
@@ -806,6 +755,7 @@ function assert_P1_symmetry(crystal::Crystal)
                \tcrystal_p1 = apply_symmetry_operations(crystal)")
     end
 end
+
 
 """
     write_cif(crystal, filename; fractional_coords=true, number_atoms=true)
@@ -932,6 +882,7 @@ end
 
 write_cif(crystal::Crystal) = write_cif(crystal, String(split(crystal.name, ".")[1]))
 
+
 """
     write_cssr(xtal, "myxtal.cssr")
     write_cssr(xtal) # uses xtal.name to guess desired filename.
@@ -964,6 +915,7 @@ end
 
 write_cssr(crystal::Crystal) = write_cssr(crystal, String(split(crystal.name, ".")[1]))
 
+
 """
     crystal = remove_duplicate_atoms_and_charges(crystal, r_tol=0.1, q_tol=0.0001, verbose=false)
 
@@ -988,6 +940,7 @@ function remove_duplicate_atoms_and_charges(crystal::Crystal, r_tol::Float64=0.1
 end
 
 inside(crystal::Crystal) = inside(crystal.atoms.coords) && inside(crystal.charges.coords)
+
 
 """
     crystal_with_charges = assign_charges(crystal, species_to_charge, net_charge_tol=1e-5)
@@ -1036,6 +989,7 @@ function assign_charges(crystal::Crystal, species_to_charge::Dict{Symbol, Float6
     return new_crystal
 end
 
+
 function Base.show(io::IO, crystal::Crystal)
     println(io, "Name: ", crystal.name)
     println(io, crystal.box)
@@ -1048,6 +1002,7 @@ function Base.show(io::IO, crystal::Crystal)
         @printf(io, "\t\t'%s, %s, %s'\n", crystal.symmetry.operations[:, i]...)
     end
 end
+
 
 function Base.isapprox(c1::Crystal, c2::Crystal; atol::Real=0.0)
     # name not included
@@ -1106,6 +1061,7 @@ function Base.lastindex(crystal::Crystal)
         error("to index the crystal, it must have 0 charges or an equal number of charges and atoms")
     end
 end
+
 
 function Base.:+(crystals::Crystal...; check_overlap::Bool=true)
     crystal = deepcopy(crystals[1])
