@@ -41,13 +41,8 @@ cov_rad = covalent_radii()
 cov_rad[:N] # 0.86
 ```
 """
-function get_covalent_radii(symbol::Union{Nothing,Symbol}=nothing)
-    if !isnothing(symbol)
-        return COVALENT_RADIUS[symbol]
-    else
-        return copy(COVALENT_RADIUS)
-    end
-end
+get_covalent_radii() = deepcopy(COVALENT_RADIUS)
+get_covalent_radii(atom::Symbol) = COVALENT_RADIUS[atom]
 
 # Cordero bond radii, DOI: 10.1039/B801115J Table 2.
 # Overridden w/ larger values from DOI 10.1039/c9ra07327b Table 5
