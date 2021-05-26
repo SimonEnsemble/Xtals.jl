@@ -35,8 +35,8 @@ const NET_CHARGE_TOL = 1e-4 # net charge tolerance
 """
     crystal = Crystal(filename;
         check_neutrality=true, net_charge_tol=1e-4,
-        check_overlap=true, overlap_tol=0.1,
-        convert_to_p1=true, read_bonds_from_file=false, wrap_coords=true,
+        check_overlap=true, convert_to_p1=true, 
+        read_bonds_from_file=false, wrap_coords=true,
         include_zero_charges=false,
         remove_duplicates=false,
         species_col=["_atom_site_type_symbol", "_atom_site_label"]
@@ -84,7 +84,6 @@ function Crystal(filename::String;
                  check_neutrality::Bool=true,
                  net_charge_tol::Float64=NET_CHARGE_TOL,
                  check_overlap::Bool=true,
-                 overlap_tol::Float64=0.1,
                  convert_to_p1::Bool=true,
                  read_bonds_from_file::Bool=false,
                  wrap_coords::Bool=true,
