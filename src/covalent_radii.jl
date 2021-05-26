@@ -18,6 +18,7 @@ function parse_covalent_radii(data::String)::Dict{Symbol,Float64}
 end
 
 
+# Covalent radii, Å
 # Cordero bond radii, DOI: 10.1039/B801115J Table 2.
 # Overridden w/ larger values from DOI 10.1039/c9ra07327b Table 5
 global DEFAULT_COVALENT_RADII = parse_covalent_radii(
