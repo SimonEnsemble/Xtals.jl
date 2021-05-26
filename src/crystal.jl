@@ -450,7 +450,10 @@ function Crystal(filename::String;
     end
 
     if check_overlap
-        overlap(crystal)
+        overlap_flag, overlap_pairs = overlap(crystal, true)
+        if overlap_flag
+            error("Overlapping atoms: $overlap_pairs")
+        end
     end
 
     if !ismissing(infer_bonds)
@@ -1125,7 +1128,7 @@ function Base.:+(crystals::Crystal...; check_overlap::Bool=true)
     end
 
     if check_overlap
-        overlap(crystal)
+        overlap(crystal.atoms.coords, crystal.box, true)
     end
 
     return crystal
