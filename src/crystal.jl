@@ -451,7 +451,7 @@ function Crystal(filename::String;
     end
 
     if check_overlap
-        _check_overlap(crystal)
+        overlap(crystal)
     end
 
     if !ismissing(infer_bonds)
@@ -472,22 +472,6 @@ function Crystal(filename::String;
     return crystal
 end
 
-overlap(crystal::Crystal) = overlap(crystal.atoms.coords, crystal.box, true)
-
-function _check_overlap(crystal::Crystal)
-    overlap_flag, overlapping_pairs = overlap(crystal)
-    if overlap_flag
-        for (i, j) in overlapping_pairs
-            @warn @sprintf("atom %d (%s) and %d (%s) are overlapping\n", i, crystal.atoms.species[i],
-                j, crystal.atoms.species[j])
-        end
-        error(crystal.name * " has overlapping pairs of atoms!
-            (this occurs often when applying symmetry rules, if your structure was not in P1 symmetry to begin with.)
-            pass `check_overlap=false` then run `overlap(crystal)` to find pairs of overlapping atoms for inspection.
-            or pass `remove_duplicates=true` to the `Crystal` constructor to automatically remove the duplicate atoms and charges.
-            you should then visualize your .cif to make sure it is proper.`\n")
-    end
-end
 
 # documented in matter.jl
 function wrap!(crystal::Crystal)
@@ -588,6 +572,21 @@ neutral(crystal::Crystal, tol::Float64=1e-5) = neutral(crystal.charges, tol)
 """
 has_charges(crystal::Crystal) = crystal.charges.n > 0
 
+
+# e.g. `:Ca23` -> `:Ca`
+function strip_number_from_label(atom_label::Symbol)
+    atom_label_string = String(atom_label)
+    character_vector = [c for c in atom_label_string]
+    isletter_vector = isletter.(character_vector)
+    if all(isletter_vector)
+        # nothing to strip
+        return atom_label
+    else
+        return Symbol(atom_label_string[1:findfirst(.! isletter_vector) - 1])
+    end
+end
+
+
 """
     strip_numbers_from_atom_labels!(crystal)
 
@@ -602,14 +601,7 @@ e.g. C12 --> C
 """
 function strip_numbers_from_atom_labels!(crystal::Crystal)
     for i = 1:crystal.atoms.n
-        # atom species in string format
-		species = string(crystal.atoms.species[i])
-		for j = 1:length(species)
-			if ! isletter(species[j])
-                crystal.atoms.species[i] = Symbol(species[1:j-1])
-				break
-			end
-		end
+        crystal.atoms.species[i] = strip_number_from_label(crystal.atoms.species[i])
 	end
 end
 
@@ -1134,7 +1126,7 @@ function Base.:+(crystals::Crystal...; check_overlap::Bool=true)
     end
 
     if check_overlap
-        _check_overlap(crystal)
+        overlap(crystal)
     end
 
     return crystal

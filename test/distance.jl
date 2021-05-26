@@ -57,6 +57,13 @@ using LinearAlgebra
     o_flag, o_ids = overlap(f, box, true, tol=0.01)
     @test o_flag
     @test o_ids == [(2, 4)]
+    xtal = Crystal("", unit_cube(),
+                   Atoms([:C, :C, :C, :O], f),
+                   Charges{Frac}(0)
+                  )
+    o_flag, o_ids = overlap(xtal)
+    @test o_flag
+    @test o_ids == [(2, 4)]
 
     f = Frac([0.2 0.4 0.6 0.2;
               0.1 0.8 0.7 0.1;
@@ -68,6 +75,13 @@ using LinearAlgebra
     o_flag, o_ids = overlap(f, box, false, tol=0.03)
     @test !o_flag
     @test o_ids == []
+    xtal = Crystal("", unit_cube(),
+                   Atoms([:C, :C, :C, :O], f),
+                   Charges{Frac}(0)
+                  )
+    o_flag, o_ids = overlap(xtal)
+    @test o_flag
+    @test o_ids == [(2, 4)]
 
     xtal = Crystal("IRMOF-1.cif")
     @test !overlap(xtal, true)[1]
@@ -75,7 +89,7 @@ using LinearAlgebra
     @test overlap(xtal, true)[1]
 
     # test distance function (via Avogadro)
-    crystal = Crystal("simple_test.cif")
+    crystal = Crystal("simple_test.cif", check_overlap=false)
     @test distance(crystal.atoms, crystal.box, 1, 1, true) == 0.0
     @test isapprox(distance(crystal.atoms, crystal.box, 2, 5, true), 4.059, atol=0.001)
     @test isapprox(distance(crystal.atoms, crystal.box, 2, 5, false), 4.059, atol=0.001)

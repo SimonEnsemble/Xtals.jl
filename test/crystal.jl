@@ -26,6 +26,10 @@ end
     @test isapprox(xtal.atoms, Atoms([:Ca, :O], Frac([0.2 0.6; 0.5 0.3; 0.7 0.1])))
     @test isapprox(xtal.charges, Charges([1.0, -1.0], Frac([0.2 0.6; 0.5 0.3; 0.7 0.1])))
     @test xtal.symmetry.is_p1
+    @test Xtals.strip_number_from_label(:C) == :C
+    @test Xtals.strip_number_from_label(:C232) == :C
+    @test Xtals.strip_number_from_label(:Ca232) == :Ca
+    @test Xtals.strip_number_from_label(:Cad) == :Cad
 
     # assign charges function
     xtal = Crystal("test_structure3.cif")

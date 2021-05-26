@@ -43,15 +43,15 @@ Returns a set of bonding rules based on the given Cordero parameters and toleran
 function bondingrules(;covalent_radii::Dict{Symbol,Float64}=get_covalent_radii(), pad::Float64=0.)::Array{BondingRule}
     bondingrules = BondingRule[]
     # loop over parameterized atoms
-    for (i, atom1) in enumerate(keys(covalent_radii))
+    for (i, atom_i) in enumerate(keys(covalent_radii))
         # make rules for the atom with every other atom (and itself)
-        for (j, atom2) in enumerate(keys(covalent_radii))
+        for (j, atom_j) in enumerate(keys(covalent_radii))
             if j < i
                 continue # already did this atom in outer loop (don't duplicate)
             end
-            radii_sum = covalent_radii[atom1] + covalent_radii[atom2]
+            radii_sum = covalent_radii[atom_i] + covalent_radii[atom_j]
             max_dist = radii_sum + pad
-            push!(bondingrules, BondingRule(atom1, atom2, max_dist))
+            push!(bondingrules, BondingRule(atom_i, atom_j, max_dist))
         end
     end
     return bondingrules
