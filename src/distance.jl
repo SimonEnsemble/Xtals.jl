@@ -133,8 +133,8 @@ function overlap(xtal::Crystal, apply_pbc::Bool)
             r = distance(xtal.atoms.coords, xtal.box, i, j, apply_pbc)
             atom_i = strip_number_from_label(xtal.atoms.species[i])
             atom_j = strip_number_from_label(xtal.atoms.species[j])
-            crᵢ = get_covalent_radii(atom_i)
-            crⱼ = get_covalent_radii(atom_j)
+            crᵢ = rc[:covalent_radii][atom_i]
+            crⱼ = rc[:covalent_radii][atom_j]
             if r < min(crᵢ, crⱼ)
                 push!(overlap_ids, (i, j))
                 overlap_flag = true

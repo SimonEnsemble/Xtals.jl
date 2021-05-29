@@ -99,7 +99,7 @@ function Crystal(filename::String;
     end
 
     # read all lines of crystal structure file
-    _f = open(joinpath(get_global(:path_to_crystals), filename), "r")
+    _f = open(joinpath(rc[:paths][:crystals], filename), "r")
     lines = readlines(_f)
     close(_f)
 
@@ -663,7 +663,7 @@ Calculates the molecular weight of a unit cell of the crystal in amu using infor
 - `mass_of_crystal::Float64`: The molecular weight of a unit cell of the crystal in amu
 """
 function molecular_weight(crystal::Crystal)
-    atomic_masses = get_global(:atomic_masses)
+    atomic_masses = rc[:atomic_masses]
 
     mass = 0.0
 	for i = 1:crystal.atoms.n

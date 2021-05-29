@@ -2,41 +2,38 @@ module Xtals
 
 using CSV, DataFrames, Printf, LinearAlgebra, LightGraphs, PyCall, MetaGraphs
 
-include("paths_and_globals.jl")
+# global variable dictionary
+global rc = Dict{Symbol,Any}()
+
 include("matter.jl")
 include("box.jl")
 include("crystal.jl")
 include("distance.jl")
 include("misc.jl")
-include("covalent_radii.jl")
-include("bonds.jl")
 include("repfactors.jl")
+
 include("atomic_masses.jl")
+rc[:atomic_masses] = DEFAULT_ATOMIC_MASSES
 include("cpk_colors.jl")
+rc[:cpk_colors] = DEFAULT_CPK_COLORS
+include("covalent_radii.jl")
+rc[:covalent_radii] = DEFAULT_COVALENT_RADII
+include("bonds.jl")
+rc[:bonding_rules] = DEFAULT_BONDING_RULES
 
 
-# runs every time the module is imported
 function __init__()
-    # global variable dictionary, accessed via get/set_global API
-    global GLOBAL = Dict{Symbol,Any}()
-    # if the user changes directory, path_to_data will change as well
-    set_global(:path_to_data => joinpath(pwd(), "data"))
-    set_global(:path_to_crystals => joinpath(get_global(:path_to_data), "crystals"))
-    # set the default covalent radii
-    set_global(:covalent_radii => DEFAULT_COVALENT_RADII)
-    # set the default bonding rules
-    set_global(:bonding_rules => bondingrules()) # wanted to precompile, but didn't work
-    # set the default atomic masses
-    set_global(:atomic_masses => DEFAULT_ATOMIC_MASSES)
-    # the set default CPK df_colors
-    set_global(:cpk_colors => DEFAULT_CPK_COLORS)
-    @debug "Default environment variables" GLOBAL
+    rc[:paths] = Dict{Symbol,String}()
+    # sets paths to data and crystals relative to pwd() at import
+    rc[:paths][:data] = joinpath(pwd(), "data")
+    rc[:paths][:crystals] = joinpath(rc[:paths][:data], "crystals")
+    @debug "Environment variables" rc
 end
 
 
 export
-    # paths_and_globals.jl
-    print_file_paths, set_global, get_global, global_dict,
+    # Xtals.jl
+    rc,
 
     # matter.jl
     Coords, Frac, Cart, Atoms, Charges, wrap!, neutral, net_charge,

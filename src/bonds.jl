@@ -34,7 +34,7 @@ Returns a set of bonding rules based on the given Cordero parameters and toleran
 # Returns
 - `bondingrules::Array{BondingRule, 1}`: Bonding rules from the specified covalent radii.`
 """
-function bondingrules(;covalent_radii::Dict{Symbol,Float64}=get_global(:covalent_radii), pad::Float64=0.)::Array{BondingRule}
+function bondingrules(;covalent_radii::Dict{Symbol,Float64}=rc[:covalent_radii], pad::Float64=0.)::Array{BondingRule}
     bond_rules = BondingRule[]
     # loop over parameterized atoms
     for (i, atom_i) in enumerate(keys(covalent_radii))
@@ -45,7 +45,7 @@ function bondingrules(;covalent_radii::Dict{Symbol,Float64}=get_global(:covalent
             end
             radii_sum = covalent_radii[atom_i] + covalent_radii[atom_j]
             max_dist = radii_sum + pad
-            push!(bondingrules, BondingRule(atom_i, atom_j, max_dist))
+            push!(bond_rules, BondingRule(atom_i, atom_j, max_dist))
         end
     end
     return bond_rules
@@ -59,8 +59,7 @@ Writes bonding rules to a CSV file that can be loaded with [`read_bonding_rules`
 - `filename::String` : The name of the output file
 - `bonding_rules::Array{BondingRule}` : (Optional) The rules to write to file. If not specified, the global rules are written.
 """
-function write_bonding_rules(filename::String, bonding_rules::Union{Array{BondingRule},Nothing}=nothing)
-    bonding_rules = isnothing(bonding_rules) ? get_global(:bonding_rules) : bonding_rules
+function write_bonding_rules(filename::String, bonding_rules::Array{BondingRule}=rc[:bonding_rules])
     f = open(filename, "w")
     for r ∈ bonding_rules
         @printf(f, "%s,%s,%f\n", r.species_i, r.species_j, r.max_dist)
@@ -95,8 +94,8 @@ Adds `bonding_rules` to the beginning of the global bonding rules list
 - `bonding_rules::Array{BondingRule}` : the array of bonding rules to add
 """
 function add_bonding_rules(bonding_rules::Array{BondingRule})
-    br = get_global(:bonding_rules)
-    set_global(:bonding_rules => vcat(bonding_rules, br))
+    br = rc[:bonding_rules]
+    rc[:bonding_rules] = vcat(bonding_rules, br)
 end
 add_bonding_rules(bonding_rule::BondingRule) = add_bonding_rules([bonding_rule])
 
@@ -209,9 +208,8 @@ The bonding rules are hierarchical, i.e. the first bonding rule takes precedence
 - `bonding_rules::Union{Array{BondingRule, 1}, Nothing}=nothing`: The array of bonding rules that will be used to fill the bonding information. They are applied in the order that they appear. if `nothing`, default bonding rules will be applied; see [`get_bonding_rules`](@ref)
 """
 function infer_bonds!(crystal::Crystal, include_bonds_across_periodic_boundaries::Bool;
-                      bonding_rules::Union{Array{BondingRule, 1}, Nothing}=nothing)
+                      bonding_rules::Array{BondingRule, 1}=rc[:bonding_rules])
     @assert ne(crystal.bonds) == 0 @sprintf("The crystal %s already has bonds. Remove them with the `remove_bonds!` function before inferring new ones.", crystal.name)
-    bonding_rules = isnothing(bonding_rules) ? get_global(:bonding_rules) : bonding_rules
     # loop over every atom
     for i in 1:crystal.atoms.n
         # loop over every unique pair of atoms
@@ -357,11 +355,8 @@ Infers bonds by first finding which atoms share a Voronoi face, and then bond th
 function infer_geometry_based_bonds!(crystal::Crystal,
         include_bonds_across_periodic_boundaries::Bool;
         r::Float64=6., pad::Float64=0.,
-        covalent_radii::Union{Nothing,Dict{Symbol,Float64}}=nothing)
+        covalent_radii::Dict{Symbol,Float64}=rc[:covalent_radii])
     @assert ne(crystal.bonds) == 0 @sprintf("The crystal %s already has bonds. Remove them with the `remove_bonds!` function before inferring new ones.", crystal.name)
-    if isnothing(covalent_radii)
-        covalent_radii = get_global(:covalent_radii)
-    end
     dm = distance_matrix(crystal, include_bonds_across_periodic_boundaries)
     for i = 1:crystal.atoms.n
         for j in bonded_atoms(crystal, i, dm, r, pad, covalent_radii)
@@ -496,3 +491,5 @@ function drop_cross_pb_bonds!(bonds::MetaGraph)
 end
 
 drop_cross_pb_bonds!(xtal::Crystal) = drop_cross_pb_bonds!(xtal.bonds)
+
+DEFAULT_BONDING_RULES = bondingrules()

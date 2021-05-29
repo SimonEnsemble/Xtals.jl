@@ -4,13 +4,13 @@ Chemical bonding interactions are represented in the `bonds` attribute of a `Cry
 
 ## Bonding Rules
 
-`Xtals` uses a global array of [`BondingRule`](@ref) structs for deciding if two atoms are an appropriate distance to be chemically bonded.  The default rules are based on the [Cordero covalent radii](doi.org/10.1039/B801115J), modified based on the work of [Thomas Manz](doi.org/10.1039/c9ra07327b).  Each [`BondingRule`](@ref) is composed of two chemical species symbols and a floating point value, the maximum distance for inferring a bond between the indicated species.
+`Xtals` uses an array of [`BondingRule`](@ref) structs stored at [`rc`](@ref) for deciding if two atoms are an appropriate distance to be chemically bonded.  The default rules are based on the [Cordero covalent radii](doi.org/10.1039/B801115J), modified based on the work of [Thomas Manz](doi.org/10.1039/c9ra07327b).  Each [`BondingRule`](@ref) is composed of two chemical species symbols and a floating point value, the maximum distance for inferring a bond between the indicated species.
 
 ```julia
 BondingRule(:C, :C, 1.77)
 ```
 
-The global bonding rules are available via [`get_global`](@ref) and may be augmented with [`add_bonding_rules`](@ref), overwritten with [`set_global`](@ref), or written to/read from disk with [`write_bonding_rules`](@ref) and [`read_bonding_rules`](@ref).
+The global bonding rules are accessible at [`rc[:bonding_rules]`](@ref) and may be augmented with [`add_bonding_rules`](@ref) or written to/read from disk with [`write_bonding_rules`](@ref) and [`read_bonding_rules`](@ref).  The default rules are determined from `rc[:covalent_radii]` at module load, but *are not recalculated upon changes to the covalent radii.*  If `rc[:covalent_radii]` is altered and new bonding rules should be calculated, the user must do `rc[:bonding_rules] = bondingrules()`.
 
 ## Adding Bonds to Crystals
 

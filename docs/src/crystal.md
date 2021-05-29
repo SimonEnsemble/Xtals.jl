@@ -2,9 +2,9 @@
 
 `Xtals.jl` maintains a data structure `Crystal` that stores information about a crystal structure file.
 
-## reading in a crystal structure file
+## Reading in a crystal structure file
 
-Currently, the crystal structure file reader accepts `.cif` and `.cssr` file formats. `Xtals.jl` looks for the crystal structure files in `Xtals.PATH_TO_CRYSTALS` which is by default `./data/crystals`. By typing `set_path_to_crystals("my_crystal_dir")`, `Xtals.jl` now looks for the crystal structure file in `my_crystal_dir`.
+Currently, the crystal structure file reader accepts `.cif` and `.cssr` file formats. `Xtals.jl` looks for the crystal structure files in `rc[:paths][:crystals]` which is by default `./data/crystals` (relative to `pwd()` at module loading). By typing `rc[:paths][:crystals] = "my_crystal_dir"`, `Xtals.jl` now looks for the crystal structure file in `my_crystal_dir`.
 The files can be read as:
 
 ```julia
@@ -19,18 +19,18 @@ xtal.symmetry                       # Symmetry information of the crystal. By de
                                     #  Use `convert_to_p1=false` argument in `Crystal` to keep original symmetry
 ```
 
-## fixing atom species
+## Fixing atom species labels
 
 Often, the atoms species are appended by numbers. This messes with the internal workings of `Xtals.jl`.
-To circumvent this problem, the function `strip_numbers_from_atom_labels!(xtal)` removes the appending numbers.
-It is important to use this function prior to GCMC or Henry coefficient calculations.
+To circumvent this problem, the function `strip_numbers_from_atom_labels!(xtal)` removes the appended numbers.
+It is important to use this function prior to GCMC or Henry coefficient calculations and bond inference operations.
 ```julia
 xtal.atoms.species              # [:C1, :C2, :O1, ...]
 strip_numbers_from_atom_labels!(xtal)
 xtal.atoms.species              # [:C, :C, :O, ...]
 ```
 
-## converting the coordinates to cartesian space
+## Converting the coordinates to cartesian space
 
 The coordinates of the crystals are stored in fractional coordinates. If one needs to analyze the cartesian coordinates of the crystal,
 that can be done by using the unit cell information of the crystal.
@@ -39,7 +39,7 @@ xtal.atoms.coords.xf                                    # array of fractional co
 cart_coords = xtal.box.f_to_c * xtal.atoms.coords.xf    # array of cartesian coordinates
 ```
 
-## creating a super cell
+## Creating a super cell
 
 For many simulations, one needs to replicate the unit cell multiple times to create a bigger super cell.
 
@@ -47,7 +47,7 @@ For many simulations, one needs to replicate the unit cell multiple times to cre
 super_xtal = replicate(xtal, (2,2,2))       # Replicates the original unit cell once in each dimension
 ```
 
-## finding other properties
+## Finding other properties
 
 ```julia
 rho = crystal_density(xtal)         # Crystal density of the crystal in kg/m^2
@@ -55,7 +55,7 @@ mw = molecular_weight(xtal)         # The molecular weight of the unit cell in a
 formula = chemical_formula(xtal)    # The irreducible chemical formula of the crystal
 ```
 
-## assigning new charges
+## Assigning new charges
 
 If the crystal structure file does not contains partial charges, we provide methods to assign new charges to the crystal
 
@@ -69,7 +69,7 @@ other_charged_xtal = Crystal(xtal.name, xtal.box, xtal.atoms,               # He
                                                                             #   and finally a new `Crystal` object is manually created
 ```
 
-## writing crystal files
+## Writing crystal files
 
 We provide methods to write both `.xyz` and `.cif` files
 
@@ -79,13 +79,11 @@ write_xyz(xtal, "my_new_xyz_file.xyz")      # stored in the current directory
 ```
 
 
-# detailed docs
+# Detailed docs
 
 ```@docs
     Crystal
     SymmetryInfo
-    set_path_to_data
-    set_path_to_crystals
     strip_numbers_from_atom_labels!
     replicate
     molecular_weight
