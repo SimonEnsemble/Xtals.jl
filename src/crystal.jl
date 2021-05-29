@@ -1128,7 +1128,8 @@ function Base.:+(crystals::Crystal...; check_overlap::Bool=true)
     end
 
     if check_overlap
-        overlap(crystal.atoms.coords, crystal.box, true)
+        overlap_flag, overlap_pairs = overlap(crystal.atoms.coords, crystal.box, true)
+        @assert !overlap_flag "Addition causes overlap: $overlap_pairs"
     end
 
     return crystal

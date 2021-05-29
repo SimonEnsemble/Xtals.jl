@@ -199,21 +199,7 @@ end
     @test rbox.Ω ≈ sbmof1.box.Ω * 2 * 3 * 4
     @test all(rbox.c_to_f * sbmof1.box.f_to_c * [1.0, 1.0, 1.0] .≈ [1/2, 1/3, 1/4])
 
- #
- #
- #     # test symmetry_rules
- #     # define default symmetry_rules
- #     symmetry_rules = [Array{AbstractString, 2}(undef, 3, 0) ["x", "y", "z"]]
- #     other_symmetry_rules = [Array{AbstractString, 2}(undef, 3, 0) ["y + z", "x + z", "x + y"]]
- #     symmetry_rules_two = [Array{AbstractString, 2}(undef, 3, 0) ["x" "y + z";
- #                                                                  "y" "x + z";
- #                                                                  "z" "x + y"]]
- #     symmetry_rules_two_cpy = deepcopy(symmetry_rules_two)
- #     @test ! is_symmetry_equal(symmetry_rules, symmetry_rules_two)
- #     @test ! is_symmetry_equal(symmetry_rules, other_symmetry_rules)
- #     @test is_symmetry_equal(symmetry_rules, symmetry_rules)
- #     @test is_symmetry_equal(symmetry_rules_two, symmetry_rules_two_cpy)
- #
+
     # test crystal addition
     c1 = Crystal("crystal 1", unit_cube(), Atoms([:a, :b],
                                                  Frac([1.0 4.0;
@@ -249,22 +235,13 @@ end
     @test isapprox(c1.charges + c2.charges, c.charges)
     @test isapprox(c[1:2], c1) # indexing test
     @test isapprox(c[3:4], c2) # indexing test
-    # TODO test bonds too.
- #     addition_bonding_rules = [BondingRule(:a, :b, 4.5, 5.3),
- #                               BondingRule(:c, :d, 4.5, 5.3)]
- #     @test is_bonded(f1, 1, 2, [BondingRule(:a, :b, 1.0, 5.5)]; include_bonds_across_periodic_boundaries=false)
- #     @test ! is_bonded(f2, 1, 2, [BondingRule(:c, :d, 1.0, 4.5)]; include_bonds_across_periodic_boundaries=false)
- #     infer_bonds!(f1, false, addition_bonding_rules)
- #     infer_bonds!(f2, false, addition_bonding_rules)
- #     @test ! compare_bonds_in_crystal(f1 + f2, f3)
- #     infer_bonds!(f3, false, addition_bonding_rules)
- #     @test compare_bonds_in_crystal(f1 + f2, f3)
 
     # test overlap crystal addition
     c_overlap = +(c1, c2, c; check_overlap=false)
     @test isapprox(c_overlap.box, c.box)
     @test isapprox(c_overlap.atoms, c1.atoms + c2.atoms + c.atoms)
     @test isapprox(c_overlap.charges, c1.charges + c2.charges + c.charges)
+    @test_throws AssertionError +(c1, c2, c) # by default, do not let crystal additions result in overlap
 
     # more xtal tests
     sbmof1 = Crystal("SBMOF-1.cif")
