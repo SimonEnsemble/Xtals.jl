@@ -1,12 +1,12 @@
 TRAVIS = true # set false for better UX in Atom. must be true for CI
 
 testfiles = [
-    "misc.jl",
     "distance.jl",
+    "crystal.jl",
+    "misc.jl",
     "bonds.jl",
     "box.jl",
     "matter.jl",
-    "crystal.jl",
     "assert_p1_symmetry.jl",
     "paths.jl" # last, to not interfere with reading test data
     ]
