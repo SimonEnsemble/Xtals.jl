@@ -1,3 +1,9 @@
+```@meta
+DocTestSetup = quote
+  using Xtals
+end
+```
+
 # Matter and Coordinates
 
 `Atoms` and `Charges` are the building blocks of `Crystal`s and `Molecule`s in
@@ -37,13 +43,17 @@ coord.xf
 the coordinates of multiple particles are stored column-wise:
 ```jldoctest matter; output=false
 # five particles at uniform random coordinates
-coords = Cart(rand(3, 5))
+coords = Cart([
+  0.0 1.0 0.0 0.0 1.0;
+  0.0 0.0 1.0 0.0 1.0;
+  0.0 0.0 0.0 1.0 1.0
+])
 # output
-Cart([0.9191328867176649 0.5602252259405531 … 0.6941792925286383 0.4465837354370361; 0.3933945192933117 0.2007652367643742 … 0.784152730804411 0.9100098503683318; 0.7834262785325792 0.5185269840308575 … 0.1330966285870454 0.8451555923505576])
+Cart([0.0 1.0 … 0.0 1.0; 0.0 0.0 … 0.0 1.0; 0.0 0.0 … 1.0 1.0])
 ```
 
 many `Array` operations work on `Coords`, such as:
-```jldoctest; output=false
+```jldoctest matter; output=false
 coords[2]                      # coordinate of 2nd particle
 coords[2:3]                    # (slicing by index) coords of particles 2 and 3
 coords[[1, 2, 5]]              # (slicing by index) coords of particles 1, 2, and 5
@@ -193,10 +203,4 @@ true
     net_charge
     neutral
     translate_by!
-```
-
-```jldoctest
-true # test to see what a failed test does...
-# output
-false
 ```
