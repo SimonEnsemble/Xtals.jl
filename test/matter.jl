@@ -23,6 +23,10 @@ using Test
                8.0 11.0;
                9.0 12.0]
               )
+    @test isapprox(c2[1], Cart([7.0; 8.0; 9.0])) # test getindex(::Cart,::Int)
+    @test lastindex(c2) == 2
+    c2[2] = [0.0, 1.0, 2.0]
+    @test isapprox(c2[2], Cart([0.0; 1.0; 2.0]))
 
     s1 = [:a, :b]
     s2 = [:c, :d]
