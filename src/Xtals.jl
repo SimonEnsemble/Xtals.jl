@@ -47,7 +47,7 @@ export
     nearest_image!, distance, overlap, remove_duplicates, pairwise_distances,
 
     # misc.jl
-    read_xyz, write_xyz, read_mol, write_mol2,
+    read_xyz, write_xyz, read_mol, write_mol2, assert_P1_symmetry,
 
     # crystal.jl
     Crystal, strip_numbers_from_atom_labels!, assign_charges,
