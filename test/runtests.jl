@@ -18,6 +18,9 @@ if !isdir("temp")
     mkdir("temp")
 end
 
-include.(testfiles)
+for testfile ∈ testfiles
+    @info "Running test/$testfile"
+    include(testfile)
+end
 
 @info "Done!"
