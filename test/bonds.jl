@@ -1,8 +1,11 @@
 module Bonds_test
+
 using Xtals, LightGraphs, Test, MetaGraphs
+
 if ! isdir("temp")
     mkdir("temp")
 end
+
 
 function visual_check(xtal::String)
     c = Crystal(xtal)
@@ -14,6 +17,16 @@ function visual_check(xtal::String)
     @info c.name * " see .vtk and .xyz to visually check bonds"
 end
 
+
+@testset "bond sanity check" begin
+    box = unit_cube()
+    texas_carbon = read_xyz(joinpath(rc[:paths][:crystals], "texas_carbon.xyz"))
+    xtal = Crystal("CH5", box, Atoms(texas_carbon.n, texas_carbon.species, Frac(texas_carbon.coords, box)), Charges{Frac}(0))
+    @test !bond_sanity_check(xtal)[1]
+    trihydrogen = read_xyz(joinpath(rc[:paths][:crystals], "trihydrogen.xyz"))
+    xtal = Crystal("H3", box, Atoms(trihydrogen.n, trihydrogen.species, Frac(trihydrogen.coords, box)), Charges{Frac}(0))
+    @test !bond_sanity_check(xtal)[1]
+end
 @testset "NiPyC2 Tests" begin
     # NiPyC2 bonding
     c = Crystal("NiPyC2_relax.cif")
@@ -139,7 +152,7 @@ end
     @test xtal.bonds == xtal2.bonds
     write_mol2(xtal, filename="temp/cof-102_no_pb.mol2")
 end
-@testset "bonding rules api" begin
+@testset "bonding rules" begin
     write_bonding_rules("temp/bonding_rules.csv")
     @test isfile("temp/bonding_rules.csv")
     bonding_rules = read_bonding_rules("temp/bonding_rules.csv")
@@ -149,7 +162,11 @@ end
     @test length(rc[:bonding_rules]) == (n + 1)
     println([r for r ∈ bonding_rules if :C == r.species_j][1])
     @test true
-    rc[:bonding_rules] = Xtals.DEFAULT_BONDING_RULES # for re-run safety
+    rc[:bonding_rules] = [BondingRule(:foo, :bar, 0.0)]
+    xtal = Crystal("cof-102.cif")
+    @test isnan(Xtals.is_bonded(xtal, 1, 2, rc[:bonding_rules])[2])
+    rc[:bonding_rules] = bondingrules()
+    @test true
 end
 @testset "etc" begin
     xtal = Crystal("SBMOF-1.cif")
