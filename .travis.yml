@@ -16,7 +16,7 @@ addons:
 
 script:
   - julia quick_setup.jl
-  - julia --project --check-bounds=yes -e 'import Pkg; Pkg.build(); Pkg.test("Xtals", coverage=true)'
+  - julia --project --check-bounds=yes -e 'import Pkg; Pkg.test("Xtals", coverage=true)'
 
 after_success:
   - julia --project -e 'import Pkg; Pkg.add("Documenter"); Pkg.add("Coverage")'
