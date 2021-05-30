@@ -13,66 +13,100 @@ fractional coordinates, which are defined in the context of a periodic system,
 e.g. within a crystal.
 
 construct coordinates of `n` particles by passing a `n` by `3` array
-```julia
-coord = Cart([1.0, 2.0, 5.0])  # construct cartesian coordinate of a particle
-coord.x                        # 3 x 1 array, [1.0, 2.0, 5.0]
-
-coord = Frac([0.1, 0.2, 0.5])  # construct fractional coordinate of a particle
-coord.xf                       # 3 x 1 array, [0.1, 0.2, 0.5]
+```jldoctest
+# construct cartesian coordinates of a particle
+coord = Cart([1.0, 2.0, 5.0])
+coord.x
+# output
+3×1 Matrix{Float64}:
+ 1.0
+ 2.0
+ 5.0
+```
+```jldoctest
+# construct fractional coordinates of a particle
+coord = Frac([0.1, 0.2, 0.5])
+coord.xf
+# output
+3×1 Matrix{Float64}:
+ 0.1
+ 0.2
+ 0.5
 ```
 
 the coordinates of multiple particles are stored column-wise:
-```julia
-coords = Cart(rand(3, 5))      # five particles at uniform random coordinates
+```jldoctest matter; output=false
+# five particles at uniform random coordinates
+coords = Cart(rand(3, 5))
+# output
+Cart([0.9191328867176649 0.5602252259405531 … 0.6941792925286383 0.4465837354370361; 0.3933945192933117 0.2007652367643742 … 0.784152730804411 0.9100098503683318; 0.7834262785325792 0.5185269840308575 … 0.1330966285870454 0.8451555923505576])
 ```
 
 many `Array` operations work on `Coords`, such as:
-```julia
+```jldoctest; output=false
 coords[2]                      # coordinate of 2nd particle
 coords[2:3]                    # (slicing by index) coords of particles 2 and 3
 coords[[1, 2, 5]]              # (slicing by index) coords of particles 1, 2, and 5
 coords[rand(Bool, 5)]          # (boolean slicing) coords, selected at random
 length(coords)                 # number of particles, (5)
+# output
+5
 ```
 
-### manipulating coordinates
+### Manipulating coordinates
 
 `Coords` are immutable:
-```julia
-coords.x = rand(3, 3)          # fails! coordinates are immutable
+```jldoctest matter
+coords.x = rand(3, 5)
+# output
+ERROR: setfield! immutable struct of type Cart cannot be changed
 ```
 but we can manipulate the values of `Array{Float64, 2}` where coordinates
 (through `coords.x` or `coords.xf`) are stored:
 
 ```julia
 coords.x[2, 3] = 100.0         # successful!
-coords.x[:] = rand(3, 3)       # successful! (achieves the above, but need the [:] to say "overwrite all of the elements"
+coords.x[:] = rand(3, 5)       # successful! (achieves the above, but need the [:] to say "overwrite all of the elements"
 ```
 
 fractional coordinates can be wrapped to be inside the unit cell box:
-```julia
+```jldoctest
 coords = Frac([1.2, -0.3, 0.9])
 wrap!(coords)
-coords.xf                      # [0.2, 0.7, 0.9]
+coords.xf
+# output
+3×1 Matrix{Float64}:
+ 0.19999999999999996
+ 0.7
+ 0.9
 ```
 
 we can translate coordinates by a vector `dx`:
-```julia
+```jldoctest
 dx = Cart([1.0, 2.0, 3.0])
 coords = Cart([1.0, 0.0, 0.0])  
 translate_by!(coords, dx)
-coords.x                        # [2.0, 2.0, 3.0]
+coords.x
+# output
+3×1 Matrix{Float64}:
+ 2.0
+ 2.0
+ 3.0
 ```
 
 if `dx::Frac` and `coords::Cart`, `translate_by!` requires a `Box` to convert
 between fractional and cartesian, as the last argument:
-```julia
+```jldoctest
 dx = Frac([0.1, 0.2, 0.3])
 box = unit_cube()
 coords = Cart([1.0, 0.0, 0.0])
-translate_by!(coords, dx)       # fails! need to know Box...
 translate_by!(coords, dx, box)
-coords.x                        # [1.1, 0.2, 0.3]
+coords.x
+# output
+3×1 Matrix{Float64}:
+ 1.1
+ 0.20000000000000004
+ 0.3
 ```
 
 ## Atoms
@@ -80,7 +114,7 @@ coords.x                        # [1.1, 0.2, 0.3]
 an atom is specified by its coordinates and atomic species. we can construct a
 set of atoms (perhaps, comprising a molecule or crystal) as follows.
 
-```julia
+```jldoctest matter; output=false
 species = [:O, :H, :H]            # atomic species are represnted with Symbols
 coords = Cart([0.0 0.757 -0.757;  # coordinates of each
                0.0 0.586  0.586;
@@ -91,21 +125,28 @@ atoms.n                           # number of atoms, 3
 atoms.coords                      # coordinates; atoms.coords.x gives the array of coords
 atoms.species                     # array of species
 atoms::Atoms{Cart}                # successful type assertion, as opposed to atoms::Atoms{Frac}
+atoms                             # view the contents of the struct
+# output
+Atoms{Cart}(3, [:O, :H, :H], Cart([0.0 0.757 -0.757; 0.0 0.586 0.586; 0.0 0.0 0.0]))
 ```
 
 the last line illustrates the two subtypes of `Atoms`, depending on whether the
 `Coords` are stored as `Frac`tional or `Cart`esian.
 
 we can slice atoms, such as:
-```julia
+```jldoctest matter; output=false
 atoms[1]                         # 1st atom
 atoms[2:3]                       # 2nd and 3rd atom
+# output
+Atoms{Cart}(2, [:H, :H], Cart([0.757 -0.757; 0.586 0.586; 0.0 0.0]))
 ```
 
 and combine them:
-```julia
+```jldoctest matter
 atoms_combined = atoms[1] + atoms[2:3]   # combine atoms 1, 2, and 3
-isapprox(atoms, atoms_combined)          # true
+isapprox(atoms, atoms_combined)
+# output
+true
 ```
 
 ## Charges
@@ -113,7 +154,7 @@ isapprox(atoms, atoms_combined)          # true
 `Charges`, well, point charges, work analogously to atoms, except instead of
 `species`, the values of the point charges are stored in an array, `q`.
 
-```
+```jldoctest matter; output=false
 q = [-1.0, 0.5, 0.5]              # values of point charges, units: electrons
 coords = Cart([0.0 0.757 -0.757;  # coordinates of the point charges
                0.0 0.586  0.586;
@@ -124,12 +165,21 @@ charges.n                         # number of charges, 3
 charges.coords                    # retreive coords
 charges.q                         # retreive q
 charges::Charges{Cart}            # successful type assertion, as opposed to charges::Charges{Frac}
+charges                           # view contents of struct
+# output
+Charges{Cart}(3, [-1.0, 0.5, 0.5], Cart([0.0 0.757 -0.757; 0.0 0.586 0.586; 0.0 0.0 0.0]))
 ```
 
 we can determine if the set of point charges comprise a charge-neutral system by:
-```julia
-net_charge(charges)                 # 0.0
-neutral(charges)                    # true
+```jldoctest matter
+net_charge(charges)
+# output
+0.0
+```
+```jldoctest matter
+neutral(charges)
+# output
+true
 ```
 
 # detailed docs
