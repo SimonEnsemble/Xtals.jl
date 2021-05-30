@@ -1,7 +1,9 @@
 module Xtals
 
-using CSV, DataFrames, Printf, LinearAlgebra, LightGraphs, PyCall, MetaGraphs, Conda
+using CSV, DataFrames, Printf, LinearAlgebra, LightGraphs, PyCall, MetaGraphs, Conda, Pkg
 
+ENV["PYTHON"] = ""
+Pkg.build("PyCall")
 for pydep ∈ ["scipy"]
     try
         pyimport(pydep)
