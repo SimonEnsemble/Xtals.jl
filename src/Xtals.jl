@@ -1,19 +1,14 @@
 module Xtals
 
-using CSV, DataFrames, Printf, LinearAlgebra, LightGraphs, PyCall, MetaGraphs, Conda, Pkg
+using CSV, DataFrames, Printf, LinearAlgebra, LightGraphs, PyCall, MetaGraphs
 
-ENV["PYTHON"] = ""
-Pkg.build("PyCall")
+# check Python dependencies
 for pydep ∈ ["scipy"]
     try
         pyimport(pydep)
-    catch
-        try
-            Conda.add(pydep) 
-        catch exception
-            throw("Error installing $pydep")
-            @debug exception
-        end
+    catch exception
+        @error "Error loading $pydep"
+        @debug exception
     end
 end
 
