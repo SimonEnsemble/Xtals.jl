@@ -1,4 +1,4 @@
-# Xtals.jl
+![Xtals.jl](xtals_logo.png)
 
 [![Build Status](https://travis-ci.org/SimonEnsemble/Xtals.jl.svg?branch=master)](https://travis-ci.org/SimonEnsemble/Xtals.jl)
 [![codecov.io](https://codecov.io/github/SimonEnsemble/Xtals.jl/coverage.svg?branch=master)](https://codecov.io/github/SimonEnsemble/Xtals.jl/?branch=master)
