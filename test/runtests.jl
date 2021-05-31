@@ -18,13 +18,13 @@ if !isdir("temp")
     mkdir("temp")
 end
 
-# run doctests
-doctest(Xtals)
-
 @info "Running unit tests..."
 for testfile ∈ testfiles
     @info "Running test/$testfile"
     include(testfile)
 end
+
+# run doctests
+doctest(Xtals)
 
 @info "Done!"

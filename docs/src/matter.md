@@ -135,7 +135,6 @@ atoms.n                           # number of atoms, 3
 atoms.coords                      # coordinates; atoms.coords.x gives the array of coords
 atoms.species                     # array of species
 atoms::Atoms{Cart}                # successful type assertion, as opposed to atoms::Atoms{Frac}
-atoms                             # view the contents of the struct
 # output
 Atoms{Cart}(3, [:O, :H, :H], Cart([0.0 0.757 -0.757; 0.0 0.586 0.586; 0.0 0.0 0.0]))
 ```
@@ -175,7 +174,6 @@ charges.n                         # number of charges, 3
 charges.coords                    # retreive coords
 charges.q                         # retreive q
 charges::Charges{Cart}            # successful type assertion, as opposed to charges::Charges{Frac}
-charges                           # view contents of struct
 # output
 Charges{Cart}(3, [-1.0, 0.5, 0.5], Cart([0.0 0.757 -0.757; 0.0 0.586 0.586; 0.0 0.0 0.0]))
 ```
