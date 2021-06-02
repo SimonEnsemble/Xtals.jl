@@ -36,6 +36,6 @@ using Xtals, Test, DataFrames, LightGraphs, CSV
     write_mol2(xtal, filename="temp/test.mol2")
     @test isfile("temp/test.mol2")
 
-    @test isnothing(load_pydep("bogus_python_package"))
+    @test isnothing(Xtals.load_pydep("bogus_python_package"))
 end
 end
