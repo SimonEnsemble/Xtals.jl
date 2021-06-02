@@ -2,16 +2,6 @@ module Xtals
 
 using CSV, DataFrames, Printf, LinearAlgebra, LightGraphs, PyCall, MetaGraphs
 
-# check Python dependencies
-for pydep ∈ ["scipy"]
-    try
-        pyimport(pydep)
-    catch exception
-        @error "Error loading $pydep"
-        @debug exception
-    end
-end
-
 # global variable dictionary
 global rc = Dict{Symbol,Any}()
 rc[:paths] = Dict{Symbol,String}()
@@ -33,9 +23,20 @@ include("bonds.jl")
 rc[:bonding_rules] = DEFAULT_BONDING_RULES
 
 
+function load_pydep(pydep)
+    try
+        return pyimport("scipy.spatial")
+    catch
+        @warn "Error loading $pydep. Some functionaltiy may be missing."
+        return nothing
+    end
+end
+
+
 function __init__()
-    # loads Python dependency
-    global scipy = pyimport("scipy.spatial")
+    # load Python dependencies
+    rc[:scipy] = load_pydep("scipy.spatial")
+    
     # sets paths to data and crystals relative to pwd() at import
     rc[:paths][:data] = joinpath(pwd(), "data")
     rc[:paths][:crystals] = joinpath(rc[:paths][:data], "crystals")
