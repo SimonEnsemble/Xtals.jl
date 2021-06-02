@@ -15,7 +15,7 @@ addons:
     - libhdf5-serial-dev
 
 script:
-  - julia quick_setup.jl
+  #- julia quick_setup.jl
   - julia --project --check-bounds=yes -e 'import Pkg; Pkg.test("Xtals", coverage=true)'
 
 after_success:
