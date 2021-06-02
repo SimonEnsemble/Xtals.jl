@@ -25,7 +25,7 @@ rc[:bonding_rules] = DEFAULT_BONDING_RULES
 
 function load_pydep(pydep)
     try
-        return pyimport("scipy.spatial")
+        return pyimport(pydep)
     catch
         @warn "Error loading $pydep. Some functionaltiy may be missing."
         return nothing

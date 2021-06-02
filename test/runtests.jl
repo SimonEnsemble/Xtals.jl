@@ -1,9 +1,9 @@
 testfiles = [
+    "misc.jl",
     "bonds.jl",
     "matter.jl",
     "distance.jl",
     "crystal.jl",
-    "misc.jl",
     "box.jl",
     "assert_p1_symmetry.jl",
     "paths.jl"
