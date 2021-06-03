@@ -60,8 +60,6 @@ Base.setindex!(coords::Cart, val::Array{Float64, 1}, ids) = (coords.x[:, ids] = 
 Base.size(coords::Cart) = size(coords.x)
 Base.size(coords::Frac) = size(coords.xf)
 
-origin(T::DataType) = T([0.0, 0.0, 0.0])
-
 
 """
     translate_by!(coords, dx)

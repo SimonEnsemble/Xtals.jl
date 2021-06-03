@@ -31,6 +31,8 @@ using Xtals, Test, DataFrames, LightGraphs, CSV
     xtal = Crystal("SBMOF-1.cif", infer_bonds=:cordero, periodic_boundaries=true)
     write_mol2(xtal, filename="temp/test.mol2")
     @test isfile("temp/test.mol2")
+    write_mol2(xtal)
+    @test isfile("SBMOF-1.mol2")
 
     @test isnothing(Xtals.load_pydep("bogus_python_package"))
 end
