@@ -10,13 +10,10 @@ testfiles = [
     ]
 
 using Test, LightGraphs, MetaGraphs, Documenter
+
 using Xtals
 
 @info "\n\n\t\tXtals.jl\n\n\n"
-
-if !isdir("temp")
-    mkdir("temp")
-end
 
 @info "Running unit tests..."
 for testfile ∈ testfiles

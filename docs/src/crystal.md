@@ -32,6 +32,7 @@ xtal.symmetry                       # Symmetry information of the crystal. By de
 Often, the atoms species are appended by numbers. This messes with the internal workings of `Xtals.jl`.
 To circumvent this problem, the function `strip_numbers_from_atom_labels!(xtal)` removes the appended numbers.
 It is important to use this function prior to GCMC or Henry coefficient calculations and bond inference operations.
+
 ```jldoctest crystal
 xtal = Crystal("IRMOF-1.cif", species_col=["_atom_site_label"])
 xtal.atoms.species[1]

@@ -10,5 +10,5 @@ In `Xtals.jl`, global variables are stored in a dictionary called `rc`.  The ent
 
 The `rc[:paths]` dictionary holds the following:
 
+- `rc[:paths][:crystals]` : the path to find crystallographic files (`.cif`, `.cssr`) to read in
 - `rc[:paths][:data]` : not directly used by `Xtals.jl`, but important for other packages which use `Xtals`, e.g. [PorousMaterials.jl](https://simonensemble.github.io/PorousMaterials.jl/dev/)
-- `rc[:paths][:crystals]` : where to find crystallographic input data
