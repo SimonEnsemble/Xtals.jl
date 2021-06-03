@@ -3,8 +3,6 @@ module Misc_Test
 using Xtals, Test, DataFrames, LightGraphs, CSV
 
 @testset "Misc Tests" begin
-    @test Xtals.parse_covalent_radii("foo,845")[:foo] == 845
-
     @test Xtals.AtomicMasses([:atom, :mass], "baz,4057")[:baz] == 4057
     am = rc[:atomic_masses]
     @test isapprox(am[:H], 1.00794, atol=0.001)
