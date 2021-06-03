@@ -26,6 +26,10 @@ end
     @test isapprox(xtal.atoms, Atoms([:Ca, :O], Frac([0.2 0.6; 0.5 0.3; 0.7 0.1])))
     @test isapprox(xtal.charges, Charges([1.0, -1.0], Frac([0.2 0.6; 0.5 0.3; 0.7 0.1])))
     @test xtal.symmetry.is_p1
+    @test Xtals.strip_number_from_label(:C) == :C
+    @test Xtals.strip_number_from_label(:C232) == :C
+    @test Xtals.strip_number_from_label(:Ca232) == :Ca
+    @test Xtals.strip_number_from_label(:Cad) == :Cad
 
     # assign charges function
     xtal = Crystal("test_structure3.cif")
@@ -67,17 +71,17 @@ end
     # test .cif writer; write, read in, assert equal
     crystal = Crystal("SBMOF-1.cif")
     rewrite_filename = "rewritten.cif"
-    write_cif(crystal, joinpath(Xtals.PATH_TO_CRYSTALS, rewrite_filename))
+    write_cif(crystal, joinpath(rc[:paths][:crystals], rewrite_filename))
     crystal_reloaded = Crystal(rewrite_filename)
     strip_numbers_from_atom_labels!(crystal_reloaded) # TODO Arthur remove this necessity from write_cif
     @test isapprox(crystal, crystal_reloaded, atol=0.0001)
-    write_cif(crystal, joinpath(Xtals.PATH_TO_CRYSTALS, rewrite_filename), fractional_coords=false) # cartesian
+    write_cif(crystal, joinpath(rc[:paths][:crystals], rewrite_filename), fractional_coords=false) # cartesian
     crystal_reloaded = Crystal(rewrite_filename)
     strip_numbers_from_atom_labels!(crystal_reloaded) # TODO Arthur remove this necessity from write_cif
     @test isapprox(crystal, crystal_reloaded, atol=0.0001)
  #     rm(rewrite_filename) # clean up.
     rewrite_filename = "rewritten.cif"
-    write_cif(crystal, joinpath(Xtals.PATH_TO_CRYSTALS, rewrite_filename), number_atoms=false)
+    write_cif(crystal, joinpath(rc[:paths][:crystals], rewrite_filename), number_atoms=false)
     crystal_reloaded = Crystal(rewrite_filename)
     @test isapprox(crystal, crystal_reloaded, atol=0.0001)
 
@@ -170,7 +174,7 @@ end
     da_xtalname = "ATIBOU01_clean"
     xtal_cif = Crystal(da_xtalname * ".cif", include_zero_charges=true)
     write_cssr(xtal_cif)
-    write_cssr(xtal_cif, joinpath(Xtals.PATH_TO_CRYSTALS, da_xtalname * ".cssr"))
+    write_cssr(xtal_cif, joinpath(rc[:paths][:crystals], da_xtalname * ".cssr"))
     xtal_cssr = Crystal(da_xtalname * ".cssr", include_zero_charges=true)
     @test isapprox(xtal_cssr, xtal_cif, atol=0.0001)
 
@@ -195,21 +199,7 @@ end
     @test rbox.Ω ≈ sbmof1.box.Ω * 2 * 3 * 4
     @test all(rbox.c_to_f * sbmof1.box.f_to_c * [1.0, 1.0, 1.0] .≈ [1/2, 1/3, 1/4])
 
- #
- #
- #     # test symmetry_rules
- #     # define default symmetry_rules
- #     symmetry_rules = [Array{AbstractString, 2}(undef, 3, 0) ["x", "y", "z"]]
- #     other_symmetry_rules = [Array{AbstractString, 2}(undef, 3, 0) ["y + z", "x + z", "x + y"]]
- #     symmetry_rules_two = [Array{AbstractString, 2}(undef, 3, 0) ["x" "y + z";
- #                                                                  "y" "x + z";
- #                                                                  "z" "x + y"]]
- #     symmetry_rules_two_cpy = deepcopy(symmetry_rules_two)
- #     @test ! is_symmetry_equal(symmetry_rules, symmetry_rules_two)
- #     @test ! is_symmetry_equal(symmetry_rules, other_symmetry_rules)
- #     @test is_symmetry_equal(symmetry_rules, symmetry_rules)
- #     @test is_symmetry_equal(symmetry_rules_two, symmetry_rules_two_cpy)
- #
+
     # test crystal addition
     c1 = Crystal("crystal 1", unit_cube(), Atoms([:a, :b],
                                                  Frac([1.0 4.0;
@@ -245,22 +235,13 @@ end
     @test isapprox(c1.charges + c2.charges, c.charges)
     @test isapprox(c[1:2], c1) # indexing test
     @test isapprox(c[3:4], c2) # indexing test
-    # TODO test bonds too.
- #     addition_bonding_rules = [BondingRule(:a, :b, 4.5, 5.3),
- #                               BondingRule(:c, :d, 4.5, 5.3)]
- #     @test is_bonded(f1, 1, 2, [BondingRule(:a, :b, 1.0, 5.5)]; include_bonds_across_periodic_boundaries=false)
- #     @test ! is_bonded(f2, 1, 2, [BondingRule(:c, :d, 1.0, 4.5)]; include_bonds_across_periodic_boundaries=false)
- #     infer_bonds!(f1, false, addition_bonding_rules)
- #     infer_bonds!(f2, false, addition_bonding_rules)
- #     @test ! compare_bonds_in_crystal(f1 + f2, f3)
- #     infer_bonds!(f3, false, addition_bonding_rules)
- #     @test compare_bonds_in_crystal(f1 + f2, f3)
 
     # test overlap crystal addition
     c_overlap = +(c1, c2, c; check_overlap=false)
     @test isapprox(c_overlap.box, c.box)
     @test isapprox(c_overlap.atoms, c1.atoms + c2.atoms + c.atoms)
     @test isapprox(c_overlap.charges, c1.charges + c2.charges + c.charges)
+    @test_throws AssertionError +(c1, c2, c) # by default, do not let crystal additions result in overlap
 
     # more xtal tests
     sbmof1 = Crystal("SBMOF-1.cif")
@@ -291,11 +272,11 @@ end
     crystal = Crystal("ADARAA_clean.cif")
     @test all(crystal.charges.q .!= 0.0) # has charges...
     @test neutral(crystal, Xtals.NET_CHARGE_TOL) # is neutral...
-    write_cif(crystal, joinpath(Xtals.PATH_TO_CRYSTALS, "high_precision_charges_test.cif")) # should write charges with more decimals
+    write_cif(crystal, joinpath(rc[:paths][:crystals], "high_precision_charges_test.cif")) # should write charges with more decimals
     crystal_reloaded = Crystal("high_precision_charges_test.cif")
     @test isapprox(crystal.charges.q, crystal_reloaded.charges.q, atol=1e-8) # would not hv this precision if didn't write high-precision charges for this one.
     crystal_not_neutral = crystal.charges.q .= round.(crystal.charges.q, digits=6) # this is what charges would be if stored 6 decimals in .cif and threw away the rest
-    write_cif(crystal, joinpath(Xtals.PATH_TO_CRYSTALS, "high_precision_charges_test_not_neutral.cif"))
+    write_cif(crystal, joinpath(rc[:paths][:crystals], "high_precision_charges_test_not_neutral.cif"))
     @test ! neutral(Crystal("high_precision_charges_test_not_neutral.cif", check_neutrality=false), Xtals.NET_CHARGE_TOL) # not gonna be neutral
     @test_throws ErrorException Crystal("high_precision_charges_test_not_neutral.cif") # should throw error b/c not charge neutral
     # tests for species_from_col:

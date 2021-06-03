@@ -1,93 +1,54 @@
 """
-    bonding_rule = BondingRule(:Ca, :O, 0.4, 2.0)
-    bonding_rules = [BondingRule(:H, :*, 0.4, 1.2),
-                     BondingRule(:*, :*, 0.4, 1.9)]
+    bonding_rule = BondingRule(:Ca, :O, 2.0)
+    bonding_rules = [BondingRule(:H, :*, 1.2),
+                     BondingRule(:*, :*, 1.9)]
 
 A rule for determining if two atoms within a crystal are bonded.
 
 # Attributes
 - `species_i::Symbol`: One of the atoms types for this bond rule
 - `species_j::Symbol`: The other atom type for this bond rule
-- `min_dist`: The minimum distance between the atoms for bonding to occur
 - `max_dist`: The maximum distance between the atoms for bonding to occur
 """
 struct BondingRule
     species_i::Symbol
     species_j::Symbol
-    min_dist::Float64
     max_dist::Float64
 end
 
-BondingRule(species_i::String, species_j::String, min_dist::String,
-    max_dist::String) = BondingRule(Symbol.([species_i, species_j])...,
-        parse.([Float64, Float64], [min_dist, max_dist])...)
-
-
-"""
-Global BondingRule array
-"""
-BONDING_RULES = BondingRule[]
+BondingRule(species_i::String, species_j::String, max_dist::String) = BondingRule(
+    Symbol.([species_i, species_j])..., parse(Float64, max_dist))
 
 
 """
     bond_rules = bondingrules()
-    bond_rules = bondingrules(covalent_radii=get_covalent_radii(), σ=3., min_tol=0.25)
+    bond_rules = bondingrules(covalent_radii=covalent_radii(), pad=0.05)
 
 Returns a set of bonding rules based on the given Cordero parameters and tolerances.
 
 # Arguments
 
-- `covalent_radii::Union{Dict{Symbol, Dict{Symbol, Float64}}, Nothing}`: Covalent radii and estimated uncertainty. See [`get_covalent_radii()`](@ref)
-- `σ::Float`: Number of Cordero estimated standard deviations to use for tolerance on covalent radii.
-- `min_tol::Float`: Minimum tolerance for covalent radii.
+- `cov_rad::Union{Dict{Symbol, Float64}, Nothing}`: Covalent radii. See [`covalent_radii()`](@ref)
+- `pad::Float`: Amount to pad covalent radii for bonding interactions.
 
 # Returns
-- `bondingrules::Array{BondingRule, 1}`: The default bonding rules: `[BondingRule(:*, :*, 0.4, 1.2), BondingRule(:*, :*, 0.4, 1.9)]`
+- `bondingrules::Array{BondingRule, 1}`: Bonding rules from the specified covalent radii.`
 """
-function bondingrules(;
-        covalent_radii::Union{Dict{Symbol, Dict{Symbol, Float64}}, Nothing}=nothing,
-        σ::Float64=3., min_tol::Float64=0.25)::Array{BondingRule}
-    if covalent_radii == nothing
-        covalent_radii = get_covalent_radii()
-    end
-    bondingrules = BondingRule[]
+function bondingrules(;covalent_radii::Dict{Symbol,Float64}=rc[:covalent_radii], pad::Float64=0.)::Array{BondingRule}
+    bond_rules = BondingRule[]
     # loop over parameterized atoms
-    for (i, atom1) in enumerate(keys(covalent_radii))
+    for (i, atom_i) in enumerate(keys(covalent_radii))
         # make rules for the atom with every other atom (and itself)
-        for (j, atom2) in enumerate(keys(covalent_radii))
+        for (j, atom_j) in enumerate(keys(covalent_radii))
             if j < i
                 continue # already did this atom in outer loop (don't duplicate)
             end
-            radii_sum = covalent_radii[atom1][:radius_Å] + covalent_radii[atom2][:radius_Å]
-            margin = max(min_tol,
-                σ * (covalent_radii[atom1][:esd_Å] + covalent_radii[atom2][:esd_Å]) / 100)
-            min_dist = radii_sum - 2 * margin
-            max_dist = radii_sum + margin
-            push!(bondingrules, BondingRule(atom1, atom2, min_dist, max_dist))
+            radii_sum = covalent_radii[atom_i] + covalent_radii[atom_j]
+            max_dist = radii_sum + pad
+            push!(bond_rules, BondingRule(atom_i, atom_j, max_dist))
         end
     end
-    return bondingrules
-end
-
-
-"""
-    get_bonding_rules()
-Returns the current global bonding rule set.  Each [`BondingRule`](@ref) specifies the distance interval over which a specific pair of atomic species are to be considered chemically bonded.
-The default set of bonding rules is built via [`bondingrules`](@ref) using the default parameters at package initialization.
-"""
-function get_bonding_rules()::Array{BondingRule}
-    return BONDING_RULES
-end
-
-
-"""
-    set_bonding_rules(bonding_rules)
-Sets the global bonding rules, overriding the current global rule set.
-# Arguments
-- `bonding_rules::Array{BondingRule}` : the new global bonding rule set
-"""
-function set_bonding_rules(bonding_rules::Array{BondingRule})
-    global BONDING_RULES = bonding_rules
+    return bond_rules
 end
 
 
@@ -98,12 +59,10 @@ Writes bonding rules to a CSV file that can be loaded with [`read_bonding_rules`
 - `filename::String` : The name of the output file
 - `bonding_rules::Array{BondingRule}` : (Optional) The rules to write to file. If not specified, the global rules are written.
 """
-function write_bonding_rules(filename::String,
-        bonding_rules::Union{Array{BondingRule},Nothing}=nothing)
-    bonding_rules = bonding_rules == nothing ? get_bonding_rules() : bonding_rules
+function write_bonding_rules(filename::String, bonding_rules::Array{BondingRule}=rc[:bonding_rules])
     f = open(filename, "w")
     for r ∈ bonding_rules
-        @printf(f, "%s,%s,%f,%f\n", r.species_i, r.species_j, r.min_dist, r.max_dist)
+        @printf(f, "%s,%s,%f\n", r.species_i, r.species_j, r.max_dist)
     end
     close(f)
 end
@@ -114,6 +73,8 @@ end
 Reads a CSV file of bonding rules and returns a BondingRule array.
 # Arguments
 - `filename::String` : name of file in data directory containing bonding rules
+# Returns
+`rules::Array{BondingRule}` : the bonding rules read from file
 """
 function read_bonding_rules(filename::String)::Array{BondingRule}
     rules = BondingRule[]
@@ -133,21 +94,22 @@ Adds `bonding_rules` to the beginning of the global bonding rules list
 - `bonding_rules::Array{BondingRule}` : the array of bonding rules to add
 """
 function add_bonding_rules(bonding_rules::Array{BondingRule})
-    br = get_bonding_rules()
-    set_bonding_rules(vcat(bonding_rules, br))
+    br = rc[:bonding_rules]
+    rc[:bonding_rules] = vcat(bonding_rules, br)
 end
+add_bonding_rules(bonding_rule::BondingRule) = add_bonding_rules([bonding_rule])
 
 
 # for pretty-printing the bonding rules
 function show(io::IO, bonding_rules::Array{BondingRule})
     for r in bonding_rules
-        println("%s\t%s\t%.3f\t%.3f", r.species_i, r.species_j, r.min_dist, r.max_dist)
+        println("%s\t%s\t%.3f\t%.3f", r.species_i, r.species_j, r.max_dist)
     end
 end
 
 
 """
-    are_atoms_bonded = is_bonded(crystal, i, j, bonding_rules=[BondingRule(:H, :*, 0.4, 1.2), BondingRule(:*, :*, 0.4, 1.9)],
+    are_atoms_bonded = is_bonded(crystal, i, j, bonding_rules=[BondingRule(:H, :*, 1.2), BondingRule(:*, :*, 1.9)],
                                  include_bonds_across_periodic_boundaries=true)
 
 Checks to see if atoms `i` and `j` in `crystal` are bonded according to the `bonding_rules`.
@@ -201,7 +163,7 @@ function is_bonded(crystal::Crystal, i::Int64, j::Int64, bonding_rules::Array{Bo
         end
         if species_match
             # determine if the atoms are close enough to bond
-            if br.min_dist < r && br.max_dist > r
+            if br.max_dist > r
                 return true, r, cross_boundary_flag
             else
                 # return (don't continue!) b/c we found relevant bonding rule, don't apply others
@@ -210,6 +172,7 @@ function is_bonded(crystal::Crystal, i::Int64, j::Int64, bonding_rules::Array{Bo
         end
     end
     # no bonding rule was applied; therefore not bonded.
+    @warn "No bonding rule for $(species_i)-$(species_j) interaction."
     return false, NaN, cross_boundary_flag
 end
 
@@ -245,9 +208,8 @@ The bonding rules are hierarchical, i.e. the first bonding rule takes precedence
 - `bonding_rules::Union{Array{BondingRule, 1}, Nothing}=nothing`: The array of bonding rules that will be used to fill the bonding information. They are applied in the order that they appear. if `nothing`, default bonding rules will be applied; see [`get_bonding_rules`](@ref)
 """
 function infer_bonds!(crystal::Crystal, include_bonds_across_periodic_boundaries::Bool;
-                      bonding_rules::Union{Array{BondingRule, 1}, Nothing}=nothing)
+                      bonding_rules::Array{BondingRule, 1}=rc[:bonding_rules])
     @assert ne(crystal.bonds) == 0 @sprintf("The crystal %s already has bonds. Remove them with the `remove_bonds!` function before inferring new ones.", crystal.name)
-    bonding_rules = bonding_rules == nothing ? get_bonding_rules() : bonding_rules
     # loop over every atom
     for i in 1:crystal.atoms.n
         # loop over every unique pair of atoms
@@ -351,32 +313,25 @@ Returns the ids of atoms that are bonded to atom `i` by determining bonds using 
 - `i::Int`: Index of the atom we want to determine the bonds of
 - `dm::Array{Float64, 2}`: The distance matrix, see [`distance_matrix`](@ref)
 - `r::Float64`: The maximum distance used to determine the neighborhood of atom `i`
-- `σ::Float64`: Sets the number of e.s.d.s for the margin of error on covalent radii
-- `covalent_radii::Dict{Symbol, Dict{Symbol, Float64}}`: Cordero parameter dictionary. See [`covalent_radii`](@ref)
-- `min_tol::Float64`: The minimum covalent radius tolerance in Å
+- `covalent_radii::Dict{Symbol, Float64}`: Cordero parameter dictionary. See [`covalent_radii`](@ref)
+- `pad::Float64`: The amount to pad the covalent radius in Å
 
 # Returns
 - `ids_bonded::Array{Int, 1}`: A list of indices of atoms bonded to atom `i`
 """
 function bonded_atoms(crystal::Crystal, i::Int, dm::Array{Float64, 2},
-        r::Float64, σ::Float64, min_tol::Float64,
-        covalent_radii::Dict{Symbol, Dict{Symbol, Float64}})
+        r::Float64, pad::Float64, covalent_radii::Dict{Symbol, Float64})
     species_i = crystal.atoms.species[i]
-    ids_neighbors, xs, rs = neighborhood(crystal, i, r, dm)
+    ids_neighbors, xs, _ = neighborhood(crystal, i, r, dm)
     ids_shared_voro_faces = _shared_voronoi_faces(ids_neighbors, xs)
     ids_bonded = Int[]
     for j in ids_shared_voro_faces
         species_j = crystal.atoms.species[j]
         # sum of covalent radii
-        radii_sum = covalent_radii[species_j][:radius_Å] +
-            covalent_radii[species_i][:radius_Å]
+        radii_sum = covalent_radii[species_j] + covalent_radii[species_i]
         # margin = σ e.s.d.s, unless that's too small
-        margin = max(min_tol,
-            σ * (covalent_radii[species_j][:esd_Å] +
-            covalent_radii[species_i][:esd_Å]) / 100)
-        max_dist = radii_sum + margin
-        min_dist = radii_sum - margin
-        if dm[i, j] ≤ max_dist && dm[i, j] ≥ min_dist
+        max_dist = radii_sum + pad
+        if dm[i, j] ≤ max_dist
             push!(ids_bonded, j)
         end
     end
@@ -394,21 +349,17 @@ Infers bonds by first finding which atoms share a Voronoi face, and then bond th
 - `crystal::Crystal`: The crystal structure
 - `include_bonds_across_periodic_boundaries::Bool`: Whether to check across the periodic boundaries
 - `r::Float`: voronoi radius, Å
-- `σ::Float`: number of estimated standard deviations to use for covalent radius tolerance
-- `min_tol::Float`: minimum tolerance for calculated bond distances, Å
-- `covalent_radii::Dict{Symbol, Dict{Symbol, Float64}}`: See [`covalent_radii`](@ref)
+- `pad::Float`: amount to pad covalent radii, Å
+- `covalent_radii::Dict{Symbol,Float64}`: See [`covalent_radii`](@ref)
 """
 function infer_geometry_based_bonds!(crystal::Crystal,
         include_bonds_across_periodic_boundaries::Bool;
-        r::Float64=6., σ::Float64=3., min_tol::Float64=0.25,
-        covalent_radii::Union{Nothing,Dict{Symbol,Dict{Symbol,Float64}}}=nothing)
+        r::Float64=6., pad::Float64=0.,
+        covalent_radii::Dict{Symbol,Float64}=rc[:covalent_radii])
     @assert ne(crystal.bonds) == 0 @sprintf("The crystal %s already has bonds. Remove them with the `remove_bonds!` function before inferring new ones.", crystal.name)
-    if covalent_radii == nothing
-        covalent_radii = get_covalent_radii()
-    end
     dm = distance_matrix(crystal, include_bonds_across_periodic_boundaries)
     for i = 1:crystal.atoms.n
-        for j in bonded_atoms(crystal, i, dm, r, σ, min_tol, covalent_radii)
+        for j in bonded_atoms(crystal, i, dm, r, pad, covalent_radii)
             add_edge!(crystal.bonds, i, j)
         end
     end
@@ -463,8 +414,8 @@ Writes the bond information from a crystal to the selected filename.
 # Arguments
 - `crystal::Crystal`: The crystal to have its bonds written to a vtk file
 - `filename::String`: The filename the bond information will be saved to. If left out, will default to crystal name.
-- `center_at_origin::Bool`: center the coordinates at the origin of the crystal
-- `bond_filter::Pair{Symbol, Function}`: a key-value pair of an edge attribute and a predicate function. Bonds with attributes that cause the predicate to return false are excluded from writing.
+- `center_at_origin::Bool`: (optional) center the coordinates at the origin of the crystal
+- `bond_filter::Pair{Symbol, Function}`: (optional) a key-value pair of an edge attribute and a predicate function. Bonds with attributes that cause the predicate to return false are excluded from writing.
 """
 function write_bond_information(crystal::Crystal, filename::String;
         center_at_origin::Bool=false, bond_filter::Union{Pair{Symbol, F}, Nothing}=nothing) where F
@@ -478,8 +429,7 @@ function write_bond_information(crystal::Crystal, filename::String;
     # filter bonds
     idx_keep_bonds = trues(ne(crystal.bonds))
     if !isnothing(bond_filter)
-        attr = bond_filter[1]
-        pred = bond_filter[2]
+        attr, pred = bond_filter
         for (b, bond) ∈ enumerate(edges(crystal.bonds))
             prop = get_prop(crystal.bonds, bond, attr)
             if !pred(prop)
@@ -531,13 +481,12 @@ Gets rid of the bonds across unit cell boundaries
 """
 function drop_cross_pb_bonds!(bonds::MetaGraph)
     for bond in collect(edges(bonds))
-        p = get_prop(bonds, bond, :cross_boundary)
-        if ismissing(p)
-            @warn "Bond w/ missing :cross_boundary attribute"
-        elseif p
+        if get_prop(bonds, bond, :cross_boundary)
             rem_edge!(bonds, src(bond), dst(bond))
         end
     end
 end
 
 drop_cross_pb_bonds!(xtal::Crystal) = drop_cross_pb_bonds!(xtal.bonds)
+
+DEFAULT_BONDING_RULES = bondingrules()

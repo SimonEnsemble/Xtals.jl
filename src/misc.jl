@@ -5,6 +5,7 @@ function add_extension(filename::String, extension::String)
     return filename
 end
 
+
 """
     atoms = read_xyz("molecule.xyz")
 
@@ -32,6 +33,7 @@ function read_xyz(filename::AbstractString)
     close(f)
     return Atoms(species, Cart(x))
 end
+
 
 """
     write_xyz(atoms, filename; comment="")
@@ -97,7 +99,7 @@ function read_mol(filename::String)
     end
 
     bonds = MetaGraph(n_atoms)
-    bond_types = [-1 for i = 1:n_bonds]
+    bond_types = [-1 for _ ∈ 1:n_bonds]
     for b = 1:n_bonds
         line_bond_b = split(lines[n_atoms + 4 + b])
 
@@ -151,4 +153,18 @@ function write_mol2(xtal::Crystal; filename::String="")
 		xtal.box.α, xtal.box.β, xtal.box.γ)
 	# flush the buffer
 	close(f)
+end
+
+
+"""
+    assert_P1_symmetry(crystal::Crystal)
+
+Throw an error if and only if the crystal is not in P1 symmetry.
+"""
+function assert_P1_symmetry(crystal::Crystal)
+    if ! crystal.symmetry.is_p1
+        error("the crystal " * crystal.name * " is not in P1 symmetry.\n
+               To convert to P1 symmetry, try:\n
+               \tcrystal_p1 = apply_symmetry_operations(crystal)")
+    end
 end

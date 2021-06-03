@@ -4,10 +4,11 @@ using Xtals
 using Test
 
 @testset "Path Tests" begin
-    set_path_to_data(Xtals.PATH_TO_DATA, print=true)
-    set_path_to_crystals(joinpath(pwd(), "other_data", "other_crystals"))
-    print_file_paths()
+    @test rc[:atomic_masses][:He] == 4.0026
+    oldpath = rc[:paths][:crystals]
+    rc[:paths][:crystals] = joinpath(pwd(), "other_data", "other_crystals")
     Crystal("other_SBMOF-1.cif")
+    rc[:paths][:crystals] = oldpath
     @test true # if made it this far :)
 end
 end

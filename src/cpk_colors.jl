@@ -1,5 +1,5 @@
 # makes dict from stringified cpk_atom_colors.csv
-function _CPKColors(headers::Array{Symbol}, data::String)::Dict{Symbol,Tuple{Int,Int,Int}}
+function CPKColors(headers::Array{Symbol}, data::String)::Dict{Symbol,Tuple{Int,Int,Int}}
     atom_colors = Dict{Symbol, Tuple{Int, Int, Int}}()
     species = Symbol[]
     r = Int[]
@@ -24,17 +24,8 @@ function _CPKColors(headers::Array{Symbol}, data::String)::Dict{Symbol,Tuple{Int
 end
 
 
-"""
-    get_cpk_colors()
-Returns the global CPK colors dictionary
-"""
-function get_cpk_colors()
-    return CPK_COLORS
-end
-
-
 # global cpk color dictionary
-CPK_COLORS = _CPKColors([:atom, :R, :G, :B, :Hex],
+DEFAULT_CPK_COLORS = CPKColors([:atom, :R, :G, :B, :Hex],
 """H,255,255,255,FFFFFF
 He,217,255,255,D9FFFF
 Li,204,128,255,CC80FF
