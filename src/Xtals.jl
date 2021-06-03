@@ -50,7 +50,7 @@ export
 
     # matter.jl
     Coords, Frac, Cart, Atoms, Charges, wrap!, neutral, net_charge,
-    translate_by!, origin,
+    translate_by!,
 
     # box.jl
     Box, replicate, unit_cube, write_vtk, inside, fractional_coords,
