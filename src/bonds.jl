@@ -287,7 +287,12 @@ Of the neighboring atoms, find those that share a Voronoi face.
 - `ids_shared_voro_face::Array{Int, 1}`: indices of atoms that share a Voronoi face with a specific atom
 """
 function _shared_voronoi_faces(ids_neighbors::Array{Int,1}, xs::Array{Array{Float64,1},1})
-    scipy = pyimport("scipy.spatial")
+    if isnothing(rc[:scipy])
+        @error "Python dependency not loaded."
+        throw(PyError)
+    else
+        scipy = rc[:scipy]
+    end
     # first element of xs is the point itself, the origin
     @assert length(ids_neighbors) == (length(xs) - 1)
     voro = scipy.Voronoi(xs)

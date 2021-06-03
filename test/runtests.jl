@@ -1,9 +1,9 @@
 testfiles = [
+    "misc.jl",
     "bonds.jl",
     "matter.jl",
     "distance.jl",
     "crystal.jl",
-    "misc.jl",
     "box.jl",
     "assert_p1_symmetry.jl",
     "paths.jl"
@@ -14,6 +14,10 @@ using Test, LightGraphs, MetaGraphs, Documenter
 using Xtals
 
 @info "\n\n\t\tXtals.jl\n\n\n"
+
+if !isdir("temp")
+    mkdir("temp")
+end
 
 @info "Running unit tests..."
 for testfile ∈ testfiles

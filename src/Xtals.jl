@@ -4,6 +4,8 @@ using CSV, DataFrames, Printf, LinearAlgebra, LightGraphs, PyCall, MetaGraphs
 
 # global variable dictionary
 global rc = Dict{Symbol,Any}()
+rc[:paths] = Dict{Symbol,String}()
+
 
 include("matter.jl")
 include("box.jl")
@@ -22,8 +24,19 @@ include("bonds.jl")
 rc[:bonding_rules] = DEFAULT_BONDING_RULES
 
 
+function load_pydep(pydep)
+    try
+        return pyimport(pydep)
+    catch
+        @warn "Error loading $pydep. Some functionaltiy may be missing."
+        return nothing
+    end
+end
+
+
 function __init__()
-    rc[:paths] = Dict{Symbol,String}()
+    # load Python dependencies
+    rc[:scipy] = load_pydep("scipy.spatial")
     # sets paths to data and crystals relative to pwd() at import
     rc[:paths][:data] = joinpath(pwd(), "data")
     rc[:paths][:crystals] = joinpath(rc[:paths][:data], "crystals")
