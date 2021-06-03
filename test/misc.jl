@@ -3,7 +3,6 @@ module Misc_Test
 using Xtals, Test, DataFrames, LightGraphs, CSV
 
 @testset "Misc Tests" begin
-    @test Xtals.AtomicMasses([:atom, :mass], "baz,4057")[:baz] == 4057
     am = rc[:atomic_masses]
     @test isapprox(am[:H], 1.00794, atol=0.001)
     @test isapprox(am[:Co], 58.9332, atol=0.001)
@@ -20,7 +19,6 @@ using Xtals, Test, DataFrames, LightGraphs, CSV
     @test isapprox(atoms, atoms_read)
     rm(test_xyz_filename * ".xyz")
 
-    @test Xtals.CPKColors([:atom, :R, :G, :B, :Hex], "foo,7,101,53,F00BA5")[:foo] == (7, 101, 53)
     @test rc[:cpk_colors][:Li] == (204,128,255)
 
     atoms, bonds, bond_types = read_mol("data/example.mol")

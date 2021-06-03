@@ -1,7 +1,7 @@
 # Covalent radii, Å
 # Cordero bond radii, DOI: 10.1039/B801115J Table 2.
 # Overridden w/ larger values from DOI 10.1039/c9ra07327b Table 5
-global DEFAULT_COVALENT_RADII = Dict{Symbol, Float64}(
+DEFAULT_COVALENT_RADII = Dict{Symbol, Float64}(
     :H => 0.38,
     :He => 0.28,
     :Li => 1.28,
