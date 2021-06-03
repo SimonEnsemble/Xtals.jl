@@ -288,8 +288,7 @@ Of the neighboring atoms, find those that share a Voronoi face.
 """
 function _shared_voronoi_faces(ids_neighbors::Array{Int,1}, xs::Array{Array{Float64,1},1})
     if isnothing(rc[:scipy])
-        @error "Python dependency not loaded."
-        throw(PyError)
+        error("Python dependency scipy not loaded.")
     else
         scipy = rc[:scipy]
     end

@@ -1090,3 +1090,27 @@ function Base.:+(crystals::Crystal...; check_overlap::Bool=true)
 
     return crystal
 end
+
+
+"""
+    ```prim = primitive_cell(xtal)```
+
+Returns the minimal representation (primitive unit cell) of a crystal structure.
+"""
+function primitive_cell(xtal::Crystal)
+    # check for pymatgen.io.cif dependency
+    if isnothing(rc[:pymatgen])
+        error("Python dependency pymatgen not loaded.")
+    else
+        pymatgen = rc[:pymatgen]
+    end
+    tempfile = rc[:paths][:crystals] * "/.pymatgen_temp.cif"
+    # copy out xtal and convert it to primitive cell
+    write_cif(xtal, tempfile)
+    pymatgen.CifParser(tempfile).get_structures()[1].get_primitive_structure().to(filename=tempfile)
+    # load the result
+    primitive = Crystal(tempfile)
+    # clean up
+    rm(tempfile)
+    return primitive
+end

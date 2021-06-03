@@ -28,7 +28,7 @@ function load_pydep(pydep)
     try
         return pyimport(pydep)
     catch
-        @warn "Error loading $pydep. Some functionaltiy may be missing."
+        @warn "Error loading $(split(pydep, ".")[1]). Some functionaltiy may be missing."
         return nothing
     end
 end
@@ -37,6 +37,7 @@ end
 function __init__()
     # load Python dependencies
     rc[:scipy] = load_pydep("scipy.spatial")
+    rc[:pymatgen] = load_pydep("pymatgen.io.cif")
     # sets paths to data and crystals relative to pwd() at import
     rc[:paths][:data] = joinpath(pwd(), "data")
     rc[:paths][:crystals] = joinpath(rc[:paths][:data], "crystals")
@@ -65,7 +66,7 @@ export
     # crystal.jl
     Crystal, strip_numbers_from_atom_labels!, assign_charges,
     chemical_formula, molecular_weight, crystal_density, write_cif, has_charges,
-    apply_symmetry_operations, write_cssr,
+    apply_symmetry_operations, write_cssr, primitive_cell,
 
     # bonds.jl
     infer_bonds!, write_bond_information, BondingRule, bond_sanity_check,

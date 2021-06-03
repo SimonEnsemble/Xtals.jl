@@ -17,6 +17,16 @@ function equal_multisets(ac1::Union{Atoms{Frac}, Charges{Frac}},
 end
 
 @testset "Crystal Tests" begin
+    # primitive cells via pymatgen
+    xtal = Crystal("IRMOF-1.cif")
+    prim = primitive_cell(xtal)
+    @test prim.atoms.n == 106
+    @test isnothing(assert_P1_symmetry(prim))
+    pymatgen = rc[:pymatgen]
+    rc[:pymatgen] = nothing
+    @test_throws ErrorException primitive_cell(xtal)
+    rc[:pymatgen] = pymatgen
+
     # cif reader
     xtal = Crystal("test_structure2.cif")
     strip_numbers_from_atom_labels!(xtal)
