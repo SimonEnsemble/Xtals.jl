@@ -6,6 +6,7 @@ using CSV, DataFrames, Printf, LinearAlgebra, LightGraphs, PyCall, MetaGraphs
 global rc = Dict{Symbol,Any}()
 rc[:paths] = Dict{Symbol,String}()
 
+
 include("matter.jl")
 include("box.jl")
 include("crystal.jl")
@@ -36,7 +37,6 @@ end
 function __init__()
     # load Python dependencies
     rc[:scipy] = load_pydep("scipy.spatial")
-    
     # sets paths to data and crystals relative to pwd() at import
     rc[:paths][:data] = joinpath(pwd(), "data")
     rc[:paths][:crystals] = joinpath(rc[:paths][:data], "crystals")

@@ -97,6 +97,7 @@ function add_bonding_rules(bonding_rules::Array{BondingRule})
     br = rc[:bonding_rules]
     rc[:bonding_rules] = vcat(bonding_rules, br)
 end
+add_bonding_rules(bonding_rule::BondingRule) = add_bonding_rules([bonding_rule])
 
 
 # for pretty-printing the bonding rules

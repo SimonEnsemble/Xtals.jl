@@ -1,3 +1,9 @@
+```@meta
+DocTestSetup = quote
+  using Xtals
+end
+```
+
 # Crystals
 
 `Xtals.jl` maintains a data structure `Crystal` that stores information about a crystal structure file.
@@ -7,7 +13,7 @@
 Currently, the crystal structure file reader accepts `.cif` and `.cssr` file formats. `Xtals.jl` looks for the crystal structure files in `rc[:paths][:crystals]` which is by default `./data/crystals` (relative to `pwd()` at module loading). By typing `rc[:paths][:crystals] = "my_crystal_dir"`, `Xtals.jl` now looks for the crystal structure file in `my_crystal_dir`.
 The files can be read as:
 
-```julia
+```jldoctest crystal; output=false
 xtal = Crystal("IRMOF-1.cif")       # The crystal reader stores the information in xtal
 xtal.name                           # The name of the crystal structure file
 xtal.box                            # The unit cell information
@@ -17,6 +23,8 @@ xtal.bonds                          # Bonding information in the structure. By d
                                     #  but use `read_bonds_from_file=true` argument in `Crystal` to read from crystal structure file
 xtal.symmetry                       # Symmetry information of the crystal. By default converts the symmetry to P1 symmetry.
                                     #  Use `convert_to_p1=false` argument in `Crystal` to keep original symmetry
+# output
+
 ```
 
 ## Fixing atom species labels
@@ -24,10 +32,18 @@ xtal.symmetry                       # Symmetry information of the crystal. By de
 Often, the atoms species are appended by numbers. This messes with the internal workings of `Xtals.jl`.
 To circumvent this problem, the function `strip_numbers_from_atom_labels!(xtal)` removes the appended numbers.
 It is important to use this function prior to GCMC or Henry coefficient calculations and bond inference operations.
-```julia
-xtal.atoms.species              # [:C1, :C2, :O1, ...]
+
+```jldoctest crystal
+xtal = Crystal("IRMOF-1.cif", species_col=["_atom_site_label"])
+xtal.atoms.species[1]
+# output
+:Zn1
+```
+```jldoctest crystal
 strip_numbers_from_atom_labels!(xtal)
-xtal.atoms.species              # [:C, :C, :O, ...]
+xtal.atoms.species[1]
+# output
+:Zn
 ```
 
 ## Converting the coordinates to cartesian space
@@ -59,23 +75,27 @@ formula = chemical_formula(xtal)    # The irreducible chemical formula of the cr
 
 If the crystal structure file does not contains partial charges, we provide methods to assign new charges to the crystal
 
-```julia
-species_to_charges = Dict(:Ca => 2.0, :C => 1.0, :H => -1.0)                # This method assigns a static charge to atom species
-charged_xtal = assign_charges(xtal, species_to_charge, 1e-5)                # This function creates a new charged `Crystal` object.
-                                                                            #   The function checks for charge neutrality with a tolerance of 1e-5
-new_charges = Charges([2.0, 1.0, -1.0, -1.0, ...], xtal.atoms.coords)
+```jldoctest crystal; output=false
+species_to_charge = Dict(:Zn => 2.0, :C => 0.0, :H => 0.0, :O => -0.61538)  # This method assigns a static charge to atom species
+charged_xtal = assign_charges(xtal, species_to_charge, 1e-3)                # This function creates a new charged `Crystal` object.
+                                                                            #   The function checks for charge neutrality with a tolerance of 1e-3
+new_charges = Charges(zeros(xtal.atoms.n), xtal.atoms.coords)
 other_charged_xtal = Crystal(xtal.name, xtal.box, xtal.atoms,               # Here we create a new `Charges` object using an array of new charges.
                              new_charges, xtal.bonds, xtal.symmetry)        #   The number of charges in the array has to be equal to the number of atoms
                                                                             #   and finally a new `Crystal` object is manually created
+# output
+
 ```
 
 ## Writing crystal files
 
 We provide methods to write both `.xyz` and `.cif` files
 
-```julia
+```jldoctest crystal; output=false
 write_cif(xtal, "my_new_cif_file.cif")      # Stored in the current directory
 write_xyz(xtal, "my_new_xyz_file.xyz")      # stored in the current directory
+# output
+
 ```
 
 

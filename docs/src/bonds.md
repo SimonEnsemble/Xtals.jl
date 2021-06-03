@@ -1,3 +1,9 @@
+```@meta
+DocTestSetup = quote
+  using Xtals
+end
+```
+
 # Chemical Bonding
 
 Chemical bonding interactions are represented in the `bonds` attribute of a `Crystal` as a [graph](https://github.com/JuliaGraphs/MetaGraphs.jl) where the nodes of the graph correspond to the crystal's `atoms`.
@@ -6,7 +12,10 @@ Chemical bonding interactions are represented in the `bonds` attribute of a `Cry
 
 `Xtals` uses an array of [`BondingRule`](@ref) structs stored at [`rc`](@ref) for deciding if two atoms are an appropriate distance to be chemically bonded.  The default rules are based on the [Cordero covalent radii](doi.org/10.1039/B801115J), modified based on the work of [Thomas Manz](doi.org/10.1039/c9ra07327b).  Each [`BondingRule`](@ref) is composed of two chemical species symbols and a floating point value, the maximum distance for inferring a bond between the indicated species.
 
-```julia
+
+```jldoctest; output=false
+BondingRule(:C, :C, 1.77)
+# output
 BondingRule(:C, :C, 1.77)
 ```
 
