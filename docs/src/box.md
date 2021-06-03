@@ -1,3 +1,9 @@
+```@meta
+DocTestSetup = quote
+  using Xtals
+end
+```
+
 # The Spatial Box
 
 Within `Xtals.jl`, the 3D space in which all `Coords` are located is the
@@ -38,7 +44,7 @@ To quickly get a simple unit-cubic `Box`, use the `unit_cube` function.
 ```
 
 
-## transforming coordinates
+## Transforming coordinates
 
 Conversions are provided for switching between `Frac`tional and `Cart`esian `Coords`
 using the `Box` (works for `Atoms` and `Charges`, too)
@@ -52,7 +58,7 @@ Cart(xtal.atoms.coords, xtal.box)
 ```
 
 
-## replicating a box
+## Replicating a box
 
 For simulations in larger volumes than a single crystallograhic unit cell, the
 `Box` may be replicated along each or any of the three crystallographic axes.
@@ -62,17 +68,19 @@ replicated_box = replicate(box, (2,2,2))
 ```
 
 
-## exporting a box
+## Exporting a box
 
 For visualization of the unit cell boundaries, the `Box` may be written out to a
 `.vtk` file for use in [Visit](https://wci.llnl.gov/simulation/computer-codes/visit/)
 
-```julia
+```jldoctest; setup=:(box = Box([26.1317 -13.0659 0; 0 22.6307 0; 0 0 6.72203])), output=false
 write_vtk(box, "box.vtk")
+# output
+See box.vtk
 ```
 
 
-# detailed docs
+# Detailed docs
 
 ```@docs
     Box

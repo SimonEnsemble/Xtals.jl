@@ -9,15 +9,19 @@ testfiles = [
     "paths.jl"
     ]
 
-using Test, LightGraphs, MetaGraphs
+using Test, LightGraphs, MetaGraphs, Documenter
+
 using Xtals
 
 @info "\n\n\t\tXtals.jl\n\n\n"
 
-if !isdir("temp")
-    mkdir("temp")
+@info "Running unit tests..."
+for testfile ∈ testfiles
+    @info "Running test/$testfile"
+    include(testfile)
 end
 
-include.(testfiles)
+# run doctests
+doctest(Xtals)
 
 @info "Done!"

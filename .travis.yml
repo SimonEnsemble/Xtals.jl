@@ -15,7 +15,7 @@ addons:
     - libhdf5-serial-dev
 
 script:
-  - julia --project -e 'import Pkg; Pkg.build(); ENV["PYTHON"]=""; Pkg.build("PyCall"); Pkg.add("Conda"); using Conda; Conda.add("scipy")'
+  - julia quick_setup.jl
   - julia --project --check-bounds=yes -e 'import Pkg; Pkg.test("Xtals", coverage=true)'
 
 after_success:
