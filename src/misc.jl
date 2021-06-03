@@ -154,17 +154,3 @@ function write_mol2(xtal::Crystal; filename::String="")
 	# flush the buffer
 	close(f)
 end
-
-
-"""
-    assert_P1_symmetry(crystal::Crystal)
-
-Throw an error if and only if the crystal is not in P1 symmetry.
-"""
-function assert_P1_symmetry(crystal::Crystal)
-    if ! crystal.symmetry.is_p1
-        error("the crystal " * crystal.name * " is not in P1 symmetry.\n
-               To convert to P1 symmetry, try:\n
-               \tcrystal_p1 = apply_symmetry_operations(crystal)")
-    end
-end
