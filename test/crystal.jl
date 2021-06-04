@@ -17,6 +17,9 @@ function equal_multisets(ac1::Union{Atoms{Frac}, Charges{Frac}},
 end
 
 @testset "Crystal Tests" begin
+    @test vtk_filename("foo.cssr") == "foo.vtk"
+    @test vtk_filename("bar.cif") == "bar.vtk"
+
     # primitive cells via pymatgen
     xtal = Crystal("IRMOF-1.cif")
     prim = primitive_cell(xtal)
@@ -51,6 +54,7 @@ end
     @test_throws ErrorException assign_charges(xtal, Dict(:Ca => 2.0, :O => 2.0)) # not charge neutral
     @test chemical_formula(xtal) == Dict(:Ca => 1, :O => 1)
     @test molecular_weight(xtal) ≈ 15.9994 + 40.078
+    @test_throws ErrorException assign_charges(xtal2) # already has charges
 
     # overlap checker, charge neutrality checker, wrap coords checker
     @test_throws ErrorException Crystal("test_structure2B.cif", check_overlap=true, check_neutrality=false)
@@ -64,6 +68,8 @@ end
     @test isapprox(xtal.atoms, Atoms([:Ca, :Ca, :O, :C], f))
     @test isapprox(net_charge(xtal), 2.0)
     @test chemical_formula(xtal) == Dict(:Ca => 2, :O => 1, :C => 1)
+    infer_bonds!(xtal, true)
+    @test_throws ErrorException remoe_duplicate_atoms_and_charges(xtal)
 
     # xyz writer
     xtal = Crystal("SBMOF-1.cif")
@@ -89,11 +95,17 @@ end
     crystal_reloaded = Crystal(rewrite_filename)
     strip_numbers_from_atom_labels!(crystal_reloaded) # TODO Arthur remove this necessity from write_cif
     @test isapprox(crystal, crystal_reloaded, atol=0.0001)
- #     rm(rewrite_filename) # clean up.
     rewrite_filename = "rewritten.cif"
     write_cif(crystal, joinpath(rc[:paths][:crystals], rewrite_filename), number_atoms=false)
     crystal_reloaded = Crystal(rewrite_filename)
     @test isapprox(crystal, crystal_reloaded, atol=0.0001)
+    infer_bonds!(crystal)
+    write_cif(crystal, "with_bonds")
+    crystal_reloaded = Crystal("with_bonds.cif", read_bonds_from_file=true)
+    @test ne(crystal.bonds) == ne(crystal_reloaded.bonds)
+    crystal.name[:] = "baz.norf"
+    write_cif(crystal)
+    @test isfile("baz.cif")
 
     ### apply_symmetry_operations
     # test .cif reader for non-P1 symmetry
@@ -253,6 +265,13 @@ end
     @test isapprox(c_overlap.charges, c1.charges + c2.charges + c.charges)
     @test_throws AssertionError +(c1, c2, c) # by default, do not let crystal additions result in overlap
 
+    # bond addition
+    xtal = Crystal("SBMOF-1.cif")
+    xtal2 = deepcopy(xtal)
+    infer_bonds!(xtal, true)
+    xtal3 = +(xtal, xtal2; check_overlap=false)
+    @test ne(xtal3.bonds) == ne(xtal.bonds)
+
     # more xtal tests
     sbmof1 = Crystal("SBMOF-1.cif")
     @test ! has_charges(sbmof1)
@@ -341,5 +360,14 @@ end
     ids = falses(xtal.atoms.n)
     ids[1] = ids[2] = ids[5] = true
     @test isapprox(xtal_sliced, xtal[ids])
+    xtal = Crystal("IRMOF-1.cif")
+    @test lastindex(xtal) == xtal.atoms.n == 424
+
+    # charge/atom count mismatch tests for isapprox
+    xtal = Crystal("SBMOF-1.cif")
+    xtal2 = Crystal("IRMOF-1.cif")
+    @test !isapprox(xtal, xtal2) # different atoms.n
+    xtal2 = assign_charges(xtal)
+    @test !isapprox(xtal, xtal2) # different charges.n
 end
 end

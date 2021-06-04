@@ -608,7 +608,6 @@ function strip_numbers_from_atom_labels!(crystal::Crystal)
 end
 
 vtk_filename(crystal::Crystal) = replace(replace(crystal.name, ".cif" => ""), ".cssr" => "") * ".vtk"
-write_vtk(crystal::Crystal; center_at_origin::Bool=false) = write_vtk(crystal.box, vtk_filename(crystal), center_at_origin=center_at_origin)
 
 """
     formula = chemical_formula(crystal, verbose=false)
