@@ -17,8 +17,10 @@ function equal_multisets(ac1::Union{Atoms{Frac}, Charges{Frac}},
 end
 
 @testset "Crystal Tests" begin
-    @test vtk_filename("foo.cssr") == "foo.vtk"
-    @test vtk_filename("bar.cif") == "bar.vtk"
+    xtal = Crystal("SBMOF-1.cif")
+    @test Xtals.vtk_filename(xtal) == "SBMOF-1.vtk"
+    xtal = Crystal("ATIBOU01_clean.cssr")
+    @test Xtals.vtk_filename(xtal) == "ATIBOU01_clean.vtk"
 
     # primitive cells via pymatgen
     xtal = Crystal("IRMOF-1.cif")
@@ -54,7 +56,8 @@ end
     @test_throws ErrorException assign_charges(xtal, Dict(:Ca => 2.0, :O => 2.0)) # not charge neutral
     @test chemical_formula(xtal) == Dict(:Ca => 1, :O => 1)
     @test molecular_weight(xtal) ≈ 15.9994 + 40.078
-    @test_throws ErrorException assign_charges(xtal2) # already has charges
+    xtal3 = assign_charges(xtal2, Dict(:Ca => -2.0, :O => 2.0))
+    @test isapprox(xtal2.charges, xtal3.charges)
 
     # overlap checker, charge neutrality checker, wrap coords checker
     @test_throws ErrorException Crystal("test_structure2B.cif", check_overlap=true, check_neutrality=false)
@@ -69,7 +72,7 @@ end
     @test isapprox(net_charge(xtal), 2.0)
     @test chemical_formula(xtal) == Dict(:Ca => 2, :O => 1, :C => 1)
     infer_bonds!(xtal, true)
-    @test_throws ErrorException remoe_duplicate_atoms_and_charges(xtal)
+    @test_throws ErrorException Xtals.remove_duplicate_atoms_and_charges(xtal)
 
     # xyz writer
     xtal = Crystal("SBMOF-1.cif")
@@ -99,13 +102,11 @@ end
     write_cif(crystal, joinpath(rc[:paths][:crystals], rewrite_filename), number_atoms=false)
     crystal_reloaded = Crystal(rewrite_filename)
     @test isapprox(crystal, crystal_reloaded, atol=0.0001)
-    infer_bonds!(crystal)
-    write_cif(crystal, "with_bonds")
-    crystal_reloaded = Crystal("with_bonds.cif", read_bonds_from_file=true)
-    @test ne(crystal.bonds) == ne(crystal_reloaded.bonds)
-    crystal.name[:] = "baz.norf"
+    crystal = Crystal("ATIBOU01_clean.cssr")
+    @test_throws ErrorException write_cif(crystal)
+    crystal = assign_charges(crystal, Dict(:Mn => 2.0, :O => -2.0, :H => 0.0, :C => 0.0), Inf)
     write_cif(crystal)
-    @test isfile("baz.cif")
+    @test isfile("ATIBOU01_clean.cif")
 
     ### apply_symmetry_operations
     # test .cif reader for non-P1 symmetry
@@ -367,7 +368,7 @@ end
     xtal = Crystal("SBMOF-1.cif")
     xtal2 = Crystal("IRMOF-1.cif")
     @test !isapprox(xtal, xtal2) # different atoms.n
-    xtal2 = assign_charges(xtal)
+    xtal2 = assign_charges(xtal, Dict(:Ca => -2.0, :O => 2.0, :S => 2.0, :C => 0.0, :H => 0.0), Inf)
     @test !isapprox(xtal, xtal2) # different charges.n
 end
 end

@@ -9,13 +9,13 @@ testfiles = [
     "paths.jl"
     ]
 
-using Test, LightGraphs, MetaGraphs, Documenter
+using Test, LightGraphs, MetaGraphs, Documenter, FIGlet
 
 if !isdir("temp")
     mkdir("temp")
 end
 
-@info "\n\n\t\tXtals.jl\n\n\n"
+FIGlet.render("Xtals.jl", FIGlet.availablefonts()[5])
 
 using Xtals
 
