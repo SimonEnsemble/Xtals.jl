@@ -119,6 +119,7 @@ write_xyz(xtal, "my_new_xyz_file.xyz")      # stored in the current directory
     Crystal
     SymmetryInfo
     strip_numbers_from_atom_labels!
+    primitive_cell
     replicate
     molecular_weight
     crystal_density
