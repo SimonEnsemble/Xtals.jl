@@ -3,6 +3,7 @@
 import Pkg
 
 
+# tries to load a Python dependency; on failure, adds the dependency via Conda
 function check_add_dep(pkg; channel="")
     try
         @info "Checking dependency: $pkg"
@@ -16,6 +17,7 @@ function check_add_dep(pkg; channel="")
 end
 
 
+# check for a working Python environment; if none, install one
 try
     @info "Checking PyCall."
     using PyCall
@@ -31,6 +33,7 @@ catch
     @info "PyCall verified."
 end
 
+# check for Conda; if not found, install it
 try
     @info "Checking Conda."
     using Conda
@@ -42,6 +45,7 @@ catch
     @info "Conda verified."
 end
 
+# check for Xtals; if not found, add it
 try
     @info "Checking Xtals."
     using Xtals
@@ -54,7 +58,9 @@ catch # if not, install it
     @info "Xtals install verified."
 end
 
+# scipy used in local neighborhood Voronoi bonding routine
 check_add_dep("scipy")
+# pymatgen used in calculating primitive unit cell
 check_add_dep("pymatgen", channel="conda-forge")
 
 @info "Setup complete!"
