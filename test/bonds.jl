@@ -126,6 +126,10 @@ end
     @test xtal4.bonds ≠ xtal5.bonds
     #@test xtal4.bonds == xtal6.bonds # TODO examine test failure
     @test xtal5.bonds ≠ xtal6.bonds
+    scipy = rc[:scipy]
+    rc[:scipy] = nothing
+    @test_throws ErrorException infer_geometry_based_bonds!(Crystal("IRMOF-1.cif"), true)
+    rc[:scipy] = scipy
 end
 @testset ".mol/.cif bonds vs. inferred" begin
     mol_atoms, mol_bonds = read_mol("data/example.mol")

@@ -428,7 +428,7 @@ function Crystal(filename::String;
 
     if convert_to_p1 && ! is_p1 && ! read_bonds_from_file
         @info @sprintf("Crystal %s has %s space group. I am converting it to P1 symmetry.
-        To afrain from this, pass `convert_to_p1=false` to the `Crystal` constructor.\n",
+        To prevent this, pass `convert_to_p1=false` to the `Crystal` constructor.\n",
             crystal.name, crystal.symmetry.space_group)
         crystal = apply_symmetry_operations(crystal)
     end
