@@ -223,6 +223,7 @@ function infer_bonds!(crystal::Crystal, include_bonds_across_periodic_boundaries
             end
         end
     end
+    calculate_bond_vectors!(crystal)
     bond_sanity_check(crystal)
 end
 
@@ -493,4 +494,26 @@ end
 
 drop_cross_pb_bonds!(xtal::Crystal) = drop_cross_pb_bonds!(xtal.bonds)
 
-DEFAULT_BONDING_RULES = bondingrules()
+
+"""
+Adds a property to the edges of a crystal's bonding graph giving the vector between source and destination nodes in Cartesian space.
+"""
+function calculate_bond_vectors!(xtal::Crystal)
+    # check for bonds
+    @assert ne(xtal.bonds) ≠ 0 "Crystal $(xtal.name) has no bonds."
+    # loop over bonding edges
+    for edge ∈ edges(xtal.bonds)
+        # get node IDs, fractional coordinates, vector
+        i, j = src(edge), dst(edge)
+        xf_i = xtal.atoms.coords.xf[:, i]
+        xf_j = xtal.atoms.coords.xf[:, j]
+        dxf = xf_j .- xf_i
+        # apply nearest image convention to dxf
+        nearest_image!(dxf)
+        # transform to Cartesian
+        dxc = xtal.box.f_to_c * dxf
+        # annotate edge in graph
+        set_prop!(xtal.bonds, edge, :vector, dxc)
+        @assert norm(dxc) == get_prop(xtal.bonds, edge, :distance)
+    end
+end

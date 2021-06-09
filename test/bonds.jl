@@ -172,6 +172,55 @@ end
     rc[:bonding_rules] = bondingrules()
     @test true
 end
+@testset "bond vectors" begin
+    xtal = Crystal(
+        "vector test 1",
+        unit_cube(),
+        Atoms(
+            [:H, :H, :H],
+            Frac([
+                0.33 0.33 0.67;
+                0.67 0.33 0.33;
+                0.00 0.00 0.00
+            ])
+        ),
+        Charges{Frac}(0)
+    )
+    infer_bonds!(xtal, true)
+    @test isapprox(get_prop(xtal.bonds, collect(edges(xtal.bonds))[1], :vector), [0.0 -0.34 0.0])
+
+    xtal = Crystal(
+        "vector test 2",
+        unit_cube(),
+        Atoms(
+            [:H, :H, :H],
+            Frac([
+                0.75 0.75 1.25;
+                0.75 0.25 0.50;
+                0.00 0.00 0.00
+            ])
+        ),
+        Charges{Frac}(0)
+    )
+    infer_bonds!(xtal, true)
+    @test isapprox(get_prop(xtal.bonds, collect(edges(xtal.bonds))[2], :vector), [0.5 0.25 0.0])
+
+    xtal = Crystal(
+        "vector test 3",
+        unit_cube(),
+        Atoms(
+            [:H, :H, :H],
+            Frac([
+                0.75 0.25 0.75;
+                0.50 0.50 0.25;
+                0.00 0.00 0.00
+            ])
+        ),
+        Charges{Frac}(0)
+    )
+    infer_bonds!(xtal, true)
+    @test isapprox(get_prop(xtal.bonds, collect(edges(xtal.bonds))[2], :vector), [0.5 0.25 0.0])
+end
 @testset "etc" begin
     xtal = Crystal("SBMOF-1.cif")
     write_bond_information(xtal, "temp/nothing.vtk", center_at_origin=true)

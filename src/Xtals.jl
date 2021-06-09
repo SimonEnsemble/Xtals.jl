@@ -12,15 +12,15 @@ include("crystal.jl")
 include("distance.jl")
 include("misc.jl")
 include("repfactors.jl")
-
-# these files define pre-compilable defaults
 include("atomic_masses.jl")
-rc[:atomic_masses] = DEFAULT_ATOMIC_MASSES
 include("cpk_colors.jl")
-rc[:cpk_colors] = DEFAULT_CPK_COLORS
 include("covalent_radii.jl")
+include("bonds.jl")
+
+rc[:atomic_masses] = DEFAULT_ATOMIC_MASSES
+rc[:cpk_colors] = DEFAULT_CPK_COLORS
 rc[:covalent_radii] = DEFAULT_COVALENT_RADII
-include("bonds.jl") # this file relies on rc[:covalent_radii] already being set
+DEFAULT_BONDING_RULES = bondingrules()
 rc[:bonding_rules] = DEFAULT_BONDING_RULES
 
 # - lists python dependencies
