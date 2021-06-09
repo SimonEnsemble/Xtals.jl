@@ -55,12 +55,26 @@ xtal.atoms.coords.xf                                    # array of fractional co
 cart_coords = xtal.box.f_to_c * xtal.atoms.coords.xf    # array of cartesian coordinates
 ```
 
+## Finding the minimal representation
+
+Many crystal structures found in databases are not the minimal representation, a.k.a. primitive unit cell.  The primitive cell can be obtained easily by calling [`primitive_cell`](@ref):
+
+```jldoctest crystal
+prim = primitive_cell(xtal)
+xtal.atoms.n, prim.atoms.n
+# output
+(424, 106)
+```
+
 ## Creating a super cell
 
 For many simulations, one needs to replicate the unit cell multiple times to create a bigger super cell.
 
-```julia
+```jldoctest crystal
 super_xtal = replicate(xtal, (2,2,2))       # Replicates the original unit cell once in each dimension
+xtal.atoms.n, super_xtal.atoms.n
+# output
+(424, 3392)
 ```
 
 ## Finding other properties
@@ -105,6 +119,7 @@ write_xyz(xtal, "my_new_xyz_file.xyz")      # stored in the current directory
     Crystal
     SymmetryInfo
     strip_numbers_from_atom_labels!
+    primitive_cell
     replicate
     molecular_weight
     crystal_density

@@ -428,7 +428,7 @@ function Crystal(filename::String;
 
     if convert_to_p1 && ! is_p1 && ! read_bonds_from_file
         @info @sprintf("Crystal %s has %s space group. I am converting it to P1 symmetry.
-        To afrain from this, pass `convert_to_p1=false` to the `Crystal` constructor.\n",
+        To prevent this, pass `convert_to_p1=false` to the `Crystal` constructor.\n",
             crystal.name, crystal.symmetry.space_group)
         crystal = apply_symmetry_operations(crystal)
     end
@@ -608,7 +608,6 @@ function strip_numbers_from_atom_labels!(crystal::Crystal)
 end
 
 vtk_filename(crystal::Crystal) = replace(replace(crystal.name, ".cif" => ""), ".cssr" => "") * ".vtk"
-write_vtk(crystal::Crystal; center_at_origin::Bool=false) = write_vtk(crystal.box, vtk_filename(crystal), center_at_origin=center_at_origin)
 
 """
     formula = chemical_formula(crystal, verbose=false)
@@ -1089,4 +1088,28 @@ function Base.:+(crystals::Crystal...; check_overlap::Bool=true)
     end
 
     return crystal
+end
+
+
+"""
+    ```prim = primitive_cell(xtal)```
+
+Returns the minimal representation (primitive unit cell) of a crystal structure.
+"""
+function primitive_cell(xtal::Crystal)
+    # check for pymatgen.io.cif dependency
+    if isnothing(rc[:pymatgen])
+        error("Python dependency pymatgen not loaded.")
+    else
+        pymatgen = rc[:pymatgen]
+    end
+    tempfile = rc[:paths][:crystals] * "/temp_$(uuid1()).cif"
+    # copy out xtal and convert it to primitive cell
+    write_cif(xtal, tempfile)
+    pymatgen.CifParser(tempfile).get_structures()[1].get_primitive_structure().to(filename=tempfile)
+    # load the result
+    primitive = Crystal(tempfile)
+    # clean up
+    rm(tempfile)
+    return primitive
 end

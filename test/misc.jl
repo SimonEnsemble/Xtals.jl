@@ -35,5 +35,6 @@ using Xtals, Test, DataFrames, LightGraphs, CSV
     @test isfile("SBMOF-1.mol2")
 
     @test isnothing(Xtals.load_pydep("bogus_python_package"))
+    @test ismissing(Xtals.check_pydep(:bogus_python_package => "bogus_python_package"))
 end
 end
