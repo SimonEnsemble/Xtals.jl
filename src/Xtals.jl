@@ -1,11 +1,10 @@
 module Xtals
 
-using CSV, DataFrames, Printf, LinearAlgebra, LightGraphs, PyCall, MetaGraphs
+using CSV, DataFrames, Printf, LinearAlgebra, LightGraphs, PyCall, MetaGraphs, UUIDs
 
 # global variable dictionary
 global rc = Dict{Symbol,Any}()
 rc[:paths] = Dict{Symbol,String}()
-
 
 include("matter.jl")
 include("box.jl")
@@ -14,7 +13,7 @@ include("distance.jl")
 include("misc.jl")
 include("repfactors.jl")
 
-# these files define some pre-compilable defaults
+# these files define pre-compilable defaults
 include("atomic_masses.jl")
 rc[:atomic_masses] = DEFAULT_ATOMIC_MASSES
 include("cpk_colors.jl")
@@ -24,23 +23,15 @@ rc[:covalent_radii] = DEFAULT_COVALENT_RADII
 include("bonds.jl") # this file relies on rc[:covalent_radii] already being set
 rc[:bonding_rules] = DEFAULT_BONDING_RULES
 
-
-# Attempts to load a python dependency.  On failure, issues a warning.
-# Calling functions which require these dependencies without successfully loading them will throw exceptions.
-function load_pydep(pydep)
-    try
-        return pyimport(pydep)
-    catch
-        @warn "Error loading $(split(pydep, ".")). Some functionaltiy may be missing."
-        return nothing
-    end
-end
+# - lists python dependencies
+# - checks for python dependencies at pre-compile, warns on failure
+# - provides function for python dependency instantiation
+include("pydeps.jl")
 
 
 function __init__()
     # load Python dependencies
-    rc[:scipy] = load_pydep("scipy.spatial")
-    rc[:pymatgen] = load_pydep("pymatgen.io.cif")
+    init_pydeps()
     # sets paths to data and crystals relative to pwd() at import
     rc[:paths][:data] = joinpath(pwd(), "data")
     rc[:paths][:crystals] = joinpath(rc[:paths][:data], "crystals")
