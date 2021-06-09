@@ -47,7 +47,7 @@ end
     @test Xtals.strip_number_from_label(:Cad) == :Cad
 
     # assign charges function
-    xtal = Crystal("test_structure3.cif")
+    xtal = Crystal("test_structure3.cif", include_zero_charges=false)
     @test xtal.charges.n == 0
     strip_numbers_from_atom_labels!(xtal)
     xtal2 = assign_charges(xtal, Dict(:Ca => -2.0, :O => 2.0))
@@ -102,7 +102,7 @@ end
     write_cif(crystal, joinpath(rc[:paths][:crystals], rewrite_filename), number_atoms=false)
     crystal_reloaded = Crystal(rewrite_filename)
     @test isapprox(crystal, crystal_reloaded, atol=0.0001)
-    crystal = Crystal("ATIBOU01_clean.cssr")
+    crystal = Crystal("ATIBOU01_clean.cssr", include_zero_charges=false)
     @test_throws ErrorException write_cif(crystal)
     crystal = assign_charges(crystal, Dict(:Mn => 2.0, :O => -2.0, :H => 0.0, :C => 0.0), Inf)
     write_cif(crystal)

@@ -1,7 +1,7 @@
 testfiles = [
+    "crystal.jl",
     "misc.jl",
     "bonds.jl",
-    "crystal.jl",
     "matter.jl",
     "distance.jl",
     "box.jl",
