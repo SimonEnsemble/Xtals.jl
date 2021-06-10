@@ -47,7 +47,7 @@ end
     @test Xtals.strip_number_from_label(:Cad) == :Cad
 
     # assign charges function
-    xtal = Crystal("test_structure3.cif")
+    xtal = Crystal("test_structure3.cif", include_zero_charges=false)
     @test xtal.charges.n == 0
     strip_numbers_from_atom_labels!(xtal)
     xtal2 = assign_charges(xtal, Dict(:Ca => -2.0, :O => 2.0))
@@ -102,7 +102,7 @@ end
     write_cif(crystal, joinpath(rc[:paths][:crystals], rewrite_filename), number_atoms=false)
     crystal_reloaded = Crystal(rewrite_filename)
     @test isapprox(crystal, crystal_reloaded, atol=0.0001)
-    crystal = Crystal("ATIBOU01_clean.cssr")
+    crystal = Crystal("ATIBOU01_clean.cssr", include_zero_charges=false)
     @test_throws ErrorException write_cif(crystal)
     crystal = assign_charges(crystal, Dict(:Mn => 2.0, :O => -2.0, :H => 0.0, :C => 0.0), Inf)
     write_cif(crystal)
@@ -274,7 +274,7 @@ end
     @test ne(xtal3.bonds) == ne(xtal.bonds)
 
     # more xtal tests
-    sbmof1 = Crystal("SBMOF-1.cif")
+    sbmof1 = Crystal("SBMOF-1.cif", include_zero_charges=false)
     @test ! has_charges(sbmof1)
     @test isapprox(sbmof1.box.reciprocal_lattice, 2 * π * inv(sbmof1.box.f_to_c))
     @test sbmof1.box.Ω ≈ det(sbmof1.box.f_to_c) # sneak in crystal test
@@ -288,10 +288,10 @@ end
     @test sbmof1_sub.atoms.coords.xf == sbmof1.atoms.coords.xf[:, 10:15]
 
     # including zero charges or not, when reading in a .cif `include_zero_charges` flag to Crystal constructor
-    frame1 = Crystal("ATIBOU01_clean.cif") # has four zero charges in it
+    frame1 = Crystal("ATIBOU01_clean.cif", include_zero_charges=false) # has four zero charges in it
     @test ! any(frame1.charges.q .== 0.0)
     @test frame1.charges.n == frame1.atoms.n - 4 # 4 charges are zero
-    frame2 = Crystal("ATIBOU01_clean.cif"; include_zero_charges=true)
+    frame2 = Crystal("ATIBOU01_clean.cif")
     @test frame2.charges.n == frame2.atoms.n
     @test isapprox(frame2.charges.coords, frame2.atoms.coords)
 

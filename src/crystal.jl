@@ -37,7 +37,7 @@ const NET_CHARGE_TOL = 1e-4 # net charge tolerance
         check_neutrality=true, net_charge_tol=1e-4,
         check_overlap=true, convert_to_p1=true, 
         read_bonds_from_file=false, wrap_coords=true,
-        include_zero_charges=false,
+        include_zero_charges=true,
         remove_duplicates=false,
         species_col=["_atom_site_type_symbol", "_atom_site_label"]
         ) # read from file
@@ -87,7 +87,7 @@ function Crystal(filename::String;
                  convert_to_p1::Bool=true,
                  read_bonds_from_file::Bool=false,
                  wrap_coords::Bool=true,
-                 include_zero_charges::Bool=false,
+                 include_zero_charges::Bool=true,
                  remove_duplicates::Bool=false,
                  species_col::Array{String, 1}=["_atom_site_type_symbol", "_atom_site_label"],
                  infer_bonds::Union{Symbol, Missing}=missing,
@@ -260,7 +260,7 @@ function Crystal(filename::String;
                         if haskey(name_to_column, "_atom_site_charge")
                             push!(charge_values, parse(Float64, line[name_to_column["_atom_site_charge"]]))
                         else
-                            push!(charge_values, 0.0)
+                            push!(charge_values, NaN)
                         end
                         # add to label_num_to_idx so that bonds can be converted later
                         if read_bonds_from_file
@@ -292,7 +292,7 @@ function Crystal(filename::String;
                         if haskey(name_to_column, "_atom_site_charge")
                             push!(charge_values, parse(Float64, line[name_to_column["_atom_site_charge"]]))
                         else
-                            push!(charge_values, 0.0)
+                            push!(charge_values, NaN)
                         end
                         # add to label_num_to_idx so that bonds can be converted later
                         if read_bonds_from_file
@@ -414,7 +414,10 @@ function Crystal(filename::String;
     # construct atoms attribute of crystal
     atoms = Atoms(species, Frac(coords))
     # construct charges attribute of crystal
-    if ! include_zero_charges
+    if  all(isnan.(charge_values))
+        # if no charges column, charge_values will be all NaN
+        charges = Charges{Frac}(0)
+    elseif ! include_zero_charges
         # include only nonzero charges
         idx_nz = charge_values .!= 0.0
         charges = Charges(charge_values[idx_nz], Frac(coords[:, idx_nz]))
@@ -444,7 +447,7 @@ function Crystal(filename::String;
     if check_neutrality
         if ! neutral(crystal, net_charge_tol)
             error(@sprintf("Crystal %s is not charge neutral; net charge is %f e. Ignore
-            this error message by passing check_charge_neutrality=false or increasing the
+            this error message by passing check_neutrality=false or increasing the
             net charge tolerance `net_charge_tol`\n", crystal.name, net_charge(crystal)))
         end
     end
@@ -726,7 +729,7 @@ function apply_symmetry_operations(crystal::Crystal)
         for c in 1:crystal.charges.n
             # apply current symmetry rule to current atom for x, y, and z coordinates
             charge_id = (sr - 1) * crystal.charges.n + c
-            charges.q[c] = crystal.charges.q[c]
+            charges.q[charge_id] = crystal.charges.q[c]
             charges.coords.xf[:, charge_id] .= [Base.invokelatest.(
                         sym_rule[k], crystal.charges.coords.xf[:, c]...) for k in 1:3]
         end
