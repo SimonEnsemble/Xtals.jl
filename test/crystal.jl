@@ -118,6 +118,9 @@ end
     @test any(xtal.atoms.coords.xf .> 1.0)
     xtal = Crystal("symmetry_test_structure.cif", wrap_coords=true) # default
     @test all(xtal.atoms.coords.xf .< 1.0) && all(xtal.atoms.coords.xf .> 0.0)
+    xtal = Crystal("symmetry_test_structure_charges.cif")
+    @test xtal.charges.n == xtal.atoms.n
+    @test !any(isnan.(xtal.charges.q))
 
     non_P1_crystal = Crystal("symmetry_test_structure.cif") # not in P1 original
     strip_numbers_from_atom_labels!(non_P1_crystal)
@@ -270,8 +273,9 @@ end
     xtal = Crystal("SBMOF-1.cif")
     xtal2 = deepcopy(xtal)
     infer_bonds!(xtal, true)
+    infer_bonds!(xtal2, true)
     xtal3 = +(xtal, xtal2; check_overlap=false)
-    @test ne(xtal3.bonds) == ne(xtal.bonds)
+    @test ne(xtal3.bonds) == ne(xtal.bonds) + ne(xtal2.bonds)
 
     # more xtal tests
     sbmof1 = Crystal("SBMOF-1.cif", include_zero_charges=false)
@@ -286,6 +290,11 @@ end
     @test sbmof1_sub.charges.n == 0
     @test sbmof1_sub.atoms.species == sbmof1.atoms.species[10:15]
     @test sbmof1_sub.atoms.coords.xf == sbmof1.atoms.coords.xf[:, 10:15]
+    unequal_n_q = Crystal("symmetry_test_structure_charges.cif", include_zero_charges=false)
+    @test_throws ErrorException lastindex(unequal_n_q)
+    @test_throws ErrorException unequal_n_q[[1]]
+    
+    @test !isapprox(unequal_n_q, Crystal("symmetry_test_structure.cif"))
 
     # including zero charges or not, when reading in a .cif `include_zero_charges` flag to Crystal constructor
     frame1 = Crystal("ATIBOU01_clean.cif", include_zero_charges=false) # has four zero charges in it
