@@ -260,7 +260,7 @@ function Crystal(filename::String;
                         if haskey(name_to_column, "_atom_site_charge")
                             push!(charge_values, parse(Float64, line[name_to_column["_atom_site_charge"]]))
                         else
-                            push!(charge_values, 0.0)
+                            push!(charge_values, NaN)
                         end
                         # add to label_num_to_idx so that bonds can be converted later
                         if read_bonds_from_file
@@ -292,7 +292,7 @@ function Crystal(filename::String;
                         if haskey(name_to_column, "_atom_site_charge")
                             push!(charge_values, parse(Float64, line[name_to_column["_atom_site_charge"]]))
                         else
-                            push!(charge_values, 0.0)
+                            push!(charge_values, NaN)
                         end
                         # add to label_num_to_idx so that bonds can be converted later
                         if read_bonds_from_file
@@ -414,7 +414,10 @@ function Crystal(filename::String;
     # construct atoms attribute of crystal
     atoms = Atoms(species, Frac(coords))
     # construct charges attribute of crystal
-    if ! include_zero_charges
+    if  all(isnan.(charge_values))
+        # if no charges column, charge_values will be all NaN
+        charges = Charges{Frac}(0)
+    elseif ! include_zero_charges
         # include only nonzero charges
         idx_nz = charge_values .!= 0.0
         charges = Charges(charge_values[idx_nz], Frac(coords[:, idx_nz]))
@@ -726,7 +729,7 @@ function apply_symmetry_operations(crystal::Crystal)
         for c in 1:crystal.charges.n
             # apply current symmetry rule to current atom for x, y, and z coordinates
             charge_id = (sr - 1) * crystal.charges.n + c
-            charges.q[c] = crystal.charges.q[c]
+            charges.q[charge_id] = crystal.charges.q[c]
             charges.coords.xf[:, charge_id] .= [Base.invokelatest.(
                         sym_rule[k], crystal.charges.coords.xf[:, c]...) for k in 1:3]
         end
