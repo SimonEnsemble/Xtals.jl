@@ -496,15 +496,50 @@ drop_cross_pb_bonds!(xtal::Crystal) = drop_cross_pb_bonds!(xtal.bonds)
 
 
 """
+    `clear_vectors!(xtal)`
+    `clear_vectors!(xtal.bonds)`
+
+Removes edge vector attributes from crystal bonding graph.
+"""
+function clear_vectors!(bonds::MetaGraph)
+    for edge ∈ edges(bonds)
+        rem_prop!(bonds, edge, :vector)
+        rem_prop!(bonds, edge, :direction)
+    end
+    set_prop!(bonds, :has_vectors, false)
+end
+
+clear_vectors!(xtal::Crystal) = clear_vectors!(xtal.bonds)
+
+
+"""
+    `calculate_bond_vectors!(xtal)`
 Adds a property to the edges of a crystal's bonding graph giving the vector between source and destination nodes in Cartesian space.
 """
 function calculate_bond_vectors!(xtal::Crystal)
     # check for bonds
-    @assert ne(xtal.bonds) ≠ 0 "Crystal $(xtal.name) has no bonds."
+    if ne(xtal.bonds) == 0
+        # no bonds--but could be legit property of xtal. non-fatal error
+        @error "Crystal $(xtal.name) has no bonds."
+        return
+    end
+    # check that vectors have not already been calculated
+    if has_prop(xtal.bonds, :has_vectors) && get_prop(xtal.bonds, :has_vectors)
+        # loop will skip all bonds if vectors already set. fatal error.
+        error("Crystal $(xtal.name) already has vectors. Clear them with `clear_vectors!` first.")
+        return
+    end
+    # get bonds as directed graph (matters for vectors!)
+    bonds = DiGraph(adjacency_matrix(xtal.bonds))
     # loop over bonding edges
-    for edge ∈ edges(xtal.bonds)
-        # get node IDs, fractional coordinates, vector
+    for edge ∈ edges(bonds)
+        # get node IDs
         i, j = src(edge), dst(edge)
+        # only need to label an edge once in undirected graph
+        if has_prop(xtal.bonds, j, i, :vector)
+            continue
+        end
+        # get fractional coordinates, vector
         xf_i = xtal.atoms.coords.xf[:, i]
         xf_j = xtal.atoms.coords.xf[:, j]
         dxf = xf_j .- xf_i
@@ -513,7 +548,44 @@ function calculate_bond_vectors!(xtal::Crystal)
         # transform to Cartesian
         dxc = xtal.box.f_to_c * dxf
         # annotate edge in graph
-        set_prop!(xtal.bonds, edge, :vector, dxc)
-        @assert norm(dxc) == get_prop(xtal.bonds, edge, :distance)
+        set_prop!(xtal.bonds, i, j, :vector, dxc)
+        # xtal.bonds is undirected, so need to specify direction of vector
+        set_prop!(xtal.bonds, i, j, :direction, (i, j))
+    end
+    set_prop!(xtal.bonds, :has_vectors, true)
+end
+
+
+"""
+    `get_bond_vector(bonds, i, j)`
+Returns the vector between connected nodes `i` and `j` of the `bonds` graph.
+"""
+function get_bond_vector(bonds::MetaGraph, i::Int, j::Int)
+    if get_prop(bonds, i, j, :direction) == (i, j)
+        return get_prop(bonds, i, j, :vector)
+    else
+        return -1 .* get_prop(bonds, i, j, :vector)
     end
 end
+
+
+"""
+    `bond_angle(xtal.bonds, 2, 1, 3)`
+    `bond_angle(xtal, 8, 121, 42)`
+
+Returns the bond angle between three nodes of a bonding graph (or three atoms in a crystal), if the edges (bonds) exist.
+Otherwise, returns `NaN`
+"""
+function bond_angle(bonds::MetaGraph, i::Int, j::Int, k::Int)::Float64
+    @assert has_prop(bonds, :has_vectors)
+    if has_edge(bonds, i, j) && has_edge(bonds, j, k)
+        # get vectors in correct orientation
+        u = get_bond_vector(bonds, i, j)
+        v = get_bond_vector(bonds, j, k)
+        return acos(dot(u, v) / norm(u) / norm(v))
+    else
+        return NaN
+    end
+end
+
+bond_angle(xtal::Crystal, i::Int, j::Int, k::Int) = bond_angle(xtal.bonds, i, j, k)

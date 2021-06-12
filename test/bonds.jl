@@ -17,14 +17,66 @@ function visual_check(xtal::String)
     @info c.name * " see .vtk and .xyz to visually check bonds"
 end
 
+@testset "bond vectors" begin
+    box = replicate(unit_cube(), (10, 10, 10))
 
+    xtal = Crystal(
+        "vector test 1",
+        box,
+        Atoms(
+            [:H, :H, :H],
+            Frac([
+                0.000 0.000 0.075;
+                0.075 0.000 0.000;
+                0.000 0.000 0.000
+            ])
+        ),
+        Charges{Frac}(0)
+    )
+    infer_bonds!(xtal, true)
+    @test isapprox(get_bond_vector(xtal.bonds, 1, 2), [0.00; -0.75;  0.00])
+    @test isapprox(get_bond_vector(xtal.bonds, 2, 1), [0.00;  0.75;  0.00])
+    @test isapprox(get_bond_vector(xtal.bonds, 2, 3), [0.75;  0.00;  0.00])
+
+    xtal = Crystal(
+        "vector test 2",
+        box,
+        Atoms(
+            [:H, :H, :H],
+            Frac([
+                1.000 0.000 0.075;
+                0.075 0.000 0.000;
+                0.000 0.000 0.000
+            ])
+        ),
+        Charges{Frac}(0)
+    )
+    infer_bonds!(xtal, true)
+    @test isapprox(get_bond_vector(xtal.bonds, 1, 2), [0.00; -0.75;  0.00])
+    @test isapprox(get_bond_vector(xtal.bonds, 2, 1), [0.00;  0.75;  0.00])
+    @test isapprox(get_bond_vector(xtal.bonds, 2, 3), [0.75;  0.00;  0.00])
+
+    methane = Frac(read_xyz(joinpath(rc[:paths][:crystals], "methane.xyz")), box)
+    xtal = Crystal(
+        "vector test 3",
+        box,
+        methane,
+        Charges{Frac}(0)
+    )
+    infer_bonds!(xtal, false)
+    @test isapprox(bond_angle(xtal, 2, 1, 3), bond_angle(xtal, 3, 1, 4))
+    @test isapprox(bond_angle(xtal, 2, 1, 3), deg2rad(109.5))
+end
 @testset "bond sanity check" begin
     box = unit_cube()
     texas_carbon = read_xyz(joinpath(rc[:paths][:crystals], "texas_carbon.xyz"))
     xtal = Crystal("CH5", box, Atoms(texas_carbon.n, texas_carbon.species, Frac(texas_carbon.coords, box)), Charges{Frac}(0))
     @test !bond_sanity_check(xtal)[1]
+    infer_bonds!(xtal, false)
+    @test !bond_sanity_check(xtal)[1]
     trihydrogen = read_xyz(joinpath(rc[:paths][:crystals], "trihydrogen.xyz"))
     xtal = Crystal("H3", box, Atoms(trihydrogen.n, trihydrogen.species, Frac(trihydrogen.coords, box)), Charges{Frac}(0))
+    infer_bonds!(xtal, false)
     @test !bond_sanity_check(xtal)[1]
 end
 @testset "NiPyC2 Tests" begin
@@ -171,55 +223,6 @@ end
     @test isnan(Xtals.is_bonded(xtal, 1, 2, rc[:bonding_rules])[2])
     rc[:bonding_rules] = bondingrules()
     @test true
-end
-@testset "bond vectors" begin
-    xtal = Crystal(
-        "vector test 1",
-        unit_cube(),
-        Atoms(
-            [:H, :H, :H],
-            Frac([
-                0.33 0.33 0.67;
-                0.67 0.33 0.33;
-                0.00 0.00 0.00
-            ])
-        ),
-        Charges{Frac}(0)
-    )
-    infer_bonds!(xtal, true)
-    @test isapprox(get_prop(xtal.bonds, collect(edges(xtal.bonds))[1], :vector), [0.0 -0.34 0.0])
-
-    xtal = Crystal(
-        "vector test 2",
-        unit_cube(),
-        Atoms(
-            [:H, :H, :H],
-            Frac([
-                0.75 0.75 1.25;
-                0.75 0.25 0.50;
-                0.00 0.00 0.00
-            ])
-        ),
-        Charges{Frac}(0)
-    )
-    infer_bonds!(xtal, true)
-    @test isapprox(get_prop(xtal.bonds, collect(edges(xtal.bonds))[2], :vector), [0.5 0.25 0.0])
-
-    xtal = Crystal(
-        "vector test 3",
-        unit_cube(),
-        Atoms(
-            [:H, :H, :H],
-            Frac([
-                0.75 0.25 0.75;
-                0.50 0.50 0.25;
-                0.00 0.00 0.00
-            ])
-        ),
-        Charges{Frac}(0)
-    )
-    infer_bonds!(xtal, true)
-    @test isapprox(get_prop(xtal.bonds, collect(edges(xtal.bonds))[2], :vector), [0.5 0.25 0.0])
 end
 @testset "etc" begin
     xtal = Crystal("SBMOF-1.cif")
