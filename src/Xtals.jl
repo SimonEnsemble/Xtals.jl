@@ -32,9 +32,11 @@ include("pydeps.jl")
 function __init__()
     # load Python dependencies
     init_pydeps()
-    # sets paths to data and crystals relative to pwd() at import
-    rc[:paths][:data] = joinpath(pwd(), "data")
-    rc[:paths][:crystals] = joinpath(rc[:paths][:data], "crystals")
+    # create path entries in global dictionary
+    rc[:paths][:crystals] = ""
+    rc[:paths][:data] = ""
+    # set paths to data and crystals relative to pwd() at import
+    set_paths(joinpath(pwd(), "data"))
 end
 
 
@@ -52,7 +54,7 @@ export
     nearest_image!, distance, overlap, remove_duplicates, pairwise_distances,
 
     # misc.jl
-    read_xyz, write_xyz, read_mol, write_mol2, assert_P1_symmetry,
+    read_xyz, write_xyz, read_mol, write_mol2, assert_P1_symmetry, set_paths,
 
     # crystal.jl
     Crystal, strip_numbers_from_atom_labels!, assign_charges, chemical_formula, molecular_weight, 
