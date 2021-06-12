@@ -154,32 +154,3 @@ function write_mol2(xtal::Crystal; filename::String="")
 	# flush the buffer
 	close(f)
 end
-
-
-"""
-    `set_paths("path_to_data", print_paths=true)`
-
-Sets all paths in `rc[:paths]` relative to `path_to_data`.  Paths follow the standard format of 
-`rc[:paths][:foo] = "path_to_data/foo"`, except for `rc[:paths][:data]` which is `"path_to_data"`.
-Warnings are issued if any chosen paths are not valid folders.
-# Arguments
-- `path_to_data::String` : an absolute or relative path to use as the root of the data folder tree. Defaults to present working directory.
-- `print_paths::Bool` : Optional.  If `true`, prints contents of `rc[:paths]` to console.  Defaults to `false`.
-- `no_warn::Bool` : Optional.  Set `true` to suppress invalid path warnings.  Default to `false`.
-"""
-function set_paths(path_to_data::String=pwd(); print_paths::Bool=false, no_warn::Bool=false)
-    for (key, path) ∈ rc[:paths] # set all relative paths
-        rc[:paths][key] = joinpath(path_to_data, String(key))
-    end
-    rc[:paths][:data] = path_to_data # correct data root path
-    if print_paths
-        @info rc[:paths]
-    end
-    if !no_warn
-        for (key, path) ∈ rc[:paths]
-            if !isdir(path)
-                @warn "$key path directory not found" path
-            end
-        end
-    end
-end
