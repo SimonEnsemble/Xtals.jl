@@ -8,12 +8,13 @@ makedocs(
     clean = true,
     pages = [
             "Xtals" => "index.md",
+            "globals" => "globals.md",
             "matter" => "matter.md",
             "boxes" => "box.md",
             "crystals" => "crystal.md",
             "computing distances" => "distance.md",
             "bonding" => "bonds.md",
-            "globals" => "globals.md"
+            "visualization" => "visualization.md"
             ],
     format = Documenter.HTML(assets = ["assets/flux.css"])
 )

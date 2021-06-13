@@ -3,6 +3,10 @@ module Misc_Test
 using Xtals, Test, DataFrames, LightGraphs, CSV
 
 @testset "Misc Tests" begin
+    xtal = Crystal("SBMOF-1.cif")
+    infer_bonds!(xtal, true)
+    @test_throws String view_crystal(xtal) # this function really can't be tested programmatically...
+
     am = rc[:atomic_masses]
     @test isapprox(am[:H], 1.00794, atol=0.001)
     @test isapprox(am[:Co], 58.9332, atol=0.001)

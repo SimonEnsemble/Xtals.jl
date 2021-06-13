@@ -1,6 +1,6 @@
 module Xtals
 
-using CSV, DataFrames, Printf, LinearAlgebra, LightGraphs, PyCall, MetaGraphs, UUIDs
+using Bio3DView, CSV, DataFrames, LightGraphs, LinearAlgebra, MetaGraphs, Printf, PyCall, UUIDs
 
 # global variable dictionary
 global rc = Dict{Symbol,Any}()
@@ -54,7 +54,7 @@ export
     nearest_image!, distance, overlap, remove_duplicates, pairwise_distances,
 
     # misc.jl
-    read_xyz, write_xyz, read_mol, write_mol2, assert_P1_symmetry, set_paths,
+    read_xyz, write_xyz, read_mol, write_mol2, assert_P1_symmetry, set_paths, view_crystal,
 
     # crystal.jl
     Crystal, strip_numbers_from_atom_labels!, assign_charges, chemical_formula, molecular_weight, 
