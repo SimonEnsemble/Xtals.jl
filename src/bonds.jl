@@ -187,6 +187,7 @@ function remove_bonds!(crystal::Crystal)
         rem_edge!(crystal.bonds, collect(edges(crystal.bonds))[1].src,
             collect(edges(crystal.bonds))[1].dst)
     end
+    clear_vectors!(crystal)
 end
 
 
@@ -568,6 +569,8 @@ function get_bond_vector(bonds::MetaGraph, i::Int, j::Int)
     end
 end
 
+get_bond_vector(xtal::Crystal, i::Int, j::Int) = get_bond_vector(xtal.bonds, i, j)
+
 
 """
     `bond_angle(xtal.bonds, 2, 1, 3)`
@@ -577,15 +580,37 @@ Returns the bond angle between three nodes of a bonding graph (or three atoms in
 Otherwise, returns `NaN`
 """
 function bond_angle(bonds::MetaGraph, i::Int, j::Int, k::Int)::Float64
+    # θ = arccos(u⃗•v⃗ / (‖u⃗‖*‖v⃗‖))
     @assert has_prop(bonds, :has_vectors)
     if has_edge(bonds, i, j) && has_edge(bonds, j, k)
         # get vectors in correct orientation
-        u = get_bond_vector(bonds, i, j)
-        v = get_bond_vector(bonds, j, k)
-        return acos(dot(u, v) / norm(u) / norm(v))
+        u⃗ = get_bond_vector(bonds, j, i)
+        v⃗ = get_bond_vector(bonds, j, k)
+        norm_u⃗ = get_prop(bonds, i, j, :distance)
+        norm_v⃗ = get_prop(bonds, j, k, :distance)
+        # rounding to 12 digits avoids the case of arccos(ϕ) : ϕ > 1
+        return acos(round(dot(u⃗, v⃗) / (norm_u⃗ * norm_v⃗), digits=12))
     else
         return NaN
     end
 end
 
 bond_angle(xtal::Crystal, i::Int, j::Int, k::Int) = bond_angle(xtal.bonds, i, j, k)
+
+
+"""
+    `bond_distance(xtal, i, j)`
+    `bond_distance(xtal.bonds, i, j)`
+
+Gives the distance between two bonded atoms in a crystal or two nodes in a bonding graph.
+Returns `NaN` if the atoms (nodes) are not bonded (connected).
+"""
+function bond_distance(bonds::MetaGraph, i::Int, j::Int)::Float64
+    if has_edge(bonds, i, j)
+        return get_prop(bonds, i, j, :distance)
+    else
+        return NaN
+    end
+end
+
+bond_distance(xtal::Crystal, i::Int, j::Int) = bond_distance(xtal.bonds, i, j)
