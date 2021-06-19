@@ -1,6 +1,6 @@
 module Xtals
 
-using CSV, DataFrames, Printf, LinearAlgebra, LightGraphs, PyCall, MetaGraphs, UUIDs
+using Bio3DView, CSV, DataFrames, LightGraphs, LinearAlgebra, MetaGraphs, Printf, PyCall, UUIDs
 
 # global variable dictionary
 global rc = Dict{Symbol,Any}()
@@ -12,15 +12,15 @@ include("crystal.jl")
 include("distance.jl")
 include("misc.jl")
 include("repfactors.jl")
-
-# these files define pre-compilable defaults
 include("atomic_masses.jl")
-rc[:atomic_masses] = DEFAULT_ATOMIC_MASSES
 include("cpk_colors.jl")
-rc[:cpk_colors] = DEFAULT_CPK_COLORS
 include("covalent_radii.jl")
+include("bonds.jl")
+
+rc[:atomic_masses] = DEFAULT_ATOMIC_MASSES
+rc[:cpk_colors] = DEFAULT_CPK_COLORS
 rc[:covalent_radii] = DEFAULT_COVALENT_RADII
-include("bonds.jl") # this file relies on rc[:covalent_radii] already being set
+DEFAULT_BONDING_RULES = bondingrules()
 rc[:bonding_rules] = DEFAULT_BONDING_RULES
 
 # - lists python dependencies
@@ -54,7 +54,7 @@ export
     nearest_image!, distance, overlap, remove_duplicates, pairwise_distances,
 
     # misc.jl
-    read_xyz, write_xyz, read_mol, write_mol2, assert_P1_symmetry, set_paths,
+    read_xyz, write_xyz, read_mol, write_mol2, assert_P1_symmetry, set_paths, view_crystal,
 
     # crystal.jl
     Crystal, strip_numbers_from_atom_labels!, assign_charges, chemical_formula, molecular_weight, 
@@ -63,6 +63,7 @@ export
     # bonds.jl
     infer_bonds!, write_bond_information, BondingRule, bond_sanity_check, remove_bonds!, 
     infer_geometry_based_bonds!, get_bonding_rules, set_bonding_rules, read_bonding_rules,
-    write_bonding_rules, add_bonding_rules, drop_cross_pb_bonds!, bondingrules
+    write_bonding_rules, add_bonding_rules, drop_cross_pb_bonds!, bondingrules, bond_angle,
+    get_bond_vector, calculate_bond_vectors!, clear_vectors!, bond_distance
 
 end # module Xtals

@@ -183,3 +183,25 @@ function set_paths(path_to_data::String=pwd(); print_paths::Bool=false, no_warn:
         end
     end
 end
+
+
+"""
+    `view_crystal(xtal, drop_cross_pb_bonds=true)`
+Launch a GUI window displaying the crystal.
+# Arguments
+- `xtal::Crystal` : the crystal to display
+- `drop_cross_pb_bonds::Bool` : Optional. Set to `true` to remove bonds that extend across periodic boundaries of the unit cell (these tend to mess up the visualization). Defaults to `true`.
+"""
+function view_crystal(xtal::Crystal; drop_cross_pb_bonds::Bool=true)
+    structure_file = rc[:paths][:data] * "/temp_$(uuid1()).cif"
+    box_file = rc[:paths][:data] * "/temp_$(uuid1()).vtk"
+    crystal = deepcopy(xtal)
+    if drop_cross_pb_bonds
+        drop_cross_pb_bonds!(crystal)
+    end
+    write_mol2(crystal, filename=structure_file)
+    write_vtk(crystal.box, box_file)
+    viewfile(structure_file, "mol2", vtkcell=box_file)
+    rm(structure_file)
+    rm(box_file)
+end

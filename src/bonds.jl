@@ -187,6 +187,7 @@ function remove_bonds!(crystal::Crystal)
         rem_edge!(crystal.bonds, collect(edges(crystal.bonds))[1].src,
             collect(edges(crystal.bonds))[1].dst)
     end
+    clear_vectors!(crystal)
 end
 
 
@@ -223,6 +224,7 @@ function infer_bonds!(crystal::Crystal, include_bonds_across_periodic_boundaries
             end
         end
     end
+    calculate_bond_vectors!(crystal)
     bond_sanity_check(crystal)
 end
 
@@ -493,4 +495,122 @@ end
 
 drop_cross_pb_bonds!(xtal::Crystal) = drop_cross_pb_bonds!(xtal.bonds)
 
-DEFAULT_BONDING_RULES = bondingrules()
+
+"""
+    `clear_vectors!(xtal)`
+    `clear_vectors!(xtal.bonds)`
+
+Removes edge vector attributes from crystal bonding graph.
+"""
+function clear_vectors!(bonds::MetaGraph)
+    for edge ∈ edges(bonds)
+        rem_prop!(bonds, edge, :vector)
+        rem_prop!(bonds, edge, :direction)
+    end
+    set_prop!(bonds, :has_vectors, false)
+end
+
+clear_vectors!(xtal::Crystal) = clear_vectors!(xtal.bonds)
+
+
+"""
+    `calculate_bond_vectors!(xtal)`
+Adds a property to the edges of a crystal's bonding graph giving the vector between source and destination nodes in Cartesian space.
+"""
+function calculate_bond_vectors!(xtal::Crystal)
+    # check for bonds
+    if ne(xtal.bonds) == 0
+        # no bonds--but could be legit property of xtal. non-fatal error
+        @error "Crystal $(xtal.name) has no bonds."
+        return
+    end
+    # check that vectors have not already been calculated
+    if has_prop(xtal.bonds, :has_vectors) && get_prop(xtal.bonds, :has_vectors)
+        # loop will skip all bonds if vectors already set. fatal error.
+        error("Crystal $(xtal.name) already has vectors. Clear them with `clear_vectors!` first.")
+        return
+    end
+    # get bonds as directed graph (matters for vectors!)
+    bonds = DiGraph(adjacency_matrix(xtal.bonds))
+    # loop over bonding edges
+    for edge ∈ edges(bonds)
+        # get node IDs
+        i, j = src(edge), dst(edge)
+        # only need to label an edge once in undirected graph
+        if has_prop(xtal.bonds, j, i, :vector)
+            continue
+        end
+        # get fractional coordinates, vector
+        xf_i = xtal.atoms.coords.xf[:, i]
+        xf_j = xtal.atoms.coords.xf[:, j]
+        dxf = xf_j .- xf_i
+        # apply nearest image convention to dxf
+        nearest_image!(dxf)
+        # transform to Cartesian
+        dxc = xtal.box.f_to_c * dxf
+        # annotate edge in graph
+        set_prop!(xtal.bonds, i, j, :vector, dxc)
+        # xtal.bonds is undirected, so need to specify direction of vector
+        set_prop!(xtal.bonds, i, j, :direction, (i, j))
+    end
+    set_prop!(xtal.bonds, :has_vectors, true)
+end
+
+
+"""
+    `get_bond_vector(bonds, i, j)`
+Returns the vector between connected nodes `i` and `j` of the `bonds` graph.
+"""
+function get_bond_vector(bonds::MetaGraph, i::Int, j::Int)
+    if get_prop(bonds, i, j, :direction) == (i, j)
+        return get_prop(bonds, i, j, :vector)
+    else
+        return -1 .* get_prop(bonds, i, j, :vector)
+    end
+end
+
+get_bond_vector(xtal::Crystal, i::Int, j::Int) = get_bond_vector(xtal.bonds, i, j)
+
+
+"""
+    `bond_angle(xtal.bonds, 2, 1, 3)`
+    `bond_angle(xtal, 8, 121, 42)`
+
+Returns the bond angle between three nodes of a bonding graph (or three atoms in a crystal), if the edges (bonds) exist.
+Otherwise, returns `NaN`
+"""
+function bond_angle(bonds::MetaGraph, i::Int, j::Int, k::Int)::Float64
+    # θ = arccos(u⃗•v⃗ / (‖u⃗‖*‖v⃗‖))
+    @assert has_prop(bonds, :has_vectors)
+    if has_edge(bonds, i, j) && has_edge(bonds, j, k)
+        # get vectors in correct orientation
+        u⃗ = get_bond_vector(bonds, j, i)
+        v⃗ = get_bond_vector(bonds, j, k)
+        norm_u⃗ = get_prop(bonds, i, j, :distance)
+        norm_v⃗ = get_prop(bonds, j, k, :distance)
+        # rounding to 12 digits avoids the case of arccos(ϕ) : ϕ > 1
+        return acos(round(dot(u⃗, v⃗) / (norm_u⃗ * norm_v⃗), digits=12))
+    else
+        return NaN
+    end
+end
+
+bond_angle(xtal::Crystal, i::Int, j::Int, k::Int) = bond_angle(xtal.bonds, i, j, k)
+
+
+"""
+    `bond_distance(xtal, i, j)`
+    `bond_distance(xtal.bonds, i, j)`
+
+Gives the distance between two bonded atoms in a crystal or two nodes in a bonding graph.
+Returns `NaN` if the atoms (nodes) are not bonded (connected).
+"""
+function bond_distance(bonds::MetaGraph, i::Int, j::Int)::Float64
+    if has_edge(bonds, i, j)
+        return get_prop(bonds, i, j, :distance)
+    else
+        return NaN
+    end
+end
+
+bond_distance(xtal::Crystal, i::Int, j::Int) = bond_distance(xtal.bonds, i, j)
