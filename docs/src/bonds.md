@@ -58,7 +58,7 @@ Some chemical information formats, like `.cif` and `.mol`, can store not only th
 
 ## Bond distances, vectors, and angles
 
-When `infer_bonds!` is called, it labels each bond with several additional pieces of information.  The first is the center-to-center distance between the bonded atoms,
+Bonds may be labeled with several additional pieces of information.  The first is the center-to-center distance between the bonded atoms,
 accessible via `bond_distance`:
 
 ```jldoctest bonds
@@ -67,9 +67,10 @@ bond_distance(xtal, 1, 5)
 1.5233240952030063
 ```
 
-`infer_bonds!` additionally employs the function `calculate_bond_vectors!` to label each edge in the bonding graph with a vector, accessible via `get_bond_vector`:
+The bond distance is automatically added by `infer_bonds!`. Applying `calculate_bond_vectors!` (or passing `calculate_vectors=true` to `infer_bonds!`) labels each edge in the bonding graph with a vector, accessible via `get_bond_vector`:
 
 ```jldoctest bonds
+calculate_bond_vectors!(xtal)
 get_bond_vector(xtal, 1, 5)
 # output
 3-element Vector{Float64}:

@@ -1114,5 +1114,6 @@ function primitive_cell(xtal::Crystal)
     primitive = Crystal(tempfile)
     # clean up
     rm(tempfile)
-    return primitive
+    name = split(xtal.name, ".cif")[1] * "_primitive_cell.cif"
+    return Crystal(name, primitive.box, primitive.atoms, primitive.charges)
 end

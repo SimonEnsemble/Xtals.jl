@@ -207,9 +207,10 @@ The bonding rules are hierarchical, i.e. the first bonding rule takes precedence
 - `crystal::Crystal`: The crystal that bonds will be added to
 - `include_bonds_across_periodic_boundaries::Bool`: Whether to check across the periodic boundary when calculating bonds
 - `bonding_rules::Union{Array{BondingRule, 1}, Nothing}=nothing`: The array of bonding rules that will be used to fill the bonding information. They are applied in the order that they appear. if `nothing`, default bonding rules will be applied; see [`get_bonding_rules`](@ref)
+- `calculate_vectors::Bool`: Optional. Set `true` to annotate all edges in the `bonds` graph with vector information.
 """
 function infer_bonds!(crystal::Crystal, include_bonds_across_periodic_boundaries::Bool;
-                      bonding_rules::Array{BondingRule, 1}=rc[:bonding_rules])
+                      bonding_rules::Array{BondingRule, 1}=rc[:bonding_rules], calculate_vectors::Bool=false)
     @assert ne(crystal.bonds) == 0 @sprintf("The crystal %s already has bonds. Remove them with the `remove_bonds!` function before inferring new ones.", crystal.name)
     # loop over every atom
     for i in 1:crystal.atoms.n
@@ -224,7 +225,9 @@ function infer_bonds!(crystal::Crystal, include_bonds_across_periodic_boundaries
             end
         end
     end
-    calculate_bond_vectors!(crystal)
+    if calculate_vectors
+        calculate_bond_vectors!(crystal)
+    end
     bond_sanity_check(crystal)
 end
 
