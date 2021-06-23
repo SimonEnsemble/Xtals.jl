@@ -52,7 +52,7 @@ end
     # check bond angle
     @test isapprox(bond_angle(xtal, 1, 2, 3), deg2rad(90))
     # check invalid bond angle
-    @test isnan(bond_angle(xtal, 2, 3, 1))
+    @test_throws AssertionError bond_angle(xtal, 2, 3, 1)
     # check bond distance calculations
     @test isapprox(bond_distance(xtal, 1, 2), norm(get_prop(xtal.bonds, 1, 2, :vector)))
 
