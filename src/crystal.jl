@@ -1106,7 +1106,7 @@ function primitive_cell(xtal::Crystal)
     else
         pymatgen = rc[:pymatgen]
     end
-    tempfile = rc[:paths][:crystals] * "/temp_$(uuid1()).cif"
+    tempfile = joinpath(pwd(), ".temp_$(uuid1()).cif")
     # copy out xtal and convert it to primitive cell
     write_cif(xtal, tempfile)
     pymatgen.CifParser(tempfile).get_structures()[1].get_primitive_structure().to(filename=tempfile)
