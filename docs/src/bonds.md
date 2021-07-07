@@ -96,7 +96,7 @@ To get the angle (in radians) between two bonds, use `bond_angle`:
 ```jldoctest bonds
 bond_angle(xtal, 1, 5, 9)
 # output
-2.089762039489443
+2.089762039489374
 ```
 
 ## Detailed Docs
