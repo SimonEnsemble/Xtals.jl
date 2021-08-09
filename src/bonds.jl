@@ -584,18 +584,21 @@ Otherwise, returns `NaN`
 """
 function bond_angle(bonds::MetaGraph, i::Int, j::Int, k::Int)::Float64
     # θ = arccos(u⃗•v⃗ / (‖u⃗‖*‖v⃗‖))
-    @assert has_prop(bonds, :has_vectors)
-    if has_edge(bonds, i, j) && has_edge(bonds, j, k)
-        # get vectors in correct orientation
-        u⃗ = get_bond_vector(bonds, j, i)
-        v⃗ = get_bond_vector(bonds, j, k)
-        norm_u⃗ = get_prop(bonds, i, j, :distance)
-        norm_v⃗ = get_prop(bonds, j, k, :distance)
-        # rounding to 12 digits avoids the case of arccos(ϕ) : ϕ > 1
-        return acos(round(dot(u⃗, v⃗) / (norm_u⃗ * norm_v⃗), digits=12))
-    else
-        return NaN
+    @assert has_prop(bonds, :has_vectors) "Vectors have not been calculated. Do so with `calculate_bond_vectors!`"
+    @assert has_edge(bonds, i, j) && has_edge(bonds, j, k) "Invalid vertex selection. Cannot calculate ∠($i,$j,$k)"
+    # get vectors in correct orientation
+    u⃗ = get_bond_vector(bonds, j, i)
+    v⃗ = get_bond_vector(bonds, j, k)
+    norm_u⃗ = get_prop(bonds, i, j, :distance)
+    norm_v⃗ = get_prop(bonds, j, k, :distance)
+    ϕ = dot(u⃗, v⃗) / (norm_u⃗ * norm_v⃗)
+    # correct for numerical precision domain error |ϕ| > 1
+    if isapprox(ϕ, 1)
+        ϕ = 1.0
+    elseif isapprox(ϕ, -1)
+        ϕ = -1.0
     end
+    return acos(ϕ)
 end
 
 bond_angle(xtal::Crystal, i::Int, j::Int, k::Int) = bond_angle(xtal.bonds, i, j, k)

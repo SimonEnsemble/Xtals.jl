@@ -23,9 +23,9 @@ end
     @test Xtals.vtk_filename(xtal) == "ATIBOU01_clean.vtk"
 
     # primitive cells via pymatgen
-    xtal = Crystal("IRMOF-1.cif")
+    xtal = Crystal("str_m1_o3_o20_pcu_sym.22.cif")
     prim = primitive_cell(xtal)
-    @test prim.atoms.n == 106
+    @test prim.atoms.n == 996
     @test isnothing(assert_P1_symmetry(prim))
     pymatgen = rc[:pymatgen]
     rc[:pymatgen] = nothing

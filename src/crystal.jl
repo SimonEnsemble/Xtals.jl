@@ -809,6 +809,9 @@ function write_cif(crystal::Crystal, filename::String; fractional_coords::Bool=t
 
     @printf(cif_file, "_symmetry_Int_Tables_number 1\n\n")
     @printf(cif_file, "loop_\n_symmetry_equiv_pos_as_xyz\n")
+    if size(crystal.symmetry.operations, 2) == 0
+        @printf(cif_file, "'x,y,z'\n")
+    end
     for i in 1:size(crystal.symmetry.operations, 2)
         @printf(cif_file, "'%s,%s,%s'\n", crystal.symmetry.operations[:, i]...)
     end
@@ -1106,7 +1109,7 @@ function primitive_cell(xtal::Crystal)
     else
         pymatgen = rc[:pymatgen]
     end
-    tempfile = rc[:paths][:crystals] * "/temp_$(uuid1()).cif"
+    tempfile = joinpath(pwd(), ".temp_$(uuid1()).cif")
     # copy out xtal and convert it to primitive cell
     write_cif(xtal, tempfile)
     pymatgen.CifParser(tempfile).get_structures()[1].get_primitive_structure().to(filename=tempfile)

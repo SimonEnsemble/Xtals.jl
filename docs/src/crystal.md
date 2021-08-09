@@ -24,7 +24,7 @@ xtal.bonds                          # Bonding information in the structure. By d
 xtal.symmetry                       # Symmetry information of the crystal. By default converts the symmetry to P1 symmetry.
                                     #  Use `convert_to_p1=false` argument in `Crystal` to keep original symmetry
 # output
-
+Xtals.SymmetryInfo(["x"; "y"; "z"], "P1", true)
 ```
 
 ## Fixing atom species labels
@@ -98,7 +98,18 @@ other_charged_xtal = Crystal(xtal.name, xtal.box, xtal.atoms,               # He
                              new_charges, xtal.bonds, xtal.symmetry)        #   The number of charges in the array has to be equal to the number of atoms
                                                                             #   and finally a new `Crystal` object is manually created
 # output
+Name: IRMOF-1.cif
+Bravais unit cell of a crystal.
+	Unit cell angles α = 90.000000 deg. β = 90.000000 deg. γ = 90.000000 deg.
+	Unit cell dimensions a = 25.832000 Å. b = 25.832000 Å, c = 25.832000 Å
+	Volume of unit cell: 17237.492730 Å³
 
+	# atoms = 424
+	# charges = 424
+	chemical formula: Dict(:Zn => 4, :H => 12, :O => 13, :C => 24)
+	space Group: P1
+	symmetry Operations:
+		'x, y, z'
 ```
 
 ## Writing crystal files
