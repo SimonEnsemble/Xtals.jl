@@ -66,17 +66,6 @@ function distance(coords::Cart, box::Box, i::Int, j::Int, apply_pbc::Bool)
     end
 end
 
-function distance(coords::Cart, box::Box, i::Int, j::Int, apply_pbc::Bool)
-    dx = @views coords.x[:, i] - coords.x[:, j]
-    if apply_pbc
-        dxf = box.c_to_f * dx
-        nearest_image!(dxf)
-        return norm(box.f_to_c * dxf)
-    else
-        return norm(dx)
-    end
-end
-
 function distance(coords::Cart, box::Box, i, j, apply_pbc::Bool)
     dx = @views coords.x[:, i] - coords.x[:, j]
     if apply_pbc
@@ -98,10 +87,10 @@ function distance(coords::Cart, i, j)
     dx = @views coords.x[:, i] - coords.x[:, j]
     return norm.(eachcol(dx))
 end
-distance(atoms::Atoms{Cart}, i::Int, j::Int) = distance(atoms.coords, i, j)
+distance(atoms::Atoms{Cart}, i, j) = distance(atoms.coords, i, j)
 
-distance(atoms::Atoms, box::Box, i::Int, j::Int, apply_pbc::Bool) = distance(atoms.coords, box, i, j, apply_pbc)
-distance(charges::Charges, box::Box, i::Int, j::Int, apply_pbc::Bool) = distance(charges.coords, box, i, j, apply_pbc)
+distance(atoms::Atoms, box::Box, i, j, apply_pbc::Bool) = distance(atoms.coords, box, i, j, apply_pbc)
+distance(charges::Charges, box::Box, i, j, apply_pbc::Bool) = distance(charges.coords, box, i, j, apply_pbc)
 
 
 function pairwise_distances(coords::Frac, box::Box, apply_pbc::Bool)
