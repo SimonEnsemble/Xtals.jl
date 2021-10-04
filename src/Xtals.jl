@@ -45,7 +45,7 @@ export
     rc,
 
     # matter.jl
-    Coords, Frac, Cart, Atoms, Charges, wrap!, neutral, net_charge, translate_by!,
+    Coords, Frac, Cart, Atoms, Atom, Charges, wrap!, neutral, net_charge, translate_by!,
 
     # box.jl
     Box, replicate, unit_cube, write_vtk, inside, fractional_coords, cartesian_coords,

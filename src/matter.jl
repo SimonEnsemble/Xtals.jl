@@ -137,14 +137,36 @@ function Atoms(species::Array{Symbol, 1}, coords::Coords)
     return Atoms(length(species), species, coords)
 end
 
+"""
+Representation of a single atom at some point in space.
+
+```julia
+struct Atom{T<:Coords} # enforce that the type specified is `Coords`
+    species::Symbol # list of species
+    coords::T # coordinates
+end
+```
+
+here, `T` is `Frac` or `Cart`.
+"""
+struct Atom{T<:Coords}
+    species::Symbol
+    coords::T
+end
+
 Atoms(species::Symbol, coords::Coords) = Atoms([species], coords)
 Atoms{Frac}(n::Int) = Atoms([:_ for a = 1:n], Frac([NaN for i = 1:3, a = 1:n])) # safe pre-allocation
 Atoms{Cart}(n::Int) = Atoms([:_ for a = 1:n], Cart([NaN for i = 1:3, a = 1:n])) # safe pre-allocation
 
 Base.isapprox(a1::Atoms, a2::Atoms; atol::Real=0) = (a1.species == a2.species) && isapprox(a1.coords, a2.coords, atol=atol)
+Base.isapprox(a1::Atom, a2::Atom; atol::Real=0) = (a1.species == a2.species) && isapprox(a1.coords, a2.coords, atol=atol)
 Base.:+(a1::Atoms, a2::Atoms) = Atoms(a1.n + a2.n, [a1.species; a2.species], hcat(a1.coords, a2.coords))
+Base.:+(a1::Atoms, a2::Atom) = Atoms(a1.n + 1, [a1.species; a2.species], hcat(a1.coords, a2.coords))
+Base.:+(a1::Atom, a2::Atoms) = Atoms(1 + a2.n, [a1.species; a2.species], hcat(a1.coords, a2.coords))
+Base.:+(a1::Atom, a2::Atom) = Atoms(2, [a1.species; a2.species], hcat(a1.coords, a2.coords))
 
 Base.getindex(atoms::Atoms, ids) = Atoms(atoms.species[ids], atoms.coords[ids])
+Base.getindex(atoms::Atoms, id::Int) = Atom(atoms.species[id], atoms.coords[id])
 Base.lastindex(atoms::Atoms) = atoms.n
 
 
