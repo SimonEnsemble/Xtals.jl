@@ -34,6 +34,10 @@ using Test
     ## Atoms
     a1_f = Atoms(s1, f1)
     a2_f = Atoms(s2, f2)
+    a1_f_1 = Atom(s1[1], f1[1])
+    a1_f_2 = Atom(s1[2], f1[2])
+    @test isapprox(a1_f, a1_f_1 + a1_f_2)
+    @test isapprox(a1_f[1], a1_f_1)
 
     a1_c = Atoms(s1, c1)
     a2_c = Atoms(s2, c2)
