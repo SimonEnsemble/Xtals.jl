@@ -115,5 +115,33 @@ using LinearAlgebra
     @test isapprox(pd[3, 2], 6.031, atol=0.01) # calculated in avogadro
     pd = Xtals.pairwise_distances(coords, box, false)
     @test isapprox(pd[3, 2], 17.31, atol=0.01) # calculated in avogadro
+
+    ###
+    # vector-column distances
+    ###
+    coords = Crystal("distance_tester.cif").atoms.coords
+    box = Crystal("distance_tester.cif").box
+
+    function check_vector_indices(coords, box, Is, Js, apply_pbc = true)
+      d = distance(coords, box, Is, Js, apply_pbc)
+
+      # force using distance(::Coords, ::Box, ::Integer, ::Integer)
+      d_elementwise = distance.(Ref(coords), Ref(box), Is, Js, apply_pbc)
+
+      # CartesianIndex is implicity a 1-vector
+      if Is isa CartesianIndices
+          d_elementwise = first.(d_elementwise)
+      end
+
+      @test d ≈ d_elementwise
+    end
+
+    # different types of indices
+    Is = (1:5, rand(1:5, 5), CartesianIndices((1:5))) 
+    Js = (1:5, rand(1:5, 5), CartesianIndices((1:5)))
+
+    for (I, J) in zip(Is, Js), pbc in (true, false)
+        check_vector_indices(coords, box, I, J, pbc)
+    end
 end
 end

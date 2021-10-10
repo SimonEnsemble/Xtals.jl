@@ -40,15 +40,23 @@ apply periodic boundary conditions if and only if `apply_pbc` is `true`.
 - `apply_pbc::Bool`: `true` if we wish to apply periodic boundary conditions, `false` otherwise
 """
 function distance(coords::Frac, box::Box, i::Int, j::Int, apply_pbc::Bool)
-    dxf = coords.xf[:, i] - coords.xf[:, j]
+    dxf = @views coords.xf[:, i] - coords.xf[:, j]
     if apply_pbc
         nearest_image!(dxf)
     end
     return norm(box.f_to_c * dxf)
 end
 
+function distance(coords::Frac, box::Box, i, j, apply_pbc::Bool)
+    dxf = @views coords.xf[:, i] - coords.xf[:, j]
+    if apply_pbc
+        nearest_image!(dxf)
+    end
+    return norm.(eachcol(box.f_to_c * dxf))
+end
+
 function distance(coords::Cart, box::Box, i::Int, j::Int, apply_pbc::Bool)
-    dx = coords.x[:, i] - coords.x[:, j]
+    dx = @views coords.x[:, i] - coords.x[:, j]
     if apply_pbc
         dxf = box.c_to_f * dx
         nearest_image!(dxf)
@@ -58,15 +66,31 @@ function distance(coords::Cart, box::Box, i::Int, j::Int, apply_pbc::Bool)
     end
 end
 
+function distance(coords::Cart, box::Box, i, j, apply_pbc::Bool)
+    dx = @views coords.x[:, i] - coords.x[:, j]
+    if apply_pbc
+        dxf = box.c_to_f * dx
+        nearest_image!(dxf)
+        return norm.(eachcol(box.f_to_c * dxf))
+    else
+        return norm.(eachcol(dx))
+    end
+end
+
 # no PBCs
 function distance(coords::Cart, i::Int, j::Int)
-    dx = coords.x[:, i] - coords.x[:, j]
+    dx = @views coords.x[:, i] - coords.x[:, j]
     return norm(dx)
 end
-distance(atoms::Atoms{Cart}, i::Int, j::Int) = distance(atoms.coords, i, j)
 
-distance(atoms::Atoms, box::Box, i::Int, j::Int, apply_pbc::Bool) = distance(atoms.coords, box, i, j, apply_pbc)
-distance(charges::Charges, box::Box, i::Int, j::Int, apply_pbc::Bool) = distance(charges.coords, box, i, j, apply_pbc)
+function distance(coords::Cart, i, j)
+    dx = @views coords.x[:, i] - coords.x[:, j]
+    return norm.(eachcol(dx))
+end
+distance(atoms::Atoms{Cart}, i, j) = distance(atoms.coords, i, j)
+
+distance(atoms::Atoms, box::Box, i, j, apply_pbc::Bool) = distance(atoms.coords, box, i, j, apply_pbc)
+distance(charges::Charges, box::Box, i, j, apply_pbc::Bool) = distance(charges.coords, box, i, j, apply_pbc)
 
 
 function pairwise_distances(coords::Frac, box::Box, apply_pbc::Bool)
