@@ -1,7 +1,7 @@
 name = "Xtals"
 uuid = "ede5f01d-793e-4c47-9885-c447d1f18d6d"
 authors = ["SimonEnsemble <cory.simon@oregonstate.edu>"]
-version = "0.3.5"
+version = "0.3.6"
 
 [deps]
 Bio3DView = "99c8bb3a-9d13-5280-9740-b4880ed9c598"
