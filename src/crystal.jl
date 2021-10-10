@@ -1023,28 +1023,25 @@ end
 
 
 # slicing of crystal by arrays of Int's
-function Base.getindex(crystal::Crystal,
-                       ids::Union{Array{Int, 1}, UnitRange{Int}})
+function Base.getindex(crystal::Crystal, ids::Union{Array{Int, 1}, UnitRange{Int}})
     # mapping from old index to new index
     old_to_new = Dict(ids[i] => i for i in 1:length(ids))
+    # create appropriately sized graph
     bonds = MetaGraph(length(ids))
+    # copy bonds from within slice
     for edge in edges(crystal.bonds)
         if edge.src in ids && edge.dst in ids
             add_edge!(bonds, old_to_new[edge.src], old_to_new[edge.dst])
-            set_props!(bonds, old_to_new[edge.src], old_to_new[edge.dst],
-                       props(bonds, edge.src, edge.dst))
+            set_props!(bonds, old_to_new[edge.src], old_to_new[edge.dst], props(crystal.bonds, edge.src, edge.dst))
         end
     end
     if crystal.charges.n == 0
-        return Crystal(crystal.name, crystal.box, crystal.atoms[ids],
-            crystal.charges, bonds, crystal.symmetry)
+        return Crystal(crystal.name, crystal.box, crystal.atoms[ids], crystal.charges, bonds, crystal.symmetry)
     elseif (crystal.charges.n == crystal.atoms.n) &&
             isapprox(crystal.charges.coords, crystal.atoms.coords)
-        return Crystal(crystal.name, crystal.box, crystal.atoms[ids],
-            crystal.charges[ids], bonds, crystal.symmetry)
+        return Crystal(crystal.name, crystal.box, crystal.atoms[ids], crystal.charges[ids], bonds, crystal.symmetry)
     else
-        error("for getindex(crystal), crystal must have 0 charges or an equal number of charges and atoms
-        that share coordinates")
+        error("for getindex(crystal), crystal must have 0 charges or an equal number of charges and atoms that share coordinates")
     end
     return crystal
 end
