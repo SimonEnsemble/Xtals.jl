@@ -42,5 +42,6 @@ jobs:
     script: julia --project ./test/cross_dep.jl PoreMatMod
     skip_cleanup: true
 
+# whether or not to send an email on success/failure
 notifications:
-  email: false
+  email: false # I think they're annoying
