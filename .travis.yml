@@ -15,8 +15,10 @@ addons:
 
 jobs:
   include:
-    - stage: Setup # install Julia/Python deps
+    - stage: Setup 1 # install Julia/Python deps
       script: julia quick_setup.jl
+    
+    - stage: Setup 2 # install test/doc deps
       script: julia --project -e 'import Pkg; Pkg.add("Documenter"); Pkg.add("Coverage")'
 
     - stage: Testing # unit tests, doctests, and coverage
