@@ -15,18 +15,19 @@ addons:
 
 jobs:
   include:
-    - stage: Setup 1 # install Julia/Python deps
-      script: julia quick_setup.jl
-    
-    - stage: Setup 2 # install test/doc deps
-      script: julia --project -e 'import Pkg; Pkg.add("Documenter"); Pkg.add("Coverage")'
-
-    - stage: Testing # unit tests, doctests, and coverage
+    - stage: Testing
+      install: # install Julia/Python deps
+        - julia quick_setup.jl
+        - julia --project -e 'import Pkg; Pkg.add("Documenter"); Pkg.add("Coverage")'
       script: julia --project --check-bounds=yes -e 'import Pkg; Pkg.test("Xtals", coverage=true)'
 
     - stage: Cross-Testing # cross-test w/ dependent libraries
-      script: julia --project ./test/cross_dep.jl PorousMaterials
-      script: julia --project ./test/cross_dep.jl PoreMatMod
+      install: # install Julia/Python deps
+        - julia quick_setup.jl
+        - julia --project -e 'import Pkg; Pkg.add("Documenter"); Pkg.add("Coverage")'
+      script:
+        - julia --project ./test/cross_dep.jl PorousMaterials
+        - julia --project ./test/cross_dep.jl PoreMatMod
 
     - stage: Documentation # build the docs and upload coverage results
       script: julia --project -e 'using Coverage; Codecov.submit(process_folder())'
