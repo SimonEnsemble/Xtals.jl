@@ -1,36 +1,32 @@
 os: linux
-
 dist: xenial
 
 language: julia
+julia: 1.6
 
 codecov: true
-
-julia:
-  - 1.6
 
 addons:
   apt:
     packages:
-    - libhdf5-serial-dev
+      - libhdf5-serial-dev
 
-script:
-  - julia quick_setup.jl
-  - julia --project --check-bounds=yes -e 'import Pkg; Pkg.test("Xtals", coverage=true)'
+jobs:
+  include:
+    - stage: Setup 1 # install Julia/Python deps
+        - script: julia quick_setup.jl
+        - script: julia --project -e 'import Pkg; Pkg.add("Documenter"); Pkg.add("Coverage")'
 
-after_success:
-  - julia --project -e 'import Pkg; Pkg.add("Documenter"); Pkg.add("Coverage")'
-  - julia --project -e 'using Coverage; Codecov.submit(process_folder())'
-  - julia --project ./docs/make.jl
+    - stage: Testing # unit tests, doctests, and coverage
+        script: julia --project --check-bounds=yes -e 'import Pkg; Pkg.test("Xtals", coverage=true)'
+
+    - stage: Cross-Testing # cross-test w/ dependent libraries
+        - script: julia ./test/cross_dep.jl PorousMaterials
+        - script: julia ./test/cross_dep.jl PoreMatMod
+
+    - stage: Documentation # build the docs and upload coverage results
+        - script: julia --project -e 'using Coverage; Codecov.submit(process_folder())'
+        - script: julia --project ./docs/make.jl
 
 notifications:
   email: true
-  slack:
-    rooms:
-      - secure: YydV4a8we+y26g/dlKsPFhXTOqJ7Q755YGOtGB19vo3JnG6QJ22DOQxF2+cMN3YMKRlwE1BhW6sB8Vd6BbfU4mPw8VXaSjnckLp4C48K6vxpX21gpeajFawaxAeyUPOp8KJZyKjNWGpz2UxNXv/f0V1iIGKs4ZJ0J3kg4/kMZvpOD+DiYoR6JN1xtu1yPbY67DogUB2LPfK1k/uiyaN166dzelVZtj1+bO3lKveBfB0KcI0HaUtRnnIzvZ65ZiuGJeTIFXoWl0MaKxlp4Nw5W3lz5pTbjmbBxtfpZBBz/70dNnUzbcpBzRiRRrkDu7bPT25ZgqS3ynHNaGH2LmLiv2T9/9A6Rqc6u/H8vfcBxNIbq+NHwUFQiNttLXtnsz20GOpVizfLvdM2s0/iZfP90ONtn/4o0/XGo5+dzYLMJvhh3osjKEx/O+fdNUVQJYHdg+aXnvEpcmwH7HGuDFJEIztwbjZNOoVgiDA3vf+H1bnFlKQV8mqmLygQ7k13iceQ2emEqxgaaaM52w4V3WiDDtdllILn6k3LVixERJv54OBzDjN0nvCXTYAFDnkTX8rvrZ+ieMb9CORd5ONBXl6MHWfbjFijdpQ973t2u7kxeOeggsk0S2vjSrw5IuuB+CfeyuLnKLurZ1H0fXywpUuhD22bhoSR0JZCJU3dCrjtmFc=
-    on_success: always
-    on_failure: always
-    template:
-      - "Repo `%{repository_slug}` *%{result}* build (<%{build_url}|#%{build_number}>) for commit (<%{compare_url}|%{commit}>) on branch `%{branch}`."
-      - "Execution time: *%{duration}*"
-      - "Message: %{message}"
