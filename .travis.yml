@@ -1,7 +1,9 @@
 os: linux
+
 dist: xenial
 
 language: julia
+
 julia: 1.6
 
 codecov: true
@@ -24,7 +26,7 @@ jobs:
         script: julia --project ./test/cross_dep.jl PorousMaterials
         script: julia --project ./test/cross_dep.jl PoreMatMod
 
-    - stage: Documentation # build the docs and upload coverage results
+    stage: Documentation # build the docs and upload coverage results
         script: julia --project -e 'using Coverage; Codecov.submit(process_folder())'
         script: julia --project ./docs/make.jl
 
