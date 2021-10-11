@@ -34,7 +34,6 @@ jobs:
 
     # cross-test w/ dependent libraries
     - stage: Cross-Testing
-      # run each test in parallel
       script:
         - julia --project ./test/cross_dep.jl PorousMaterials
         - julia --project ./test/cross_dep.jl PoreMatMod
