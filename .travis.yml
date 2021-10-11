@@ -1,10 +1,12 @@
 os: linux
+
 dist: xenial
 
 addons: apt: packages:
     - libhdf5-serial-dev
 
 language: julia
+
 julia: 1.6
 
 codecov: true
