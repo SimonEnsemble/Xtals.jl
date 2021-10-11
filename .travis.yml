@@ -18,25 +18,27 @@ julia: 1.6
 codecov: true
 
 # install deps
-install: julia quick_setup.jl && julia --project -e 'import Pkg; Pkg.add("Documenter"); Pkg.add("Coverage")'
+install:
+  - julia quick_setup.jl
+  - julia --project -e 'import Pkg; Pkg.add("Documenter"); Pkg.add("Coverage")'
 
 # run build jobs
 jobs:
   include:
-    ### unit tests, test coverage, and docs building
+    # unit tests, test coverage, and docs building
     - stage: Testing & Documentation
-    # run unit tests and record test coverage
-    script: julia --project --check-bounds=yes -e 'import Pkg; Pkg.test("Xtals", coverage=true)'
-    # build/deploy docs and upload test coverage results
-    after_success:
-      - cd ./test && julia --project ./docs/make.jl
-      - julia --project -e 'using Coverage; Codecov.submit(process_folder())'
-    ### cross-test w/ dependent libraries
-    - stage: Cross-Testing
-    script:
-      - julia --project ./test/cross_dep.jl PorousMaterials
-      - julia --project ./test/cross_dep.jl PoreMatMod
+      # run unit tests and record test coverage
+      script: julia --project --check-bounds=yes -e 'import Pkg; Pkg.test("Xtals", coverage=true)'
+      # build/deploy docs and upload test coverage results
+      after_success:
+        - cd ./test && julia --project ./docs/make.jl
+        - julia --project -e 'using Coverage; Codecov.submit(process_folder())'
 
-# whether or not to send an email on success/failure
+    # cross-test w/ dependent libraries
+    - stage: Cross-Testing
+      # run each test in parallel
+      script: julia --project ./test/cross_dep.jl PorousMaterials
+      script: julia --project ./test/cross_dep.jl PoreMatMod
+
 notifications:
-  email: false
+  email: false # the emails are more annoying than useful, IMO...
