@@ -1,6 +1,5 @@
 # set operating system to Ubuntu 16.04
 os: linux
-
 dist: xenial
 
 # install additional package(s)
@@ -11,7 +10,6 @@ addons:
 
 # get Julia 1.6
 language: julia
-
 julia: 1.6
 
 # set codecov env var
@@ -41,4 +39,4 @@ jobs:
       script: julia --project ./test/cross_dep.jl PoreMatMod
 
 notifications:
-  email: false # the emails are more annoying than useful, IMO...
+  email: false
