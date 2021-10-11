@@ -1,37 +1,29 @@
 os: linux
-
 dist: xenial
 
-language: julia
+addons: apt: packages:
+    - libhdf5-serial-dev
 
+language: julia
 julia: 1.6
 
 codecov: true
 
-addons:
-  apt:
-    packages:
-      - libhdf5-serial-dev
+install:
+- julia quick_setup.jl
+- julia --project -e 'import Pkg; Pkg.add("Documenter"); Pkg.add("Coverage")'
 
 jobs:
   include:
-    - stage: Testing
-      install: # install Julia/Python deps
-        - julia quick_setup.jl
-        - julia --project -e 'import Pkg; Pkg.add("Documenter"); Pkg.add("Coverage")'
+    - stage: Testing & Documentation # unit tests, test coverage, and docs building
+      # run unit tests and record test coverage
       script: julia --project --check-bounds=yes -e 'import Pkg; Pkg.test("Xtals", coverage=true)'
+      # build/deploy docs and upload test coverage results
+      after_success: script: julia --project ./docs/make.jl && julia --project -e 'using Coverage; Codecov.submit(process_folder())'
 
     - stage: Cross-Testing # cross-test w/ dependent libraries
-      install: # install Julia/Python deps
-        - julia quick_setup.jl
-        - julia --project -e 'import Pkg; Pkg.add("Documenter"); Pkg.add("Coverage")'
-      script:
-        - julia --project ./test/cross_dep.jl PorousMaterials
-        - julia --project ./test/cross_dep.jl PoreMatMod
-
-    - stage: Documentation # build the docs and upload coverage results
-      script: julia --project -e 'using Coverage; Codecov.submit(process_folder())'
-      script: julia --project ./docs/make.jl
+      script: julia --project ./test/cross_dep.jl PorousMaterials
+      script: julia --project ./test/cross_dep.jl PoreMatMod
 
 notifications:
-  email: true
+  email: false # the emails are more annoying than useful, IMO...
