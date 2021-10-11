@@ -23,7 +23,9 @@ jobs:
       # run unit tests and record test coverage
       script: julia --project --check-bounds=yes -e 'import Pkg; Pkg.test("Xtals", coverage=true)'
       # build/deploy docs and upload test coverage results
-      after_success: script: julia --project ./docs/make.jl && julia --project -e 'using Coverage; Codecov.submit(process_folder())'
+      after_success:
+        - julia --project ./docs/make.jl
+        - julia --project -e 'using Coverage; Codecov.submit(process_folder())'
 
     - stage: Cross-Testing # cross-test w/ dependent libraries
       # install deps
