@@ -2,28 +2,35 @@ os: linux
 
 dist: xenial
 
-addons: apt: packages:
-    - libhdf5-serial-dev
-
 language: julia
 
 julia: 1.6
 
 codecov: true
 
-install:
-- julia quick_setup.jl
-- julia --project -e 'import Pkg; Pkg.add("Documenter"); Pkg.add("Coverage")'
+addons:
+  apt:
+    packages:
+      - libhdf5-serial-dev
 
 jobs:
   include:
     - stage: Testing & Documentation # unit tests, test coverage, and docs building
+      # install deps
+      install:
+        - julia quick_setup.jl
+        - julia --project -e 'import Pkg; Pkg.add("Documenter"); Pkg.add("Coverage")'
       # run unit tests and record test coverage
       script: julia --project --check-bounds=yes -e 'import Pkg; Pkg.test("Xtals", coverage=true)'
       # build/deploy docs and upload test coverage results
       after_success: script: julia --project ./docs/make.jl && julia --project -e 'using Coverage; Codecov.submit(process_folder())'
 
     - stage: Cross-Testing # cross-test w/ dependent libraries
+      # install deps
+      install:
+        - julia quick_setup.jl
+        - julia --project -e 'import Pkg; Pkg.add("Documenter")'
+      # run each test in parallel
       script: julia --project ./test/cross_dep.jl PorousMaterials
       script: julia --project ./test/cross_dep.jl PoreMatMod
 
