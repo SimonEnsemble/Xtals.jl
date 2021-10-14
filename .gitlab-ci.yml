@@ -31,12 +31,13 @@ build-script: # test building w/ Python
 test-unit: # run all the unit tests
   stage: test
   script:
-    - julia --project unit_tests.jl
+    - julia --project ./test/unit_tests.jl
 
 test-docs: # test the code examples in the docs
   stage: test
   script:
-    - julia --project -e 'Pkg.add("Documenter"); include("doc_tests.jl")'
+    - julia --project -e 'import Pkg; Pkg.add("Documenter");
+    - julia --project -e 'include("doc_tests.jl")'
 
 
 # # # CROSSTEST STAGE
