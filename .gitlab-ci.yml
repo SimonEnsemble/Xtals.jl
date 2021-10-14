@@ -21,10 +21,6 @@ full-build: # test building w/ Python
   stage: build
   script:
     - julia --project quick_setup.jl
-    - julia --project -e 'import Pkg; Pkg.add("Documenter");'
-  artifacts:
-    paths:
-      - .julia # pass Julia environment to downstream jobs
 
 
 # # # TEST STAGE
@@ -37,7 +33,8 @@ unit-testing: # run all the unit tests
 docs-code-testing: # test the code examples in the docs
   stage: test
   script:
-    - julia --project -e 'include("doc_tests.jl")'
+    - julia --project -e 'import Pkg; Pkg.add("Documenter");'
+    - julia --project ./test/doc_tests.jl
 
 
 # # # CROSSTEST STAGE
@@ -45,12 +42,12 @@ docs-code-testing: # test the code examples in the docs
 crosstest-porousmaterials: # check for breaking changes
   stage: crosstest
   script:
-    - julia ./test/cross_dep.jl PorousMaterials
+    - julia --project ./test/cross_dep.jl PorousMaterials
 
 crosstest-porematmod: # check for breaking changes
   stage: crosstest
   script:
-    - julia ./test/cross_dep.jl PoreMatMod
+    - julia --project ./test/cross_dep.jl PoreMatMod
 
 
 # # # DEPLOY STAGE
@@ -58,4 +55,5 @@ crosstest-porematmod: # check for breaking changes
 deploy-docs: # build and deploy the docs
   stage: deploy
   script:
-    - julia ./docs/make.jl
+    - julia --project -e 'import Pkg; Pkg.add("Documenter");'
+    - julia --project ./docs/make.jl
