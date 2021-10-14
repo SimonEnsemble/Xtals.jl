@@ -29,7 +29,7 @@ full-build: # test building w/ Python
 unit-testing: # run all the unit tests
   stage: test
   script:
-    - julia --project -e 'import Pkg; Pkg.build("Xtals")'
+    - julia --project -e 'import Pkg; Pkg.instantiate(); Pkg.build("Xtals")'
     - julia --project -e 'import Pkg; Pkg.add("Documenter")'
     - julia --project ./test/unit_tests.jl
 
@@ -37,7 +37,7 @@ docs-code-testing: # test the code examples in the docs
   stage: test
   script:
     - julia --project -e 'import Pkg; Pkg.build("Xtals")'
-    - julia --project - 'import Pkg; Pkg.add("Documenter"); Pkg.add("FIGlet")'
+    - julia --project -e 'import Pkg; Pkg.add("Documenter"); Pkg.add("FIGlet")'
     - julia --project ./test/doc_tests.jl
 
 
