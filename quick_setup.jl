@@ -1,5 +1,3 @@
-#!/usr/bin/env julia
-
 import Pkg
 
 
