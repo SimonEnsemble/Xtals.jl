@@ -21,7 +21,7 @@ full-build: # test building w/ Python
   stage: build
   script:
     - julia --project quick_setup.jl
-    - julia --project -e 'import Pkg; Pkg.add("Documenter");
+    - julia --project -e 'import Pkg; Pkg.add("Documenter");'
   artifacts:
     paths:
       - .julia # pass Julia environment to downstream jobs
