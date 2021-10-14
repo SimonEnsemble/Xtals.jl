@@ -28,12 +28,13 @@ full-build: # test building w/ Python
 unit-testing: # run all the unit tests
   stage: test
   script:
+    - julia --project -e 'import Pkg; Pkg.build("Xtals")'
     - julia --project ./test/unit_tests.jl
 
 docs-code-testing: # test the code examples in the docs
   stage: test
   script:
-    - julia --project -e 'import Pkg; Pkg.add("Documenter");'
+    - julia --project -e 'import Pkg; Pkg.add("Documenter"); Pkg.build("Xtals")'
     - julia --project ./test/doc_tests.jl
 
 
@@ -42,11 +43,13 @@ docs-code-testing: # test the code examples in the docs
 crosstest-porousmaterials: # check for breaking changes
   stage: crosstest
   script:
+    - julia --project -e 'import Pkg; Pkg.build("Xtals")'
     - julia --project ./test/cross_dep.jl PorousMaterials
 
 crosstest-porematmod: # check for breaking changes
   stage: crosstest
   script:
+    - julia --project -e 'import Pkg; Pkg.build("Xtals")'
     - julia --project ./test/cross_dep.jl PoreMatMod
 
 
@@ -55,5 +58,5 @@ crosstest-porematmod: # check for breaking changes
 deploy-docs: # build and deploy the docs
   stage: deploy
   script:
-    - julia --project -e 'import Pkg; Pkg.add("Documenter");'
+    - julia --project -e 'import Pkg; Pkg.add("Documenter"); Pkg.build("Xtals")'
     - julia --project ./docs/make.jl
