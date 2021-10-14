@@ -1,0 +1,53 @@
+stages:
+  - build # wherein we set up the environment and build the package
+  - test # wherein we run unit tests and doc-tests in parallel
+  - crosstest # wherein we check for breaking changes vs. dev branches of key downstream packages
+  - deploy # wherein we build and deploy the documentation
+
+
+# # # BUILD STAGE
+
+build-pkg: # test building sans Python
+  stage: build
+  script:
+    - julia --project -e 'import Pkg; Pkg.build("Xtals"); using Xtals'
+
+build-script: # test building w/ Python (## TODO cache this build for test jobs?)
+  stage: build
+  script:
+    - julia quick_setup.jl
+    - julia --project -e 'import Pkg; Pkg.build("Xtals"); using Xtals'
+
+
+# # # TEST STAGE
+
+test-unit: # run all the unit tests
+  stage: test
+  script:
+    - julia --project unit_tests.jl
+
+test-docs: # test the code examples in the docs
+  stage: test
+  script:
+    - julia --project -e 'Pkg.add("Documenter"); include("doc_tests.jl")'
+
+
+# # # CROSSTEST STAGE
+
+crosstest-porousmaterials: # check for breaking changes
+  stage: crosstest
+  script:
+    - julia ./test/cross_dep.jl PorousMaterials
+
+crosstest-porematmod: # check for breaking changes
+  stage: crosstest
+  script:
+    - julia ./test/cross_dep.jl PoreMatMod
+
+
+# # # DEPLOY STAGE
+
+deploy-docs: # build and deploy the docs
+  stage: deploy
+  script:
+    - julia ./docs/make.jl
