@@ -1,3 +1,5 @@
+image: julia:1.6
+
 # build stages execute sequentially; jobs within a stage execute in parallel
 # every job is run on a new VM
 stages:
@@ -8,38 +10,20 @@ stages:
   - deploy # wherein we build and deploy the documentation
 
 
-# # # GLOBAL VARS
-
-variables: # accessible to all jobs
-  JULIA: "~/julia-1.6.3/bin/julia" # path to Julia binary
-
-
-# # # PREBUILD STAGE
-
-prebuild-julia: # install Julia
-  stage: prebuild
-  script:
-    - wget https://julialang-s3.julialang.org/bin/linux/x64/1.6/julia-1.6.3-linux-x86_64.tar.gz
-    - tar -xf julia-1.6.3-linux-x86_64.tar.gz
-  artifacts:
-    paths:
-      - julia-1.6.3 # save the Julia source and binaries
-      - .julia # save the local Julia environment
-    expire_in: 1 day # clean up
-
-
 # # # BUILD STAGE
 
 build-pkg: # test building sans Python
   stage: build
   script:
-    - $JULIA --project -e 'import Pkg; Pkg.build("Xtals"); using Xtals'
+    - julia --project -e 'import Pkg; Pkg.build("Xtals")'
 
 build-script: # test building w/ Python
   stage: build
   script:
-    - $JULIA quick_setup.jl
-    - $JULIA --project -e 'import Pkg; Pkg.build("Xtals"); using Xtals'
+    - julia --project quick_setup.jl
+  artifacts:
+    paths:
+      - .julia # pass Julia environment to downstream jobs
 
 
 # # # TEST STAGE
@@ -47,12 +31,12 @@ build-script: # test building w/ Python
 test-unit: # run all the unit tests
   stage: test
   script:
-    - $JULIA --project unit_tests.jl
+    - julia --project unit_tests.jl
 
 test-docs: # test the code examples in the docs
   stage: test
   script:
-    - $JULIA --project -e 'Pkg.add("Documenter"); include("doc_tests.jl")'
+    - julia --project -e 'Pkg.add("Documenter"); include("doc_tests.jl")'
 
 
 # # # CROSSTEST STAGE
@@ -60,12 +44,12 @@ test-docs: # test the code examples in the docs
 crosstest-porousmaterials: # check for breaking changes
   stage: crosstest
   script:
-    - $JULIA ./test/cross_dep.jl PorousMaterials
+    - julia ./test/cross_dep.jl PorousMaterials
 
 crosstest-porematmod: # check for breaking changes
   stage: crosstest
   script:
-    - $JULIA ./test/cross_dep.jl PoreMatMod
+    - julia ./test/cross_dep.jl PoreMatMod
 
 
 # # # DEPLOY STAGE
@@ -73,4 +57,4 @@ crosstest-porematmod: # check for breaking changes
 deploy-docs: # build and deploy the docs
   stage: deploy
   script:
-    - $JULIA ./docs/make.jl
+    - julia ./docs/make.jl
