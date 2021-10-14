@@ -12,15 +12,16 @@ stages:
 
 # # # BUILD STAGE
 
-build-pkg: # test building sans Python
+simple-build-test: # test building sans Python
   stage: build
   script:
     - julia --project -e 'import Pkg; Pkg.build("Xtals")'
 
-build-script: # test building w/ Python
+full-build: # test building w/ Python
   stage: build
   script:
     - julia --project quick_setup.jl
+    - julia --project -e 'import Pkg; Pkg.add("Documenter");
   artifacts:
     paths:
       - .julia # pass Julia environment to downstream jobs
@@ -28,15 +29,14 @@ build-script: # test building w/ Python
 
 # # # TEST STAGE
 
-test-unit: # run all the unit tests
+unit-testing: # run all the unit tests
   stage: test
   script:
     - julia --project ./test/unit_tests.jl
 
-test-docs: # test the code examples in the docs
+docs-code-testing: # test the code examples in the docs
   stage: test
   script:
-    - julia --project -e 'import Pkg; Pkg.add("Documenter");
     - julia --project -e 'include("doc_tests.jl")'
 
 
