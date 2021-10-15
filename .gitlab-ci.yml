@@ -17,6 +17,9 @@ minimal-build: # test minimal build, no Python
   stage: build
   script:
     - julia --project=@. -e 'import Pkg; Pkg.build("Xtals"); using Xtals'
+  after_script:
+    - which julia
+    - ls -a ~
 
 ## TODO cron job to check that registered version loads
 
@@ -25,6 +28,7 @@ full-build: # full build for complete testing
   stage: build
   script:
     - julia --project=@. quick_setup.jl
+    - julia --project=@. -e 'using Xtals'
   artifacts:
     paths:
       - ~/.julia/*
