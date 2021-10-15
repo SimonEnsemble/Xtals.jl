@@ -13,61 +13,62 @@ stages:
 
 # # # BUILD STAGE
 
-minimal-build: # test building sans Python & w/ minimal code
+minimal-build: # test minimal build, no Python
   stage: build
   script:
-    - julia --project -e 'using Xtals'
+    - julia --project=@. -e 'using Xtals'
 
 # check that registered version loads (this should be a cron job) ## TODO cron job
 pkg-test:
   stage: build
   script:
-    - julia 'import Pkg; Pkg.add("Xtals"); using Xtals'
+    - julia -e 'import Pkg; Pkg.add("Xtals"); using Xtals'
 
 # all jobs in next stage of pipeline need the things installed by quick_setup.jl
-## TODO artifact the full build, knock out one test job's local install to see if it works
 full-build: # the official full build for complete testing
   stage: build
   script:
-    - julia -- project quick_setup.jl
+    - julia --project=@. quick_setup.jl
   artifacts:
     paths:
       - ~/.julia
+
 
 # # # TEST STAGE
 
 artifact-testing: # check that previous build state has been preserved
   stage: test
   script:
-    - julia --project ./test/unit_tests.jl
+    - julia --project=@. ./test/unit_tests.jl
 
 unit-testing: # run all the unit tests
   stage: test
   before_script:
-    - julia --project quick_setup.jl
+    - julia --project=@. quick_setup.jl
   script:
-    - julia --project ./test/unit_tests.jl
+    - julia --project=@. ./test/unit_tests.jl
 
 docs-code-testing: # test the code examples in the docs
   stage: test
   before_script:
-    - julia --project quick_setup.jl
+    - julia --project=@. -e 'using Xtals'
+    - julia --project=@. quick_setup.jl
   script:
-    - julia --project ./test/doc_tests.jl
+    - julia --project=@. ./test/doc_tests.jl
 
 porousmaterials-testing: # check for breaking changes
   stage: test
   before_script:
-    - julia --project quick_setup.jl
+    - julia --project=@. quick_setup.jl
   script:
-    - julia --project ./test/cross_dep.jl PorousMaterials
+    - julia --project=@. ./test/cross_dep.jl PorousMaterials
 
 porematmod-testing: # check for breaking changes
   stage: test
   before_script:
-    - julia --project quick_setup.jl
+    - julia --project=@. quick_setup.jl
   script:
-    - julia --project ./test/cross_dep.jl PoreMatMod
+    - julia --project=@. ./test/cross_dep.jl PoreMatMod
 
 
 # # # DEPLOY STAGE
@@ -75,6 +76,6 @@ porematmod-testing: # check for breaking changes
 deploy-docs: # build and deploy the docs
   stage: deploy
   before_script:
-    - julia --project -e 'import Pkg; Pkg.add("Documenter"); Pkg.build("Xtals")'
+    - julia --project=@. -e 'import Pkg; Pkg.add("Documenter")'
   script:
-    - julia --project ./docs/make.jl
+    - julia --project=@. ./docs/make.jl
