@@ -25,7 +25,6 @@ full-build: # full build for complete testing
   stage: build
   script:
     - julia --project=@. quick_setup.jl
-    - 
   artifacts:
     paths:
       - ~/.julia/*
