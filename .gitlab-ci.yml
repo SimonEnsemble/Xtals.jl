@@ -27,8 +27,9 @@ minimal-build: # test minimal build, no Python
 full-build: # full build for complete testing
   stage: build
   script:
-    - julia --project=@. quick_setup.jl
-    - julia --project=@. -e 'using Xtals'
+    - julia --project=@. -e 'import Pkg; Pkg.build("Xtals")' # enforce priority of local Xtals
+    - julia --project=@. quick_setup.jl # run the full installer script
+    - julia --project=@. -e 'using Xtals' # make sure pkg loads in fresh session
   artifacts:
     paths:
       - ~/.julia/*
@@ -51,7 +52,7 @@ unit-testing: # run all the unit tests
 docs-code-testing: # test the code examples in the docs
   stage: test
   before_script:
-    - julia --project=@. -e 'using Xtals'
+    - julia --project=@. -e 'import Pkg; Pkg.build("Xtals"); using Xtals'
     - julia --project=@. quick_setup.jl
   script:
     - julia --project=@. ./test/doc_tests.jl
