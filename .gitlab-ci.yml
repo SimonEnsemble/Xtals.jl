@@ -1,58 +1,72 @@
-image: julia:1.6
+image: julia:1.6  # Docker img of a system w/ Julia 1.6
 
-# build stages execute sequentially; jobs within a stage execute in parallel
+
+# # # STAGES
+
+# build stages execute sequentially; jobs within a stage execute parallel to one another
 # every job is run on a new VM
 stages:
-  - prebuild # wherein we install Julia
-  - build # wherein we set up the environment and build the package
-  - test # wherein we run unit tests and doc-tests in parallel
-  - crosstest # wherein we check for breaking changes vs. dev branches of key downstream packages
+  - build # wherein we check that the minimum build succeeds
+  - test # wherein the full build is unit/doc/cross tested in parallel
   - deploy # wherein we build and deploy the documentation
 
 
 # # # BUILD STAGE
 
-simple-build-test: # test building sans Python
+minimal-build: # test building sans Python & w/ minimal code
   stage: build
   script:
-    - julia --project -e 'import Pkg; Pkg.build("Xtals")'
     - julia --project -e 'using Xtals'
 
-full-build: # test building w/ Python
+# check that registered version loads (this should be a cron job) ## TODO cron job
+pkg-test:
   stage: build
   script:
-    - julia --project quick_setup.jl
+    - julia 'import Pkg; Pkg.add("Xtals"); using Xtals'
 
+# all jobs in next stage of pipeline need the things installed by quick_setup.jl
+## TODO artifact the full build, knock out one test job's local install to see if it works
+full-build: # the official full build for complete testing
+  stage: build
+  script:
+    - julia -- project quick_setup.jl
+  artifacts:
+    paths:
+      - ~/.julia
 
 # # # TEST STAGE
 
-unit-testing: # run all the unit tests
+artifact-testing: # check that previous build state has been preserved
   stage: test
   script:
-    - julia --project -e 'import Pkg; Pkg.instantiate(); Pkg.build("Xtals")'
-    - julia --project -e 'import Pkg; Pkg.add("Documenter")'
+    - julia --project ./test/unit_tests.jl
+
+unit-testing: # run all the unit tests
+  stage: test
+  before_script:
+    - julia --project quick_setup.jl
+  script:
     - julia --project ./test/unit_tests.jl
 
 docs-code-testing: # test the code examples in the docs
   stage: test
+  before_script:
+    - julia --project quick_setup.jl
   script:
-    - julia --project -e 'import Pkg; Pkg.build("Xtals")'
-    - julia --project -e 'import Pkg; Pkg.add("Documenter"); Pkg.add("FIGlet")'
     - julia --project ./test/doc_tests.jl
 
-
-# # # CROSSTEST STAGE
-
-crosstest-porousmaterials: # check for breaking changes
-  stage: crosstest
+porousmaterials-testing: # check for breaking changes
+  stage: test
+  before_script:
+    - julia --project quick_setup.jl
   script:
-    - julia --project -e 'import Pkg; Pkg.build("Xtals")'
     - julia --project ./test/cross_dep.jl PorousMaterials
 
-crosstest-porematmod: # check for breaking changes
-  stage: crosstest
+porematmod-testing: # check for breaking changes
+  stage: test
+  before_script:
+    - julia --project quick_setup.jl
   script:
-    - julia --project -e 'import Pkg; Pkg.build("Xtals")'
     - julia --project ./test/cross_dep.jl PoreMatMod
 
 
@@ -60,6 +74,7 @@ crosstest-porematmod: # check for breaking changes
 
 deploy-docs: # build and deploy the docs
   stage: deploy
-  script:
+  before_script:
     - julia --project -e 'import Pkg; Pkg.add("Documenter"); Pkg.build("Xtals")'
+  script:
     - julia --project ./docs/make.jl
