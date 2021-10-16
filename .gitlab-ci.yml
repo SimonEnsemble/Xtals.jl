@@ -28,10 +28,12 @@ full-build: # full build for complete testing
     - julia --project=@. -e 'import Pkg; Pkg.build("Xtals")' # enforce priority of local Xtals
     - julia --project=@. quick_setup.jl # run the full installer script
     - julia --project=@. -e 'using Xtals' # make sure pkg loads in fresh session
+  after_script:
+    - ln -s ~/.julia $CI_PROJECT_DIR/.julia
   artifacts:
     paths:
-      - $CI_PROJECT_DIR/manifest.toml
-      - $CI_PROJECT_DIR/../.julia/*
+      - $CI_PROJECT_DIR/Manifest.toml
+      - $CI_PROJECT_DIR/.julia/*
 
 
 # # # TEST STAGE
@@ -48,7 +50,7 @@ unit-testing: # run all the unit tests
     - julia --project=@. -e 'import Pkg; Pkg.add("Documenter")'
     - julia --project=@. -e 'import Pkg; Pkg.add("FIGlet")'
   script:
-    - julia --project=@. ./test/unit_tests.jl
+    - julia --project=@. -e 'cd("test"); include("unit_tests.jl")'
 
 docs-code-testing: # test the code examples in the docs
   stage: test
@@ -58,7 +60,7 @@ docs-code-testing: # test the code examples in the docs
     - julia --project=@. -e 'import Pkg; Pkg.add("Documenter")'
     - julia --project=@. -e 'import Pkg; Pkg.add("FIGlet")'
   script:
-    - julia --project=@. ./test/doc_tests.jl
+    - julia --project=@. -e 'cd("test"); include("doc_tests.jl")'
 
 porousmaterials-testing: # check for breaking changes
   stage: test
