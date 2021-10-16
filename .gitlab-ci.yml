@@ -17,11 +17,6 @@ minimal-build: # test minimal build, no Python
   stage: build
   script:
     - julia --project=@. -e 'import Pkg; Pkg.build("Xtals"); using Xtals'
-  after_script:
-    - which julia
-    - ls -a ~
-
-## TODO cron job to check that registered version loads
 
 # all jobs in next stage of pipeline need the things installed by quick_setup.jl
 full-build: # full build for complete testing
@@ -32,7 +27,8 @@ full-build: # full build for complete testing
     - julia --project=@. -e 'using Xtals' # make sure pkg loads in fresh session
   artifacts:
     paths:
-      - ~/.julia/*
+      - manifest.toml
+      - ../.julia/*
 
 
 # # # TEST STAGE
@@ -46,6 +42,7 @@ unit-testing: # run all the unit tests
   stage: test
   before_script:
     - julia --project=@. quick_setup.jl
+    - julia --project=@. -e 'import Pkg; Pkg.add("Documenter")'
   script:
     - julia --project=@. ./test/unit_tests.jl
 
@@ -54,6 +51,7 @@ docs-code-testing: # test the code examples in the docs
   before_script:
     - julia --project=@. -e 'import Pkg; Pkg.build("Xtals"); using Xtals'
     - julia --project=@. quick_setup.jl
+    - julia --project=@. -e 'import Pkg; Pkg.add("Documenter")'
   script:
     - julia --project=@. ./test/doc_tests.jl
 
