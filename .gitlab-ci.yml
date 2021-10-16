@@ -6,52 +6,49 @@ image: julia:1.6  # Docker img of a system w/ Julia 1.6
 # build stages execute sequentially; jobs within a stage execute parallel to one another
 # every job is run on a new VM
 stages:
-  - build # wherein we check that the minimum build succeeds
-  - test # wherein the full build is unit/doc/cross tested in parallel
+  - test # wherein unit/doc/cross tests run in parallel
   - deploy # wherein we build and deploy the documentation
-
-
-# # # BUILD STAGE
-
-minimal-build: # test minimal build, no Python
-  stage: build
-  script:
-    - julia --project=@. -e 'import Pkg; Pkg.build("Xtals"); using Xtals'
 
 
 # # # TEST STAGE
 
+minimal-build: # test minimal build, no Python
+  stage: test
+  script:
+    - julia --project -e 'import Pkg; Pkg.build("Xtals"); using Xtals'
+
 unit-testing: # run all the unit tests
   stage: test
   before_script:
-    - julia --project=@. quick_setup.jl
-    - julia --project=@. -e 'import Pkg; Pkg.add("Documenter")'
-    - julia --project=@. -e 'import Pkg; Pkg.add("FIGlet")'
+    - julia --project quick_setup.jl
+    - julia --project -e 'import Pkg; Pkg.add("Documenter")'
+    - julia --project -e 'import Pkg; Pkg.add("FIGlet")'
   script:
-    - julia --project=@. -e 'cd("test"); include("unit_tests.jl")'
+    - julia --project -e 'cd("test"); include("unit_tests.jl")'
 
 docs-code-testing: # test the code examples in the docs
   stage: test
   before_script:
-    - julia --project=@. quick_setup.jl
-    - julia --project=@. -e 'import Pkg; Pkg.add("Documenter")'
-    - julia --project=@. -e 'import Pkg; Pkg.add("FIGlet")'
+    - julia --project quick_setup.jl
+    - julia --project -e 'import Pkg; Pkg.add("Documenter")'
+    - julia --project -e 'import Pkg; Pkg.add("FIGlet")'
   script:
-    - julia --project=@. -e 'cd("test"); include("doc_tests.jl")'
+    - julia --project -e 'cd("test"); include("doc_tests.jl")'
 
 porousmaterials-testing: # check for breaking changes
   stage: test
   before_script:
-    - julia --project=@. quick_setup.jl
+    - julia --project quick_setup.jl
   script:
-    - julia --project=@. ./test/cross_dep.jl PorousMaterials
+    #- julia --project ./test/cross_dep.jl PorousMaterials
+    - echo "TESTING SKIPPED"
 
 porematmod-testing: # check for breaking changes
   stage: test
   before_script:
-    - julia --project=@. quick_setup.jl
+    - julia --project quick_setup.jl
   script:
-    - julia --project=@. ./test/cross_dep.jl PoreMatMod
+    - julia --project ./test/cross_dep.jl PoreMatMod
 
 
 # # # DEPLOY STAGE
@@ -59,6 +56,6 @@ porematmod-testing: # check for breaking changes
 deploy-docs: # build and deploy the docs
   stage: deploy
   before_script:
-    - julia --project=@. -e 'import Pkg; Pkg.add("Documenter")'
+    - julia --project -e 'import Pkg; Pkg.add("Documenter")'
   script:
-    - julia --project=@. ./docs/make.jl
+    - julia --project ./docs/make.jl
