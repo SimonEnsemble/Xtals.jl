@@ -18,28 +18,8 @@ minimal-build: # test minimal build, no Python
   script:
     - julia --project=@. -e 'import Pkg; Pkg.build("Xtals"); using Xtals'
 
-# all jobs in next stage of pipeline need the things installed by quick_setup.jl
-full-build: # full build for complete testing
-  stage: build
-  script:
-    - julia --project=@. -e 'import Pkg; Pkg.build("Xtals")' # enforce priority of local Xtals
-    - julia --project=@. quick_setup.jl # run the full installer script
-    - julia --project=@. -e 'using Xtals' # make sure pkg loads in fresh session
-  after_script:
-    - ln -s ~/.julia $CI_PROJECT_DIR/.julia
-    - ls -a $CI_PROJECT_DIR
-  artifacts:
-    paths:
-      - $CI_PROJECT_DIR/Manifest.toml # this works...
-      - $CI_PROJECT_DIR/.julia/*      # this doesn't!
-
 
 # # # TEST STAGE
-
-artifact-testing: # check that previous build state has been preserved
-  stage: test
-  script:
-    - julia --project=@. -e 'using Xtals'
 
 unit-testing: # run all the unit tests
   stage: test
@@ -53,7 +33,6 @@ unit-testing: # run all the unit tests
 docs-code-testing: # test the code examples in the docs
   stage: test
   before_script:
-    - julia --project=@. -e 'import Pkg; Pkg.build("Xtals"); using Xtals'
     - julia --project=@. quick_setup.jl
     - julia --project=@. -e 'import Pkg; Pkg.add("Documenter")'
     - julia --project=@. -e 'import Pkg; Pkg.add("FIGlet")'
