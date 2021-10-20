@@ -379,5 +379,9 @@ end
     @test !isapprox(xtal, xtal2) # different atoms.n
     xtal2 = assign_charges(xtal, Dict(:Ca => -2.0, :O => 2.0, :S => 2.0, :C => 0.0, :H => 0.0), Inf)
     @test !isapprox(xtal, xtal2) # different charges.n
+
+    # make sure that CIF files with tabs in the _symmetry_equiv_pos_as_xyz blocks load w/o error
+    xtal = Crystal("xtal_w_tabs.cif")
+    @test true
 end
 end
