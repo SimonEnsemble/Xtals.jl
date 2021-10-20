@@ -47,8 +47,7 @@ porematmod-testing: # check for breaking changes
   before_script:
     - julia --project quick_setup.jl
   script:
-    #- julia --project ./test/cross_dep.jl PoreMatMod
-    - echo "TESTING SKIPPED" # this test is breaking in the CI pipeline, although it runs locally just fine...
+    - julia --project ./test/cross_dep.jl PoreMatMod
 
 
 # # # DEPLOY STAGE
