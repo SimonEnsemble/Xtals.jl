@@ -381,7 +381,7 @@ end
     @test !isapprox(xtal, xtal2) # different charges.n
 
     # make sure that CIF files with tabs in the _symmetry_equiv_pos_as_xyz blocks load w/o error
-    xtal = Crystal("xtal_w_tabs.cif")
+    xtal = Crystal("xtal_w_tabs.cif", check_overlap=false)
     @test true
 end
 end
