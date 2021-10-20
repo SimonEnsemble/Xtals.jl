@@ -219,7 +219,7 @@ function Crystal(filename::String;
                     #   ways of writing cifs...
                     while i <= length(lines) && length(lines[i]) > 0 && lines[i][1] != '_' && !occursin("loop_", lines[i])
                         line = lines[i]
-                        sym_funcs = split(line, [' ', ',', ''', '"'], keepempty=false)
+                        sym_funcs = split(line, [' ', ',', ''', '"', '\t'], keepempty=false)
                         if length(sym_funcs) == 0
                             break
                         end
