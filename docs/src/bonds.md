@@ -56,6 +56,17 @@ xtal.bonds
 
 Some chemical information formats, like `.cif` and `.mol`, can store not only the cartesian coordinates of atoms, but also the graph of bonds between atoms in molecules and crystals.  The `read_bonds_from_file` keyword argument for [`Crystal`](@ref) enables loading these bonds when reading the data.  [`read_mol`](@ref) also returns bond information.
 
+## Bonds for Atoms
+
+In the case that atomic coordinates are loaded from XYZ format, there will be no unit cell information.  To infer bonds between atoms in this case, use the `infer_bonds` function:
+
+```jldoctest bonds
+atoms = read_xyz("test/data/A11.xyz")
+bonds = infer_bonds(atoms)
+# output
+asdf
+```
+
 ## Bond distances, vectors, and angles
 
 Bonds may be labeled with several additional pieces of information.  The first is the center-to-center distance between the bonded atoms,
@@ -107,6 +118,7 @@ add_bonding_rules
 read_bonding_rules
 write_bonding_rules
 infer_bonds!
+infer_bonds
 remove_bonds!
 infer_geometry_based_bonds!
 write_bond_information
