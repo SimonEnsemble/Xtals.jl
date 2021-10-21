@@ -107,6 +107,68 @@ function show(io::IO, bonding_rules::Array{BondingRule})
     end
 end
 
+"""
+    bonded, bond_length = is_bonded(atoms, i, j, bonding_rules)
+
+Checks to see if atoms `i` and `j` in `crystal` are bonded according to the `bonding_rules`.
+
+# Arguments
+- `atoms::Atoms{Cart}`: The atoms that may be bonded
+- `i::Int`: Index of the first atom
+- `j::Int`: Index of the second atom
+- `bonding_rules::Array{BondingRule, 1}`: The array of bonding rules that will
+    be used to fill the bonding information. They are applied in the order that
+    they appear.
+
+# Returns
+- `bonded_flag::Bool`: true iff atoms `i` and `j` are bonded according to `bonding_rules`
+- `r::Float64`: the distance between atomic centers.
+"""
+function is_bonded(atoms::Atoms{Cart}, i::Int64, j::Int64, bonding_rules::Array{BondingRule, 1})
+    species_i = atoms.species[i]
+    species_j = atoms.species[j]
+    # compute vector between the two atoms.
+    dxc = atoms.coords.x[:, i] - atoms.coords.x[:, j]
+    # compute Euclidean distance
+    r = norm(dxc)
+    
+    bonded_flag = loop_over_bonding_rules(bonding_rules, species_i, species_j, r)
+
+    return bonded_flag, r
+end
+
+"""
+    bonded = loop_over_bonding_rules(bonding_rules, species_i, species_j, r)
+"""
+function loop_over_bonding_rules(bonding_rules::Vector{BondingRule}, species_i::Symbol, species_j::Symbol, r::Float64)
+    # loop over possible bonding rules
+    for br in bonding_rules
+        # determine if the atom species correspond to the species in `bonding_rules`
+        species_match = false
+        if br.species_i == :* && br.species_j == :*
+            species_match = true
+        elseif br.species_i == :* && (species_i == br.species_j || species_j == br.species_j)
+            species_match = true
+        elseif br.species_j == :* && (species_i == br.species_i || species_j == br.species_j)
+            species_match = true
+        elseif (species_i == br.species_i && species_j == br.species_j) || (species_j == br.species_i && species_i == br.species_j)
+            species_match = true
+        end
+        if species_match
+            # determine if the atoms are close enough to bond
+            if br.max_dist > r
+                return true
+            else
+                # return (don't continue!) b/c we found relevant bonding rule, don't apply others
+                return false
+            end
+        end
+    end
+    # no bonding rule was applied; therefore not bonded.
+    @warn "No bonding rule for $(species_i)-$(species_j) interaction."
+    return false
+end
+
 
 """
     are_atoms_bonded = is_bonded(crystal, i, j, bonding_rules=[BondingRule(:H, :*, 1.2), BondingRule(:*, :*, 1.9)],
@@ -148,32 +210,12 @@ function is_bonded(crystal::Crystal, i::Int64, j::Int64, bonding_rules::Array{Bo
     end
     # convert dxf to Cartesian coordinates; compute periodic distance
     r = norm(crystal.box.f_to_c * dxf)
-    # loop over possible bonding rules
-    for br in bonding_rules
-        # determine if the atom species correspond to the species in `bonding_rules`
-        species_match = false
-        if br.species_i == :* && br.species_j == :*
-            species_match = true
-        elseif br.species_i == :* && (species_i == br.species_j || species_j == br.species_j)
-            species_match = true
-        elseif br.species_j == :* && (species_i == br.species_i || species_j == br.species_j)
-            species_match = true
-        elseif (species_i == br.species_i && species_j == br.species_j) || (species_j == br.species_i && species_i == br.species_j)
-            species_match = true
-        end
-        if species_match
-            # determine if the atoms are close enough to bond
-            if br.max_dist > r
-                return true, r, cross_boundary_flag
-            else
-                # return (don't continue!) b/c we found relevant bonding rule, don't apply others
-                return false, NaN, cross_boundary_flag
-            end
-        end
-    end
-    # no bonding rule was applied; therefore not bonded.
-    @warn "No bonding rule for $(species_i)-$(species_j) interaction."
-    return false, NaN, cross_boundary_flag
+    
+    bonded = loop_over_bonding_rules(bonding_rules, species_i, species_j, r)
+
+    r = bonded ? r : NaN
+
+    return bonded, r, cross_boundary_flag
 end
 
 
@@ -188,6 +230,34 @@ function remove_bonds!(crystal::Crystal)
             collect(edges(crystal.bonds))[1].dst)
     end
     clear_vectors!(crystal)
+end
+
+
+"""
+    bonds = infer_bonds(atoms; bonding_rules=rc[:bonding_rules])
+
+Returns a `MetaGraph` encoding the chemical bonds between atoms.
+
+# Arguments
+- `atoms::Atoms{Cart}`: the atoms to bond
+- `bonding_rules::Vector{BondingRule}`: the bonding rules to use
+"""
+function infer_bonds(atoms::Atoms{Cart}; bonding_rules=rc[:bonding_rules])::MetaGraph
+    bonds = MetaGraph(atoms.n)
+
+    for i in 1:atoms.n
+        # loop over every unique pair of atoms
+        for j in i+1:atoms.n
+            bonding_flag, r = is_bonded(atoms, i, j, bonding_rules)
+            if bonding_flag
+                add_edge!(bonds, i, j)
+                set_prop!(bonds, i, j, :distance, r)
+                set_prop!(bonds, i, j, :cross_boundary, false)
+            end
+        end
+    end
+
+    return bonds
 end
 
 
@@ -588,6 +658,8 @@ function bond_angle(bonds::MetaGraph, i::Int, j::Int, k::Int)::Float64
     v⃗ = get_bond_vector(bonds, j, k)
     norm_u⃗ = get_prop(bonds, i, j, :distance)
     norm_v⃗ = get_prop(bonds, j, k, :distance)
+    @assert norm_u⃗ ≠ 0 && norm_v⃗ ≠ 0
+    @assert !isnan(norm_u⃗) && !isnan(norm_v⃗)
     ϕ = dot(u⃗, v⃗) / (norm_u⃗ * norm_v⃗)
     # correct for numerical precision domain error |ϕ| > 1
     if isapprox(ϕ, 1)
