@@ -61,10 +61,10 @@ Some chemical information formats, like `.cif` and `.mol`, can store not only th
 In the case that atomic coordinates are loaded from XYZ format, there will be no unit cell information.  To infer bonds between atoms in this case, use the `infer_bonds` function:
 
 ```jldoctest bonds
-atoms = read_xyz("test/data/A11.xyz")
-bonds = infer_bonds(atoms)
+atoms = Cart(xtal.atoms, xtal.box) # get atoms in Cartesian coords
+bonds = infer_bonds(atoms) # infer bonding graph
 # output
-asdf
+{120, 110} undirected Int64 metagraph with Float64 weights defined by :weight (default weight 1.0)
 ```
 
 ## Bond distances, vectors, and angles
