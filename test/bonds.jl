@@ -291,5 +291,11 @@ end
     write_bond_information(xtal, "temp/all_bonds.vtk")
     write_bond_information(xtal, "temp/no_pb.vtk", bond_filter=:cross_boundary=>p->!p)
 end
+@testset "bonds from xyz" begin
+    xtal = Crystal("IRMOF-1.cif")
+    infer_bonds!(xtal, false)
+    bonds = infer_bonds(Cart(xtal.atoms, xtal.box))
+    @test bonds == xtal.bonds
+end
 end
 # visual_check
