@@ -1,0 +1,40 @@
+
+data_
+_chemical_name_mineral ?hkl_Phase?
+_cell_length_a 12.510(3)
+_cell_length_b 6.3987(18)
+_cell_length_c 10.286(3)
+_cell_angle_alpha 90
+_cell_angle_beta 90
+_cell_angle_gamma 90
+_cell_volume 823.3(4)
+_symmetry_space_group_name_H-M Pnn2
+loop_
+	_symmetry_equiv_pos_as_xyz
+	 'x, y, z '
+	 '-x+1/2, y+1/2, z+1/2 '
+	 '-x, -y, z '
+	 'x+1/2, -y+1/2, z+1/2 '
+loop_
+_atom_site_label
+_atom_site_type_symbol
+_atom_site_symmetry_multiplicity
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_occupancy
+_atom_site_B_iso_or_equiv
+Ni1 Ni   2 0.5 1 -0.04387 1 5.0(10)
+N1 N   4 0.603265 0.872561 0.087677 1 4.3(9)
+O1 O   4 0.894455 0.743549 0.410637 1 4.3(9)
+O2 O   4 0.883892 0.442417 0.30687 1 4.3(9)
+C1 C   4 0.848444 0.62854 0.325561 1 4.3(9)
+C2 C   4 0.762263 0.715859 0.242316 1 4.3(9)
+C3 C   4 0.723294 0.917244 0.259177 1 4.3(9)
+H1 H   4 0.7501 1.00283 0.324309 1 4.3(9)
+C4 C   4 0.645755 0.987728 0.179786 1 4.3(9)
+H2 H   4 0.621109 1.12461 0.190673 1 4.3(9)
+C5 C   4 0.638553 0.671963 0.0695635 1 4.3(9)
+H3 H   4 0.608946 0.590151 0.00452837 1 4.3(9)
+C6 C   4 0.717852 0.589207 0.147317 1 4.3(9)
+H4 H   4 0.741058 0.451385 0.13614 1 4.3(9)
