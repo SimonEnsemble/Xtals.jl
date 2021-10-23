@@ -1,6 +1,8 @@
 using Documenter
 using Xtals
 
+ENV["DOCUMENTER_KEY"] = ARGS[1] # copy the CI pipeline key into ENV
+
 makedocs(
     root = joinpath(dirname(pathof(Xtals)), "..", "docs"),
     modules = [Xtals],
@@ -19,8 +21,4 @@ makedocs(
     format = Documenter.HTML(assets = ["assets/flux.css"])
 )
 
-deploydocs(
-    repo = "github.com/SimonEnsemble/Xtals.jl.git",
- #     push_preview=false,
- #     deps = Deps.pip("mkdocs", "mkdocs-material", "pymdown-extensions") # These are dependencies for the site, not the package
-)
+deploydocs(repo = "github.com/SimonEnsemble/Xtals.jl.git")
