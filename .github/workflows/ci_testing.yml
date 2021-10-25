@@ -11,9 +11,23 @@ jobs: # run in parallel within workflow
   minimal-build: # test package building w/o optional feature Python dependencies
     runs-on: ubuntu-latest
     steps: # run in series within job
-      - uses: actions/checkout@v2 # check out the code
-      - uses: julia-actions/setup-julia@v1 # set up Julia
+      - uses: actions/checkout@latest # check out the code
+      - uses: julia-actions/setup-julia@latest # set up Julia
         with:
           version: 1.6.3
-      - name: Build
-        run: julia --project -e 'import Pkg; Pkg.instantiate(); using Xtals'
+      - uses: julia-actions/julia-buildpkg@latest # test building
+      
+  unit-tests: # run unit tests on full build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@latest
+      - uses: julia-actions/setup-julia@latest
+        with:
+          version: 1.6.3
+      - name: setup # install package and all dependencies
+        run: |
+          julia --project quick_setup.jl
+          julia --project -e 'import Pkg; Pkg.add("Documenter"); Pkg.add("FIGlet")'
+      - name: test # run the unit tests
+        run: |
+          julia --project -e 'cd("test"); include("unit_tests.jl")'
