@@ -11,7 +11,7 @@ jobs: # run in parallel within workflow
   minimal-build: # test package building w/o optional feature Python dependencies
     runs-on: ubuntu-latest
     steps: # run in series within job
-      - uses: actions/checkout@latest # check out the code
+      - uses: actions/checkout@v2 # check out the code
       - uses: julia-actions/setup-julia@latest # set up Julia
         with:
           version: 1.6.3
@@ -20,7 +20,7 @@ jobs: # run in parallel within workflow
   unit-tests: # run unit tests on full build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@latest
+      - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@latest
         with:
           version: 1.6.3
