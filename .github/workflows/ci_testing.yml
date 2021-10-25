@@ -1,0 +1,19 @@
+name: CI Testing
+
+on:
+  push: # run on push to master
+    branches: [ master ]
+  pull_request: # run on PR against master
+    branches: [ master ]
+  workflow_dispatch: # run on button-press in Actions tab
+
+jobs: # run in parallel within workflow
+  minimal-build: # test package building w/o optional feature Python dependencies
+    runs-on: ubuntu-latest
+    steps: # run in series within job
+      - uses: actions/checkout@v2 # check out the code
+      - uses: julia-actions/setup-julia@v1 # set up Julia
+        with:
+          version: 1.6.3
+      - name: Build
+        run: julia --project -e 'using Xtals'
