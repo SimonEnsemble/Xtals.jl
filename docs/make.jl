@@ -1,8 +1,6 @@
 using Documenter
 using Xtals
 
-ENV["DOCUMENTER_KEY"] = ARGS[1] # copy the CI pipeline key into ENV
-
 makedocs(
     root = joinpath(dirname(pathof(Xtals)), "..", "docs"),
     modules = [Xtals],
