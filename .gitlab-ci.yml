@@ -57,4 +57,4 @@ deploy-docs: # build and deploy the docs
   before_script:
     - julia --project -e 'import Pkg; Pkg.add("Documenter")'
   script:
-    - julia --project ./docs/make.jl $CI_DOCUMENTER_KEY
+    - julia --project ./docs/make.jl
