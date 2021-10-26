@@ -1,4 +1,4 @@
-name: CI Testing
+name: Build
 
 on:
   push: # run on push to master
@@ -8,7 +8,7 @@ on:
   workflow_dispatch: # run on button-press in Actions tab
 
 concurrency: # only allow the most recent workflow to execute
-  group: ${{github.head_ref}}
+  group: 'Xtals'
   cancel-in-progress: true
 
 env: # environment variables
