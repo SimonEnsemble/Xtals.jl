@@ -98,16 +98,16 @@ jobs: # run in parallel within workflow
   deploy-docs:
     needs: [unit-tests, doc-tests, porousmaterials, porematmod]
     runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      DOCUMENTER_KEY: ${{secrets.DOCUMENTER_KEY}}
     steps:
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@latest
         with:
           version: ${{env.julia_version}}
       - uses: julia-actions/julia-buildpkg@latest
-      - name: install Documenter # not done automatically in julia-actions/julia-docdeploy
+      - name: build and deploy docs
         run: |
           julia --project -e 'import Pkg; Pkg.add("Documenter")'
-      - uses: julia-actions/julia-docdeploy@latest # deploy the docs
-        env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-          DOCUMENTER_KEY: ${{secrets.DOCUMENTER_KEY}}
+          julia --project ./docs/make.jl
