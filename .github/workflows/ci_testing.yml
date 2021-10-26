@@ -17,7 +17,7 @@ jobs: # run in parallel within workflow
       - uses: actions/checkout@v2 # check out the code
       - uses: julia-actions/setup-julia@latest # set up Julia
         with:
-          version: ${{julia_version}}
+          version: ${{env.julia_version}}
       - uses: julia-actions/julia-buildpkg@latest # test building
       
   unit-tests: # run unit tests on full build
@@ -27,7 +27,7 @@ jobs: # run in parallel within workflow
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@latest
         with:
-          version: ${{julia_version}}
+          version: ${{env.julia_version}}
       - name: setup # install package and all dependencies
         run: |
           julia --project quick_setup.jl
@@ -43,7 +43,7 @@ jobs: # run in parallel within workflow
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@latest
         with:
-          version: ${{julia_version}}
+          version: ${{env.julia_version}}
       - name: setup
         run: |
           julia --project quick_setup.jl
@@ -59,7 +59,7 @@ jobs: # run in parallel within workflow
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@latest
         with:
-          version: ${{julia_version}}
+          version: ${{env.julia_version}}
       - name: setup
         run: |
           julia --project quick_setup.jl
@@ -75,7 +75,7 @@ jobs: # run in parallel within workflow
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@latest
         with:
-          version: ${{julia_version}}
+          version: ${{env.julia_version}}
       - name: setup
         run: |
           julia --project quick_setup.jl
@@ -91,7 +91,7 @@ jobs: # run in parallel within workflow
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@latest
         with:
-          version: ${{julia_version}}
+          version: ${{env.julia_version}}
       - uses: julia-actions/julia-buildpkg@latest
       - uses: julia-actions/julia-docdeploy@latest # deploy the docs
         env:
