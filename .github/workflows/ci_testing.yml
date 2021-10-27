@@ -62,6 +62,7 @@ jobs: # run in parallel within workflow
   porousmaterials: # cross-test PorousMaterials for breaking changes
     needs: minimal-build
     runs-on: ubuntu-latest
+    continue-on-error: true # if this job fails, CI will still pass (but we will know about a compatibility issue)
     steps:
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@latest
@@ -78,6 +79,7 @@ jobs: # run in parallel within workflow
   porematmod:
     needs: minimal-build
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@latest
