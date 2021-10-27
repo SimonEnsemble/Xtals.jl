@@ -1,4 +1,4 @@
-using Test, LightGraphs, MetaGraphs, Documenter, FIGlet
+using Test, Graphs, MetaGraphs, Documenter, FIGlet
 
 if !isdir("temp")
     mkdir("temp")

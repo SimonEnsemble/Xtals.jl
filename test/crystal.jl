@@ -3,7 +3,7 @@ module Crystal_Test
 using Xtals
 using LinearAlgebra
 using Test
-using MetaGraphs, LightGraphs
+using MetaGraphs, Graphs
 
 # for test only
 # if the multi sets are equal, then when you remove duplicates,
