@@ -1,6 +1,6 @@
 module Bonds_test
 
-using Xtals, LightGraphs, Test, MetaGraphs, LinearAlgebra
+using Xtals, Graphs, Test, MetaGraphs, LinearAlgebra
 
 if ! isdir("temp")
     mkdir("temp")

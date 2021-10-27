@@ -1,6 +1,6 @@
 module Misc_Test
 
-using Xtals, Test, DataFrames, LightGraphs, CSV
+using Xtals, Test, DataFrames, Graphs, CSV
 
 @testset "Misc Tests" begin
     xtal = Crystal("SBMOF-1.cif")

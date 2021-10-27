@@ -1,6 +1,6 @@
 module Xtals
 
-using Bio3DView, CSV, DataFrames, LightGraphs, LinearAlgebra, MetaGraphs, Printf, PyCall, UUIDs
+using Bio3DView, CSV, DataFrames, Graphs, LinearAlgebra, MetaGraphs, Printf, PyCall, UUIDs
 
 # global variable dictionary
 global rc = Dict{Symbol,Any}()
