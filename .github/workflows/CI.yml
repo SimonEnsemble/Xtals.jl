@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  test:
+    env:
+      PYTHON: ""
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        julia-version: ['1']
+        julia-arch: [x64, x86]
+        os: [ubuntu-latest, macOS-latest, windows-latest]
+        exclude:
+          - os: macOS-latest
+            julia-arch: x86
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v2
+      - uses: julia-actions/setup-julia@v1
+        with:
+          version: ${{ matrix.julia-version }}
+      - uses: actions/cache@v1
+        env:
+          cache-name: cache-artifacts
+        with:
+          path: ~/.julia/artifacts
+          key: ${{ matrix.os }}-test-${{ env.cache-name }}-${{ hashFiles('**/Project.toml') }}
+          restore-keys: |
+            ${{ matrix.os }}-test-${{ env.cache-name }}-
+            ${{ matrix.os }}-test-
+            ${{ matrix.os }}-
+      - name: Build Package
+        uses: julia-actions/julia-buildpkg@v1
+      - name: Run Tests
+        uses: julia-actions/julia-runtest@v1
