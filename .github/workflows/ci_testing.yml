@@ -36,6 +36,7 @@ jobs: # run in parallel within workflow
       - uses: julia-actions/setup-julia@latest
         with:
           version: ${{env.julia_version}}
+      - uses: julia-actions/julia-buildpkg@latest # build the package
       - name: test
         run: julia --project -e 'cd("test"); include("doc_tests.jl")'
           
