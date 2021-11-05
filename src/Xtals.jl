@@ -1,6 +1,6 @@
 module Xtals
 
-using Bio3DView, CSV, DataFrames, Graphs, LinearAlgebra, MetaGraphs, Printf, PyCall, UUIDs
+using Bio3DView, CSV, DataFrames, FIGlet, Graphs, LinearAlgebra, MetaGraphs, Printf, UUIDs
 
 # global variable dictionary
 global rc = Dict{Symbol,Any}()
@@ -23,15 +23,8 @@ rc[:covalent_radii] = DEFAULT_COVALENT_RADII
 DEFAULT_BONDING_RULES = bondingrules()
 rc[:bonding_rules] = DEFAULT_BONDING_RULES
 
-# - lists python dependencies
-# - checks for python dependencies at pre-compile, warns on failure
-# - provides function for python dependency instantiation
-include("pydeps.jl")
-
 
 function __init__()
-    # load Python dependencies
-    init_pydeps()
     # create path entries in global dictionary
     rc[:paths][:crystals] = ""
     rc[:paths][:data] = ""
@@ -58,15 +51,12 @@ export
 
     # crystal.jl
     Crystal, strip_numbers_from_atom_labels!, assign_charges, chemical_formula, molecular_weight, 
-    crystal_density, write_cif, has_charges, apply_symmetry_operations, write_cssr, primitive_cell,
+    crystal_density, write_cif, has_charges, apply_symmetry_operations, write_cssr, 
 
     # bonds.jl
     infer_bonds!, write_bond_information, BondingRule, bond_sanity_check, remove_bonds!, 
-    infer_geometry_based_bonds!, get_bonding_rules, set_bonding_rules, read_bonding_rules,
+    get_bonding_rules, set_bonding_rules, read_bonding_rules,
     write_bonding_rules, add_bonding_rules, drop_cross_pb_bonds!, bondingrules, bond_angle,
-    get_bond_vector, calculate_bond_vectors!, clear_vectors!, bond_distance, infer_bonds,
-
-    # pydeps.jl
-    export_pydep, check_pydep, init_pydeps
+    get_bond_vector, calculate_bond_vectors!, clear_vectors!, bond_distance, infer_bonds
 
 end # module Xtals

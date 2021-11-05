@@ -9,15 +9,15 @@ testfiles = [
     "paths.jl"
     ]
 
-using Test, Graphs, MetaGraphs, Documenter, FIGlet
+using Test, Graphs, MetaGraphs, Documenter
 
 if !isdir("temp")
     mkdir("temp")
 end
 
-FIGlet.render("Xtals.jl", FIGlet.availablefonts()[5])
-
 using Xtals
+
+Xtals.banner()
 
 for testfile ∈ testfiles
     @info "Running test/$testfile"

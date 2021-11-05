@@ -17,50 +17,31 @@ env: # environment variables
 jobs: # run in parallel within workflow
 
 
-  minimal-build: # test package building w/o optional feature Python dependencies
+  unit-tests: # test package building w/o optional feature Python dependencies
     runs-on: ubuntu-latest
     steps: # run in series within job
       - uses: actions/checkout@v2 # check out the code
       - uses: julia-actions/setup-julia@latest # set up Julia
         with:
           version: ${{env.julia_version}}
-      - uses: julia-actions/julia-buildpkg@latest # test building
-
-
-  unit-tests: # run unit tests on full build
-    needs: minimal-build # the minimal build must be successful before this job will run
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: julia-actions/setup-julia@latest
-        with:
-          version: ${{env.julia_version}}
-      - name: setup # install package and all dependencies
-        run: |
-          julia --project quick_setup.jl
-          julia --project -e 'import Pkg; Pkg.add("Documenter"); Pkg.add("FIGlet")'
+      - uses: julia-actions/julia-buildpkg@latest # build the package
       - name: test # run the unit tests
         run: julia --project -e 'cd("test"); include("unit_tests.jl")'
 
 
   doc-tests: # run doctests
-    needs: minimal-build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@latest
         with:
           version: ${{env.julia_version}}
-      - name: setup
-        run: |
-          julia --project quick_setup.jl
-          julia --project -e 'import Pkg; Pkg.add("Documenter"); Pkg.add("FIGlet")'
       - name: test
         run: julia --project -e 'cd("test"); include("doc_tests.jl")'
           
 
   porousmaterials: # cross-test PorousMaterials for breaking changes
-    needs: minimal-build
+    needs: unit-tests
     runs-on: ubuntu-latest
     continue-on-error: true # if this job fails, CI will still pass (but we will know about a compatibility issue)
     steps:
@@ -68,16 +49,12 @@ jobs: # run in parallel within workflow
       - uses: julia-actions/setup-julia@latest
         with:
           version: ${{env.julia_version}}
-      - name: setup
-        run: |
-          julia --project quick_setup.jl
-          julia --project -e 'import Pkg; Pkg.add("Documenter"); Pkg.add("FIGlet")'
       - name: test # use the cross_dep.jl script to run unit/doc tests on the dev branch of the specified package
         run: julia --project ./test/cross_dep.jl PorousMaterials
 
 
   porematmod:
-    needs: minimal-build
+    needs: unit-tests
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
@@ -85,12 +62,21 @@ jobs: # run in parallel within workflow
       - uses: julia-actions/setup-julia@latest
         with:
           version: ${{env.julia_version}}
-      - name: setup
-        run: |
-          julia --project quick_setup.jl
-          julia --project -e 'import Pkg; Pkg.add("Documenter"); Pkg.add("FIGlet")'
       - name: test
         run: julia --project ./test/cross_dep.jl PoreMatMod
+
+
+  xtalspytools:
+    needs: unit-tests
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v2
+      - uses: julia-actions/setup-julia@latest
+        with:
+          version: ${{env.julia_version}}
+      - name: test
+        run: julia --project ./test/cross_dep.jl XtalsPyTools
           
 
   deploy-docs:

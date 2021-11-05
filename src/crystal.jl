@@ -63,7 +63,7 @@ or construct a `Crystal` data structure directly.
 - `remove_duplicates::Bool`: remove duplicate atoms and charges. an atom is duplicate only if it is the same species.
 - `species_col::Array{String}`: which column to use for species identification for `crystal.atoms.species`. we use a priority list:
     we check for the first entry of `species_col` in the .cif file; if not present, we then use the second entry, and so on.
-- `infer_bonds::Union{Symbol, Missing}`: if set, bonds are inferred according to the chosen method (:cordero or :voronoi). If set, must specify `periodic_boundaries`. By default, bonds are not inferred.
+- `infer_bonds::Bool`: if true, bonds are inferred automatically. If set, must specify `periodic_boundaries`. By default, bonds are not inferred.
 - `periodic_boundaries::Union{Bool, Missing}`: use with `infer_bonds` to specify treatment of the unit cell boundary.  Set `true` to treat the unit cell edge as a periodic boundary (allow bonds across it); set `false` to restrict bonding to within the local unit cell.
 
 across periodic unit cell boundaries; if `false`, bonds are only inferred within the local unit cell; if `missing` (default), bonds are not inferred.
@@ -90,7 +90,7 @@ function Crystal(filename::String;
                  include_zero_charges::Bool=true,
                  remove_duplicates::Bool=false,
                  species_col::Array{String, 1}=["_atom_site_type_symbol", "_atom_site_label"],
-                 infer_bonds::Union{Symbol, Missing}=missing,
+                 infer_bonds::Bool=false,
                  periodic_boundaries::Union{Bool, Missing}=missing)
     # Read file extension. Ensure we can read the file type
     extension = split(filename, ".")[end]
@@ -459,15 +459,11 @@ function Crystal(filename::String;
         end
     end
 
-    if !ismissing(infer_bonds)
+    if infer_bonds
         if ismissing(periodic_boundaries)
             error("Must specify periodic_boundaries when using infer_bonds kwarg")
-        elseif infer_bonds == :cordero
-            infer_bonds!(crystal, periodic_boundaries)
-        elseif infer_bonds == :voronoi
-            infer_geometry_based_bonds!(crystal, periodic_boundaries)
         else
-            error("Must specify either :cordero or :voronoi for infer_bonds kwarg")
+            infer_bonds!(crystal, periodic_boundaries)
         end
     end
 
@@ -1091,29 +1087,4 @@ function Base.:+(crystals::Crystal...; check_overlap::Bool=true)
     end
 
     return crystal
-end
-
-
-"""
-    ```prim = primitive_cell(xtal)```
-
-Returns the minimal representation (primitive unit cell) of a crystal structure.
-"""
-function primitive_cell(xtal::Crystal)
-    # check for pymatgen.io.cif dependency
-    if isnothing(rc[:pymatgen])
-        error("Python dependency pymatgen not loaded.")
-    else
-        pymatgen = rc[:pymatgen]
-    end
-    tempfile = joinpath(pwd(), ".temp_$(uuid1()).cif")
-    # copy out xtal and convert it to primitive cell
-    write_cif(xtal, tempfile)
-    pymatgen.CifParser(tempfile).get_structures()[1].get_primitive_structure().to(filename=tempfile)
-    # load the result
-    primitive = Crystal(tempfile)
-    # clean up
-    rm(tempfile)
-    name = split(xtal.name, ".cif")[1] * "_primitive_cell.cif"
-    return Crystal(name, primitive.box, primitive.atoms, primitive.charges)
 end

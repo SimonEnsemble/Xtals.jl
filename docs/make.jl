@@ -14,7 +14,8 @@ makedocs(
             "crystals" => "crystal.md",
             "computing distances" => "distance.md",
             "bonding" => "bonds.md",
-            "visualization" => "visualization.md"
+            "visualization" => "visualization.md",
+            "XtalsPyTools" => "pytools.md"
             ],
     format = Documenter.HTML(assets = ["assets/flux.css"])
 )
