@@ -3,7 +3,7 @@ using Xtals
 
 makedocs(
     root = joinpath(dirname(pathof(Xtals)), "..", "docs"),
-    modules = [Xtals],
+    modules = [Xtals, XtalsPyTools],
     sitename = "Xtals.jl",
     clean = true,
     pages = [
