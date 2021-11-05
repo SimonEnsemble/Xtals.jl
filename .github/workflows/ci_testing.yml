@@ -81,7 +81,7 @@ jobs: # run in parallel within workflow
           
 
   deploy-docs:
-    needs: [unit-tests, doc-tests, porousmaterials, porematmod]
+    needs: [unit-tests, doc-tests]
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
