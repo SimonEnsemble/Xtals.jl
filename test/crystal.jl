@@ -22,16 +22,6 @@ end
     xtal = Crystal("ATIBOU01_clean.cssr")
     @test Xtals.vtk_filename(xtal) == "ATIBOU01_clean.vtk"
 
-    # primitive cells via pymatgen
-    xtal = Crystal("str_m1_o3_o20_pcu_sym.22.cif")
-    prim = primitive_cell(xtal)
-    @test prim.atoms.n == 996
-    @test isnothing(assert_P1_symmetry(prim))
-    pymatgen = rc[:pymatgen]
-    rc[:pymatgen] = nothing
-    @test_throws ErrorException primitive_cell(xtal)
-    rc[:pymatgen] = pymatgen
-
     # cif reader
     xtal = Crystal("test_structure2.cif")
     strip_numbers_from_atom_labels!(xtal)
@@ -343,8 +333,7 @@ end
     @test_throws ErrorException Crystal("SBMOF-1_overlap_diff_atom.cif", remove_duplicates=true) # duplicate but diff atom, so not repairable
 
     @test_throws ErrorException Crystal("example.mol")
-    @test_throws ErrorException Crystal("SBMOF-1.cif", infer_bonds=:cordero)
-    @test_throws ErrorException Crystal("SBMOF-1.cif", infer_bonds=:bogus, periodic_boundaries=true)
+    @test_throws ErrorException Crystal("SBMOF-1.cif", infer_bonds=true)
     infer_bonds!(xtal1, true)
     @test_throws ErrorException replicate(xtal1, (1,1,1))
 

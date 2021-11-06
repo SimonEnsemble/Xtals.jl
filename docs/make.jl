@@ -3,7 +3,7 @@ using Xtals
 
 makedocs(
     root = joinpath(dirname(pathof(Xtals)), "..", "docs"),
-    modules = [Xtals],
+    modules = [Xtals, XtalsPyTools],
     sitename = "Xtals.jl",
     clean = true,
     pages = [
@@ -14,7 +14,8 @@ makedocs(
             "crystals" => "crystal.md",
             "computing distances" => "distance.md",
             "bonding" => "bonds.md",
-            "visualization" => "visualization.md"
+            "visualization" => "visualization.md",
+            "XtalsPyTools" => "pytools.md"
             ],
     format = Documenter.HTML(assets = ["assets/flux.css"])
 )
