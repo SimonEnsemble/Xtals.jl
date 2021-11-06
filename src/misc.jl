@@ -1,3 +1,8 @@
+function banner()
+    FIGlet.render("Xtals.jl", FIGlet.availablefonts()[5])
+end
+
+
 function add_extension(filename::String, extension::String)
     if ! occursin(extension, filename)
         filename *= extension

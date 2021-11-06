@@ -26,7 +26,7 @@ The global bonding rules are accessible at [`rc[:bonding_rules]`](@ref) and may 
 By default, bonding information is not added to a `Crystal`. Bonds may be inferred at the time of loading crystal data, using the `infer_bonds` keyword argument.  See [`Crystal`](@ref) for more details.
 
 ```jldoctest bonds
-xtal = Crystal("SBMOF-1.cif", infer_bonds=:voronoi, periodic_boundaries=true)
+xtal = Crystal("SBMOF-1.cif", infer_bonds=true, periodic_boundaries=true)
 xtal.bonds
 # output
 {120, 144} undirected Int64 metagraph with Float64 weights defined by :weight (default weight 1.0)
@@ -43,7 +43,7 @@ xtal.bonds
 {120, 0} undirected Int64 metagraph with Float64 weights defined by :weight (default weight 1.0)
 ```
 
-Use [`infer_bonds!`](@ref) or [`infer_geometry_based_bonds`](@ref) to infer plausible bonds using the global bonding rules (or another specified set of rules) in already-loaded crystals:
+Use [`infer_bonds!`](@ref) to infer plausible bonds using the global bonding rules (or another specified set of rules) in already-loaded crystals:
 
 ```jldoctest bonds
 infer_bonds!(xtal, true)
@@ -120,7 +120,6 @@ write_bonding_rules
 infer_bonds!
 infer_bonds
 remove_bonds!
-infer_geometry_based_bonds!
 write_bond_information
 read_mol
 bond_distance
