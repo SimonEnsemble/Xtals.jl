@@ -53,7 +53,7 @@ jobs: # run in parallel within workflow
           
 
   porousmaterials: # cross-test PorousMaterials for breaking changes
-    needs: unit-tests
+    needs: unit-and-doc-tests
 
     runs-on: ubuntu-latest
 
@@ -73,7 +73,7 @@ jobs: # run in parallel within workflow
 
 
   porematmod:
-    needs: unit-tests
+    needs: unit-and-doc-tests
 
     runs-on: ubuntu-latest
 
@@ -93,7 +93,7 @@ jobs: # run in parallel within workflow
 
 
   xtalspytools:
-    needs: unit-tests
+    needs: unit-and-doc-tests
 
     runs-on: ubuntu-latest
 
@@ -113,7 +113,7 @@ jobs: # run in parallel within workflow
           
 
   deploy-docs:
-    needs: unit-tests
+    needs: unit-and-doc-tests
 
     runs-on: ubuntu-latest
 
