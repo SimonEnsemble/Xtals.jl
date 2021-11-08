@@ -14,85 +14,127 @@ concurrency: # only allow the most recent workflow to execute
 env: # environment variables
   julia_version: '1.6.3' # julia version to use on all runners
 
+
+
 jobs: # run in parallel within workflow
 
 
-  unit-tests: # test package building w/o optional feature Python dependencies
+  unit-and-doc-tests: # test package building w/o optional feature Python dependencies
     runs-on: ubuntu-latest
+
     steps: # run in series within job
-      - uses: actions/checkout@v2 # check out the code
-      - uses: julia-actions/setup-julia@latest # set up Julia
+      - name: checkout commit
+        uses: actions/checkout@master
+
+      - name: set up Julia
+        uses: julia-actions/setup-julia@latest
         with:
           version: ${{env.julia_version}}
-      - uses: julia-actions/julia-buildpkg@latest # build the package
+      
+      - name: build package
+        uses: julia-actions/julia-buildpkg@latest
+
+      - name: install dependencies
+        run: julia --project -e 'import Pkg; Pkg.add.(["Documenter", "Coverage"])'
+
       - name: test # run the unit tests
-        run: julia --project -e 'cd("test"); include("unit_tests.jl")'
+        run: julia --project --code-coverage -e 'import Pkg; Pkg.test(coverage=true)'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
+      
+      - name: process test coverage
+        uses: julia-actions/julia-processcoverage@v1
 
-
-  doc-tests: # run doctests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: julia-actions/setup-julia@latest
+      - name: upload coverage report
+        uses: codecov/codecov-action@v2
         with:
-          version: ${{env.julia_version}}
-      - uses: julia-actions/julia-buildpkg@latest # build the package
-      - name: test
-        run: julia --project -e 'cd("test"); include("doc_tests.jl")'
+          verbose: true
           
 
   porousmaterials: # cross-test PorousMaterials for breaking changes
-    needs: unit-tests
+    needs: unit-and-doc-tests
+
     runs-on: ubuntu-latest
+
     continue-on-error: true # if this job fails, CI will still pass (but we will know about a compatibility issue)
+
     steps:
-      - uses: actions/checkout@v2
-      - uses: julia-actions/setup-julia@latest
+      - name: check out commit
+        uses: actions/checkout@v2
+
+      - name: set up Julia
+        uses: julia-actions/setup-julia@latest
         with:
           version: ${{env.julia_version}}
+
       - name: test # use the cross_dep.jl script to run unit/doc tests on the dev branch of the specified package
         run: julia --project ./test/cross_dep.jl PorousMaterials
 
 
   porematmod:
-    needs: unit-tests
+    needs: unit-and-doc-tests
+
     runs-on: ubuntu-latest
+
     continue-on-error: true
+
     steps:
-      - uses: actions/checkout@v2
-      - uses: julia-actions/setup-julia@latest
+      - name: checkout commit
+        uses: actions/checkout@v2
+
+      - name: set up Julia
+        uses: julia-actions/setup-julia@latest
         with:
           version: ${{env.julia_version}}
+
       - name: test
         run: julia --project ./test/cross_dep.jl PoreMatMod
 
 
   xtalspytools:
-    needs: unit-tests
+    needs: unit-and-doc-tests
+
     runs-on: ubuntu-latest
+
     continue-on-error: true
+    
     steps:
-      - uses: actions/checkout@v2
-      - uses: julia-actions/setup-julia@latest
+      - name: checkout commit
+        uses: actions/checkout@v2
+
+      - name: set up Julia
+        uses: julia-actions/setup-julia@latest
         with:
           version: ${{env.julia_version}}
+
       - name: test
         run: julia --project ./test/cross_dep.jl XtalsPyTools
           
 
   deploy-docs:
-    needs: [unit-tests, doc-tests]
+    needs: unit-and-doc-tests
+
     runs-on: ubuntu-latest
+
     env:
       GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       DOCUMENTER_KEY: ${{secrets.DOCUMENTER_KEY}}
+
     steps:
-      - uses: actions/checkout@v2
-      - uses: julia-actions/setup-julia@latest
+      - name: checkout commit
+        uses: actions/checkout@v2
+
+      - name: set up Julia
+        uses: julia-actions/setup-julia@latest
         with:
           version: ${{env.julia_version}}
-      - uses: julia-actions/julia-buildpkg@latest
+
+      - name: build package
+        uses: julia-actions/julia-buildpkg@latest
+
+      - name: install dependencies
+        run:  julia --project -e 'import Pkg; Pkg.add.(["Documenter"])'
+
       - name: build and deploy docs
-        run: |
-          julia --project -e 'import Pkg; Pkg.add("Documenter")'
-          julia --project ./docs/make.jl
+        run:  julia --project ./docs/make.jl
