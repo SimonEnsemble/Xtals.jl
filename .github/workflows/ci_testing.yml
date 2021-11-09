@@ -107,6 +107,11 @@ jobs: # run in parallel within workflow
         uses: julia-actions/setup-julia@latest
         with:
           version: ${{env.julia_version}}
+      
+      - name: set up python dependencies
+        run: |
+          wget https://raw.githubusercontent.com/SimonEnsemble/XtalsPyTools.jl/master/quick_setup.jl
+          julia --project ./quick_setup.jl
 
       - name: test
         run: julia --project ./test/cross_dep.jl XtalsPyTools
@@ -134,7 +139,7 @@ jobs: # run in parallel within workflow
         uses: julia-actions/julia-buildpkg@latest
 
       - name: install dependencies
-        run:  julia --project -e 'import Pkg; Pkg.add.(["Documenter"])'
+        run:  julia --project -e 'import Pkg; Pkg.add.(["Documenter", "XtalsPyTools"])'
 
       - name: build and deploy docs
         run:  julia --project ./docs/make.jl
