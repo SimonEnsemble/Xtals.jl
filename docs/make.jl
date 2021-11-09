@@ -1,5 +1,5 @@
 using Documenter
-using Xtals
+using Xtals, XtalsPyTools
 
 makedocs(
     root = joinpath(dirname(pathof(Xtals)), "..", "docs"),
