@@ -21,7 +21,7 @@ UUIDs = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
 [compat]
 Bio3DView = "^0.1.3"
 CSV = "0.8, 0.9"
-DataFrames = "^0.22.1"
+DataFrames = "^0.22.1, 1"
 Documenter = "0.27"
 FIGlet = "0.2"
 Graphs = "^1.4.1"
