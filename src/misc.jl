@@ -55,7 +55,7 @@ if the extension is not provided.)
 - `comment::AbstractString`: comment if you'd like to write to the file.
 - `center_at_origin::Bool`: (for crystal only) if `true`, translate all coords such that the origin is the center of the unit cell.
 """
-function write_xyz(atoms::Atoms{Cart}, filename::AbstractString; comment::AbstractString="")
+function write_xyz(atoms::Atoms{Cart}, filename::AbstractString; comment::AbstractString="# $filename")
     filename = add_extension(filename, ".xyz")
 
     xyzfile = open(filename, "w")
