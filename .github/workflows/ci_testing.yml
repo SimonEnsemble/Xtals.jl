@@ -35,10 +35,10 @@ jobs: # run in parallel within workflow
         uses: julia-actions/julia-buildpkg@latest
 
       - name: install dependencies
-        run: julia --project -e 'import Pkg; Pkg.add.(["Documenter", "Coverage"])'
+        run: julia --project --color=yes -e 'import Pkg; Pkg.add.(["Documenter", "Coverage"])'
 
       - name: test # run the unit tests
-        run: julia --project --code-coverage -e 'import Pkg; Pkg.test(coverage=true)'
+        run: julia --project --color=yes --code-coverage -e 'import Pkg; Pkg.test(coverage=true)'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
@@ -69,7 +69,7 @@ jobs: # run in parallel within workflow
           version: ${{env.julia_version}}
 
       - name: test # use the cross_dep.jl script to run unit/doc tests on the dev branch of the specified package
-        run: julia --project ./test/cross_dep.jl PorousMaterials
+        run: julia --project --color=yes ./test/cross_dep.jl PorousMaterials
 
 
   porematmod:
@@ -89,7 +89,7 @@ jobs: # run in parallel within workflow
           version: ${{env.julia_version}}
 
       - name: test
-        run: julia --project ./test/cross_dep.jl PoreMatMod
+        run: julia --project --color=yes ./test/cross_dep.jl PoreMatMod
 
 
   xtalspytools:
@@ -111,10 +111,10 @@ jobs: # run in parallel within workflow
       - name: set up python dependencies
         run: |
           wget https://raw.githubusercontent.com/SimonEnsemble/XtalsPyTools.jl/master/quick_setup.jl
-          julia --project ./quick_setup.jl
+          julia --project --color=yes ./quick_setup.jl
 
       - name: test
-        run: julia --project ./test/cross_dep.jl XtalsPyTools
+        run: julia --project --color=yes ./test/cross_dep.jl XtalsPyTools
           
 
   deploy-docs:
@@ -139,7 +139,7 @@ jobs: # run in parallel within workflow
         uses: julia-actions/julia-buildpkg@latest
 
       - name: install dependencies
-        run:  julia --project -e 'import Pkg; Pkg.add.(["Documenter", "XtalsPyTools"])'
+        run:  julia --project --color=yes -e 'import Pkg; Pkg.add.(["Documenter", "XtalsPyTools"])'
 
       - name: build and deploy docs
-        run:  julia --project ./docs/make.jl
+        run:  julia --project --color=yes ./docs/make.jl
