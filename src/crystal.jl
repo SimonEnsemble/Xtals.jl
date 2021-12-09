@@ -1069,7 +1069,7 @@ function Base.:+(crystals::Crystal...; check_overlap::Bool=true)
         atoms = crystal.atoms + f.atoms
         charges = crystal.charges + f.charges
 
-        nf_n_atoms = crystal.atoms.n
+        nf_n_atoms = f.atoms.n
         add_vertices!(crystal.bonds, nf_n_atoms)
         for edge in collect(edges(f.bonds))
             add_edge!(crystal.bonds, nf_n_atoms + edge.src, nf_n_atoms + edge.dst,
