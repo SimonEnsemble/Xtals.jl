@@ -1064,7 +1064,7 @@ function Base.:+(crystals::Crystal...; check_overlap::Bool=true)
             continue
         end
         @assert isapprox(crystals[i].box, box)
-        @assert crystals[i].symmetry != symmetry
+        @assert crystals[i].symmetry == symmetry
     end
         
     # initialize atoms, charges, and bonds
