@@ -174,7 +174,7 @@ end
     write_bond_information(xtal, "temp/all_bonds.vtk")
     write_bond_information(xtal, "temp/no_pb.vtk", bond_filter=:cross_boundary=>p->!p)
 
-    @test all.(isfile.(["temp/all_bonds.vtk", "temp/no_pb.vtk"]))
+    @test all(isfile.(["temp/all_bonds.vtk", "temp/no_pb.vtk"]))
 end
 
 
