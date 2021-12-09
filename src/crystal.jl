@@ -996,6 +996,9 @@ function Base.show(io::IO, crystal::Crystal)
     for i in 1:size(crystal.symmetry.operations, 2)
         @printf(io, "\t\t'%s, %s, %s'\n", crystal.symmetry.operations[:, i]...)
     end
+    @printf(io, "\tbonding graph:")
+    @printf(io, "\t\t# vertices = ", nv(crystal.bonds))
+    @printf(io, "\t\t# edges = ", ne(crystal.bonds))
 end
 
 
