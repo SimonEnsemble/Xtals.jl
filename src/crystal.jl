@@ -1055,7 +1055,7 @@ function Base.lastindex(crystal::Crystal)
 end
 
 
-function Base.:+(crystals::Crystal...; check_overlap::Bool=true)
+function Base.:+(crystals::Crystal...; check_overlap::Bool=true, name::String="added_xtal")
     box      = crystals[1].box
     symmetry = crystals[1].symmetry
     # all crystals must have same boxes and space group
@@ -1079,7 +1079,7 @@ function Base.:+(crystals::Crystal...; check_overlap::Bool=true)
         end
     end
     
-    crystal = Crystal("added_xtal", box, atoms, charges, bonds, symmetry)
+    crystal = Crystal(name, box, atoms, charges, bonds, symmetry)
 
     if check_overlap
         overlap_flag, overlap_pairs = overlap(crystal.atoms.coords, crystal.box, true)
