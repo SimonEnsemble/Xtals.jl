@@ -8,6 +8,7 @@ end
 
 @testset "bond arithmetic" begin
     xtal = Crystal("IRMOF-1.cif")
+    xtal1 = deepcopy(xtal)
     infer_bonds!(xtal, true)
     xtal2 = xtal[1:10]
     xtal3 = +(xtal, xtal2, check_overlap=false)
@@ -27,6 +28,17 @@ end
     @test ne(xtal3.bonds) == ne(xtal4.bonds)
     
     @test nv(xtal3.bonds) == nv(xtal4.bonds)
+
+    # check adding when 1 or both have no bonds
+    xtal5 = +(xtal1, xtal2, check_overlap=false)
+    xtal6 = +(xtal2, xtal1, check_overlap=false)
+    xtal7 = +(xtal1, xtal1, check_overlap=false)
+
+    @test ne(xtal5.bonds) == ne(xtal2.bonds)
+    
+    @test ne(xtal6.bonds) == ne(xtal2.bonds)
+    
+    @test ne(xtal7.bonds) == 0
 end
 
 include("bond_vectors.jl")
