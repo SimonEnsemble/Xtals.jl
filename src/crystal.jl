@@ -1057,10 +1057,7 @@ end
 
 function Base.:+(crystals::Crystal...; check_overlap::Bool=true)
     crystal = deepcopy(crystals[1])
-    for (i, f) in enumerate(crystals)
-        if i == 1
-            continue
-        end
+    for (i, f) in enumerate(crystals[2:end])
         @assert isapprox(crystal.box, f.box) @sprintf("Crystal %s has a different box\n", f.name)
  #         @assert is_symmetry_equal(crystal.symmetry, f.symmetry) @sprintf("Crystal %s has different symmetry rules\n", f.name)
         @assert crystal.symmetry != f.symmetry @sprintf("Crystal %s has different symmetry rules\n", f.name)
