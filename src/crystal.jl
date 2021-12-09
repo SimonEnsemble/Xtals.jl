@@ -1056,31 +1056,34 @@ end
 
 
 function Base.:+(crystals::Crystal...; check_overlap::Bool=true)
-    crystal = deepcopy(crystals[1])
-    for (i, f) in enumerate(crystals[2:end])
-        @assert isapprox(crystal.box, f.box) @sprintf("Crystal %s has a different box\n", f.name)
- #         @assert is_symmetry_equal(crystal.symmetry, f.symmetry) @sprintf("Crystal %s has different symmetry rules\n", f.name)
-        @assert crystal.symmetry != f.symmetry @sprintf("Crystal %s has different symmetry rules\n", f.name)
-        @assert crystal.symmetry.space_group == f.symmetry.space_group
-
-        atoms = crystal.atoms + f.atoms
-        charges = crystal.charges + f.charges
-
-        nf_n_atoms = f.atoms.n
-        add_vertices!(crystal.bonds, nf_n_atoms)
-        for edge in collect(edges(f.bonds))
-            add_edge!(crystal.bonds, nf_n_atoms + edge.src, nf_n_atoms + edge.dst,
-                props(f.bonds, edge))
-        end
-
-        crystal = Crystal(split(crystal.name, ".")[1] * "_" * split(f.name, ".")[1],
-                                 crystal.box, atoms, charges, crystal.bonds,
-                                 crystal.symmetry)
+    box      = crystals[1].box
+    symmetry = crystals[1].symmetry
+    # all crystals must have same boxes and space group
+    for i = 2:length(crystals)
+        @assert isapprox(crystals[i].box, box)
+        @assert crystals[i].symmetry == symmetry
     end
+        
+    # initialize atoms, charges, and bonds
+    atoms   = deepcopy(crystals[1].atoms)
+    charges = deepcopy(crystals[1].charges)
+    bonds   = deepcopy(crystals[1].bonds)
+    @assert nv(bonds) == crystals[1].atoms.n
+    for (i, crystal) in enumerate(crystals[2:end])
+        atoms   += crystal.atoms
+        charges += crystal.charges
+        
+        add_vertices!(bonds, crystal.atoms.n)
+        for ed in edges(crystal.bonds)
+            add_edge!(bonds, atoms.n + ed.src, atoms.n + ed.dst, props(crystal.bonds, ed))
+        end
+    end
+    
+    crystal = Crystal("added_xtal", box, atoms, charges, bonds, symmetry)
 
     if check_overlap
         overlap_flag, overlap_pairs = overlap(crystal.atoms.coords, crystal.box, true)
-        @assert !overlap_flag "Addition causes overlap: $overlap_pairs"
+        @assert ! overlap_flag "Addition causes overlap: $overlap_pairs"
     end
 
     return crystal
