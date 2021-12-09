@@ -996,6 +996,9 @@ function Base.show(io::IO, crystal::Crystal)
     for i in 1:size(crystal.symmetry.operations, 2)
         @printf(io, "\t\t'%s, %s, %s'\n", crystal.symmetry.operations[:, i]...)
     end
+    @printf(io, "\tbonding graph:\n")
+    println(io, "\t\t# vertices = ", nv(crystal.bonds))
+    println(io, "\t\t# edges = ", ne(crystal.bonds))
 end
 
 
@@ -1055,35 +1058,35 @@ function Base.lastindex(crystal::Crystal)
 end
 
 
-function Base.:+(crystals::Crystal...; check_overlap::Bool=true)
-    crystal = deepcopy(crystals[1])
-    for (i, f) in enumerate(crystals)
-        if i == 1
-            continue
-        end
-        @assert isapprox(crystal.box, f.box) @sprintf("Crystal %s has a different box\n", f.name)
- #         @assert is_symmetry_equal(crystal.symmetry, f.symmetry) @sprintf("Crystal %s has different symmetry rules\n", f.name)
-        @assert crystal.symmetry != f.symmetry @sprintf("Crystal %s has different symmetry rules\n", f.name)
-        @assert crystal.symmetry.space_group == f.symmetry.space_group
-
-        atoms = crystal.atoms + f.atoms
-        charges = crystal.charges + f.charges
-
-        nf_n_atoms = crystal.atoms.n
-        add_vertices!(crystal.bonds, nf_n_atoms)
-        for edge in collect(edges(f.bonds))
-            add_edge!(crystal.bonds, nf_n_atoms + edge.src, nf_n_atoms + edge.dst,
-                props(f.bonds, edge))
-        end
-
-        crystal = Crystal(split(crystal.name, ".")[1] * "_" * split(f.name, ".")[1],
-                                 crystal.box, atoms, charges, crystal.bonds,
-                                 crystal.symmetry)
+function Base.:+(crystals::Crystal...; check_overlap::Bool=true, name::String="added_xtal")
+    box      = crystals[1].box
+    symmetry = crystals[1].symmetry
+    # all crystals must have same boxes and space group
+    for i = 2:length(crystals)
+        @assert isapprox(crystals[i].box, box)
+        @assert crystals[i].symmetry.space_group == symmetry.space_group
     end
+        
+    # initialize atoms, charges, and bonds
+    atoms   = deepcopy(crystals[1].atoms)
+    charges = deepcopy(crystals[1].charges)
+    bonds   = deepcopy(crystals[1].bonds)
+    @assert nv(bonds) == crystals[1].atoms.n
+    for crystal in crystals[2:end]
+        add_vertices!(bonds, crystal.atoms.n)
+        for ed in edges(crystal.bonds)
+            add_edge!(bonds, atoms.n + ed.src, atoms.n + ed.dst, props(crystal.bonds, ed))
+        end
+
+        atoms   += crystal.atoms
+        charges += crystal.charges
+    end
+    
+    crystal = Crystal(name, box, atoms, charges, bonds, symmetry)
 
     if check_overlap
         overlap_flag, overlap_pairs = overlap(crystal.atoms.coords, crystal.box, true)
-        @assert !overlap_flag "Addition causes overlap: $overlap_pairs"
+        @assert ! overlap_flag "Addition causes overlap: $overlap_pairs"
     end
 
     return crystal
