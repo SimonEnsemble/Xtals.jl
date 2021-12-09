@@ -1061,7 +1061,7 @@ function Base.:+(crystals::Crystal...; check_overlap::Bool=true)
     # all crystals must have same boxes and space group
     for i = 2:length(crystals)
         @assert isapprox(crystals[i].box, box)
-        @assert crystals[i].symmetry == symmetry
+        @assert crystals[i].symmetry.space_group == symmetry.space_group
     end
         
     # initialize atoms, charges, and bonds
