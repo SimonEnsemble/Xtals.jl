@@ -1070,13 +1070,13 @@ function Base.:+(crystals::Crystal...; check_overlap::Bool=true, name::String="a
     bonds   = deepcopy(crystals[1].bonds)
     @assert nv(bonds) == crystals[1].atoms.n
     for crystal in crystals[2:end]
-        atoms   += crystal.atoms
-        charges += crystal.charges
-        
         add_vertices!(bonds, crystal.atoms.n)
         for ed in edges(crystal.bonds)
             add_edge!(bonds, atoms.n + ed.src, atoms.n + ed.dst, props(crystal.bonds, ed))
         end
+
+        atoms   += crystal.atoms
+        charges += crystal.charges
     end
     
     crystal = Crystal(name, box, atoms, charges, bonds, symmetry)
