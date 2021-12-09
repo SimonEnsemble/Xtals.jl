@@ -1069,7 +1069,7 @@ function Base.:+(crystals::Crystal...; check_overlap::Bool=true)
     charges = deepcopy(crystals[1].charges)
     bonds   = deepcopy(crystals[1].bonds)
     @assert nv(bonds) == crystals[1].atoms.n
-    for (i, crystal) in enumerate(crystals[2:end])
+    for crystal in crystals[2:end]
         atoms   += crystal.atoms
         charges += crystal.charges
         

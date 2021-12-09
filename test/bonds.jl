@@ -15,12 +15,10 @@ end
     xtal4 = +(xtal2, xtal, check_overlap=false)
 
     # check "conservation of matter"
-    @test xtal3.atoms.n == xtal.atoms.n + xtal2.atoms.n
-
-    @test ne(xtal3.bonds) == ne(xtal.bonds) + ne(xtal2.bonds)
+    @test nv(xtal3.bonds) == nv(xtal.bonds) + nv(xtal2.bonds)
 
     # check "conservation of energy"
-    @test nv(xtal3.bonds) == nv(xtal.bonds) + nv(xtal2.bonds)
+    @test ne(xtal3.bonds) == ne(xtal.bonds) + ne(xtal2.bonds)
 
     # check commutivity
     @test xtal3.atoms.n == xtal4.atoms.n
