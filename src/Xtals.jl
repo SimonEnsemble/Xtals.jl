@@ -1,6 +1,6 @@
 module Xtals
 
-using Bio3DView, CSV, DataFrames, FIGlet, Graphs, LinearAlgebra, MetaGraphs, Printf, UUIDs
+using AtomsBase, Bio3DView, CSV, DataFrames, FIGlet, Graphs, LinearAlgebra, MetaGraphs, Printf, StaticArrays, Unitful, UUIDs
 
 # global variable dictionary
 global rc = Dict{Symbol,Any}()
@@ -52,6 +52,8 @@ export
     # crystal.jl
     Crystal, strip_numbers_from_atom_labels!, assign_charges, chemical_formula, molecular_weight, 
     crystal_density, write_cif, has_charges, apply_symmetry_operations, write_cssr, 
+    # AtomsBase things also from crystal
+    position, velocity, bounding_box, boundary_conditions,
 
     # bonds.jl
     infer_bonds!, write_bond_information, BondingRule, bond_sanity_check, remove_bonds!, 

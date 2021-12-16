@@ -17,7 +17,7 @@ struct SymmetryInfo
 end
 SymmetryInfo() = SymmetryInfo([Array{String, 2}(undef, 3, 0) ["x", "y", "z"]], "P1", true) # default
 
-struct Crystal
+struct Crystal <: AbstractAtomicSystem{3}
     name::String
     box::Box
     atoms::Atoms{Frac}
@@ -1091,3 +1091,19 @@ function Base.:+(crystals::Crystal...; check_overlap::Bool=true, name::String="a
 
     return crystal
 end
+
+# AtomsBase interface things...NB that the indexing/iteration aspects aren't included because they would conflict with how slicing is defined in this package
+import Base.position
+import AtomsBase.velocity
+import AtomsBase.bounding_box
+import AtomsBase.boundary_conditions
+
+function position(crystal::Crystal)
+    pos = Cart(crystal.atoms.coords, crystal.box).x
+    return [pos[:,i] for i in 1:size(pos,2)] * u"Å"
+end
+
+velocity(::Crystal) = missing
+
+bounding_box(crystal::Crystal) = SVector{3}([SVector{3}(crystal.box.f_to_c[:,i]u"Å") for i in 1:3])
+boundary_conditions(::Crystal) = SVector{3,BoundaryCondition}([Periodic(), Periodic(), Periodic()])

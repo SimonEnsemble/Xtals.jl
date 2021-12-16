@@ -4,6 +4,7 @@ using Xtals
 using LinearAlgebra
 using Test
 using MetaGraphs, Graphs
+using AtomsBase
 
 # for test only
 # if the multi sets are equal, then when you remove duplicates,
@@ -21,6 +22,16 @@ end
     @test Xtals.vtk_filename(xtal) == "SBMOF-1.vtk"
     xtal = Crystal("ATIBOU01_clean.cssr")
     @test Xtals.vtk_filename(xtal) == "ATIBOU01_clean.vtk"
+
+    # AtomsBase stuff
+    xtal = Crystal("SBMOF-1.cif")
+    pos = position(xtal)
+    @test length(pos) == 120
+    @test isapprox(pos[1][2].val, 1.43954862, atol=1e-9)
+    @test ismissing(velocity(xtal))
+    @test bounding_box(xtal)[1][1].val == xtal.box.a
+    @test periodicity(xtal) == [1,1,1]
+    @test n_dimensions(xtal) == 3
 
     # cif reader
     xtal = Crystal("test_structure2.cif")

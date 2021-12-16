@@ -4,6 +4,7 @@ authors = ["SimonEnsemble <cory.simon@oregonstate.edu>"]
 version = "0.3.10"
 
 [deps]
+AtomsBase = "a963bdd2-2df7-4f54-a1ee-49d51e6be12a"
 Bio3DView = "99c8bb3a-9d13-5280-9740-b4880ed9c598"
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
@@ -16,7 +17,9 @@ Logging = "56ddb016-857b-54e1-b83d-db4d58db5568"
 MetaGraphs = "626554b9-1ddb-594c-aa3c-2596fe9399a5"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
+StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 UUIDs = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
+Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [compat]
 Bio3DView = "^0.1.3"
