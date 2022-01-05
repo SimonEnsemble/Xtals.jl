@@ -82,7 +82,7 @@ jobs: # run in parallel within workflow
 
   
     cross-platform-julia:
-    if: ${{ github.ref_name == "master" }}
+    if: github.ref_name == 'master'
     strategy:
       fail-fast: true
       matrix:
