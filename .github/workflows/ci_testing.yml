@@ -96,7 +96,7 @@ jobs: # run in parallel within workflow
       - name: set up Julia
         uses: julia-actions/setup-julia@latest
         with:
-          version: ${{ matrix.julia_version }}
+          version: ${{ matrix.julia }}
       
       - name: build package
         uses: julia-actions/julia-buildpkg@latest
