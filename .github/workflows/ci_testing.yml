@@ -12,7 +12,7 @@ concurrency: # only allow the most recent workflow to execute
   cancel-in-progress: true
 
 env: # environment variables
-  julia_version: '1.7.0' # julia version to use on all runners
+  julia_version: '1.7.1' # julia version to use on all runners (except cross-platform)
 
 
 
@@ -56,7 +56,8 @@ jobs: # run in parallel within workflow
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-latest, windows-latest]
+        os: [macos-latest, windows-latest, ubuntu-latest]
+        julia: ['1.6.4', '1.7.0']
     
     steps:
       - name: checkout commit
@@ -65,7 +66,7 @@ jobs: # run in parallel within workflow
       - name: set up Julia
         uses: julia-actions/setup-julia@latest
         with:
-          version: ${{ env.julia_version }}
+          version: ${{ matrix.julia }}
       
       - name: build package
         uses: julia-actions/julia-buildpkg@latest
