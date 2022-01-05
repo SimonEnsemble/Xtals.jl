@@ -12,14 +12,14 @@ concurrency: # only allow the most recent workflow to execute
   cancel-in-progress: true
 
 env: # environment variables
-  julia_version: '1.6.3' # julia version to use on all runners
+  julia_version: '1.7.1' # julia version to use on all runners (except cross-platform)
 
 
 
 jobs: # run in parallel within workflow
 
 
-  unit-and-doc-tests: # test package building w/o optional feature Python dependencies
+  unit-and-doc-tests:
     runs-on: ubuntu-latest
 
     steps: # run in series within job
@@ -50,6 +50,64 @@ jobs: # run in parallel within workflow
         uses: codecov/codecov-action@v2
         with:
           verbose: true
+
+
+  cross-platform-os:
+    if: github.ref_name == 'master'
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+      - name: checkout commit
+        uses: actions/checkout@master
+
+      - name: set up Julia
+        uses: julia-actions/setup-julia@latest
+        with:
+          version: ${{ env.julia_version }}
+      
+      - name: build package
+        uses: julia-actions/julia-buildpkg@latest
+      
+      - name: install dependencies
+        run: julia --project --color=yes -e 'import Pkg; Pkg.add("Documenter")'
+        shell: bash
+      
+      - name: run tests
+        run: julia --project --color=yes -e 'import Pkg; Pkg.test()'
+        shell: bash
+
+  
+  cross-platform-julia:
+    if: github.ref_name == 'master'
+    strategy:
+      fail-fast: true
+      matrix:
+        julia: ['1.1.1', '1.2.0', '1.3.1', '1.4.2', '1.5.4', '1.6.4', '1.7.0']
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: checkout commit
+        uses: actions/checkout@master
+
+      - name: set up Julia
+        uses: julia-actions/setup-julia@latest
+        with:
+          version: ${{ matrix.julia_version }}
+      
+      - name: build package
+        uses: julia-actions/julia-buildpkg@latest
+      
+      - name: install dependencies
+        run: julia --project --color=yes -e 'import Pkg; Pkg.add("Documenter")'
+        shell: bash
+      
+      - name: run tests
+        run: julia --project --color=yes -e 'import Pkg; Pkg.test()'
+        shell: bash
           
 
   porousmaterials: # cross-test PorousMaterials for breaking changes
@@ -119,8 +177,8 @@ jobs: # run in parallel within workflow
 
   deploy-docs:
     needs: unit-and-doc-tests
-
     runs-on: ubuntu-latest
+    if: github.ref_name == 'master'
 
     env:
       GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
