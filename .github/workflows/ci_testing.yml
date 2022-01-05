@@ -178,7 +178,7 @@ jobs: # run in parallel within workflow
   deploy-docs:
     needs: unit-and-doc-tests
     runs-on: ubuntu-latest
-    if: ${{ github.ref_name == "master" }}
+    if: github.ref_name == 'master'
 
     env:
       GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
