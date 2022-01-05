@@ -99,6 +99,9 @@ Bravais unit cell of a crystal.
 	space Group: P1
 	symmetry Operations:
 		'x, y, z'
+	bonding graph:
+		# vertices = 424
+		# edges = 0
 ```
 
 ## Writing crystal files
