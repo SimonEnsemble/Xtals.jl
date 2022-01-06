@@ -86,8 +86,9 @@ using LinearAlgebra
     ###
     #   remove duplicates
     ###
-    atoms = Crystal("SBMOF-1.cif").atoms
-    box = Crystal("SBMOF-1.cif").box
+    xtal = Crystal("SBMOF-1.cif")
+    atoms = xtal.atoms
+    box = xtal.box
     # no duplicates in SBMOF-1
     atoms_dm = remove_duplicates(atoms, box, true)
     @test isapprox(atoms, atoms_dm)
@@ -106,8 +107,9 @@ using LinearAlgebra
     ###
     # pairwise distances
     ###
-    coords = Crystal("distance_tester.cif").atoms.coords
-    box = Crystal("distance_tester.cif").box
+    xtal = Crystal("distance_tester.cif")
+    coords = xtal.atoms.coords
+    box = xtal.box
     pd = Xtals.pairwise_distances(coords, box, true)
     @test isapprox(pd[2, 2], 0.0) # zero on diag
     @test isapprox(pd[1, 2], pd[2, 1]) # symmetry
@@ -119,8 +121,6 @@ using LinearAlgebra
     ###
     # vector-column distances
     ###
-    coords = Crystal("distance_tester.cif").atoms.coords
-    box = Crystal("distance_tester.cif").box
 
     function check_vector_indices(coords, box, Is, Js, apply_pbc = true)
       d = distance(coords, box, Is, Js, apply_pbc)
