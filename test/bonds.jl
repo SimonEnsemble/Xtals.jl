@@ -6,8 +6,11 @@ if ! isdir("temp")
     mkdir("temp")
 end
 
+irmof1 = Crystal("IRMOF-1.cif")
+cof102 = Crystal("cof-102.cif")
+
 @testset "bond arithmetic" begin
-    xtal = Crystal("IRMOF-1.cif")
+    xtal = deepcopy(irmof1)
     xtal1 = deepcopy(xtal)
     infer_bonds!(xtal, true)
     xtal2 = xtal[1:10]
@@ -106,7 +109,7 @@ end
     @test mol_bonds == xtal.bonds
     
     mol_atoms, mol_bonds = read_mol("data/cof-102.mol")
-    xtal = Crystal("cof-102.cif")
+    xtal = deepcopy(cof102)
     infer_bonds!(xtal, false) # source mol file has no periodic bonds
     
     @test mol_bonds == xtal.bonds
@@ -114,7 +117,7 @@ end
 
 
 @testset "metadata" begin
-    xtal = Crystal("cof-102.cif")
+    xtal = deepcopy(cof102)
     infer_bonds!(xtal, true)
     bonds = deepcopy(xtal.bonds)
     e = collect(edges(xtal.bonds))[1]
@@ -123,7 +126,7 @@ end
 
     @test xtal.bonds == bonds
     
-    xtal2 = Crystal("cof-102.cif")
+    xtal2 = deepcopy(cof102)
     infer_bonds!(xtal2, false)
     drop_cross_pb_bonds!(xtal)
     
@@ -152,7 +155,7 @@ end
     @test true
 
     rc[:bonding_rules] = [BondingRule(:foo, :bar, 0.0)]
-    xtal = Crystal("cof-102.cif")
+    xtal = deepcopy(cof102)
     
     @test isnan(Xtals.is_bonded(xtal, 1, 2, rc[:bonding_rules])[2])
     
@@ -168,7 +171,7 @@ end
 
     @test isfile("temp/nothing.vtk")
 
-    xtal = Crystal("IRMOF-1.cif")
+    xtal = deepcopy(irmof1)
     infer_bonds!(xtal, true)
     write_xyz(xtal, "temp/IRMOF-1.xyz")
     write_bond_information(xtal, "temp/all_bonds.vtk")
@@ -179,7 +182,7 @@ end
 
 
 @testset "bonds from xyz" begin
-    xtal = Crystal("IRMOF-1.cif")
+    xtal = deepcopy(irmof1)
     infer_bonds!(xtal, false)
     bonds = infer_bonds(Cart(xtal.atoms, xtal.box))
 
