@@ -74,7 +74,7 @@ jobs: # run in parallel within workflow
 
       - name: load order
         run: |
-          julia --project .github/workflow_extras/write_load_combos.jl Xtals PorousMaterials PoreMatMod, XtalsPyTools
+          julia --project .github/workflow_extras/write_load_combos.jl Xtals PorousMaterials PoreMatMod XtalsPyTools
           bash load_combos.sh
 
 
