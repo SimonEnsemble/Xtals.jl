@@ -30,7 +30,7 @@ jobs: # run in parallel within workflow
       - name: set up Julia
         uses: julia-actions/setup-julia@latest
         with:
-          version: ${{env.julia_version}}
+          version: ${{ env.julia_version }}
       
       - name: build package
         uses: julia-actions/julia-buildpkg@latest
@@ -151,7 +151,7 @@ jobs: # run in parallel within workflow
       - name: set up Julia
         uses: julia-actions/setup-julia@latest
         with:
-          version: ${{env.julia_version}}
+          version: ${{ env.julia_version }}
 
       - name: test # use the cross_dep.jl script to run unit/doc tests on the dev branch of the specified package
         run: julia --project --color=yes ./test/cross_dep.jl PorousMaterials
@@ -170,7 +170,7 @@ jobs: # run in parallel within workflow
       - name: set up Julia
         uses: julia-actions/setup-julia@latest
         with:
-          version: ${{env.julia_version}}
+          version: ${{ env.julia_version }}
 
       - name: test
         run: julia --project --color=yes ./test/cross_dep.jl PoreMatMod
@@ -189,7 +189,7 @@ jobs: # run in parallel within workflow
       - name: set up Julia
         uses: julia-actions/setup-julia@latest
         with:
-          version: ${{env.julia_version}}
+          version: ${{ env.julia_version }}
       
       - name: set up python dependencies
         run: |
@@ -217,7 +217,7 @@ jobs: # run in parallel within workflow
       - name: set up Julia
         uses: julia-actions/setup-julia@latest
         with:
-          version: ${{env.julia_version}}
+          version: ${{ env.julia_version }}
 
       - name: build package
         uses: julia-actions/julia-buildpkg@latest
@@ -227,3 +227,26 @@ jobs: # run in parallel within workflow
 
       - name: build and deploy docs
         run:  julia --project --color=yes ./docs/make.jl
+  
+
+  aqua-jl:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: checkout commit
+        uses: actions/checkout@v2
+
+      - name: set up Julia
+        uses: julia-actions/setup-julia@latest
+        with:
+          version: ${{ env.julia_version }}
+
+      - name: build package
+        uses: julia-actions/julia-buildpkg@latest
+
+      - name: install dependencies
+        run: julia --project --color=yes -e 'import Pkg; Pkg.add.(["Aqua"])'
+
+      - name: Aqua.jl
+        run: julia --project --color=yes ./test/aqua.jl

@@ -41,7 +41,7 @@ export
     Coords, Frac, Cart, Atoms, Charges, wrap!, neutral, net_charge, translate_by!,
 
     # box.jl
-    Box, replicate, unit_cube, write_vtk, inside, fractional_coords, cartesian_coords,
+    Box, replicate, unit_cube, write_vtk, inside,
 
     # distance.jl
     nearest_image!, distance, overlap, remove_duplicates, pairwise_distances,
@@ -54,8 +54,7 @@ export
     crystal_density, write_cif, has_charges, apply_symmetry_operations, write_cssr, 
 
     # bonds.jl
-    infer_bonds!, write_bond_information, BondingRule, bond_sanity_check, remove_bonds!, 
-    get_bonding_rules, set_bonding_rules, read_bonding_rules,
+    infer_bonds!, write_bond_information, BondingRule, bond_sanity_check, remove_bonds!, read_bonding_rules,
     write_bonding_rules, add_bonding_rules, drop_cross_pb_bonds!, bondingrules, bond_angle,
     get_bond_vector, calculate_bond_vectors!, clear_vectors!, bond_distance, infer_bonds
 
