@@ -249,4 +249,4 @@ jobs: # run in parallel within workflow
         run: julia --project --color=yes -e 'import Pkg; Pkg.add.(["Aqua"])'
 
       - name: Aqua.jl
-        run: julia --project --color=yes -e 'using Xtals; import Aqua; Aqua.test_all(Xtals, ambiguities=false)' # ambiguities skipped b/c finds external ones
+        run: julia --project --color=yes -e 'using Xtals; import Aqua; Aqua.test_all(Xtals, ambiguities=false, stale_deps=(ignore=[:PyCall, :Documenter, :Aqua]))'
