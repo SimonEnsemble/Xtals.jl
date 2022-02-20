@@ -10,7 +10,7 @@ testfiles = [
     ]
 
 @assert VERSION.major == 1
-@assert VERSION.minor ≥ 1
+@assert VERSION.minor ≥ 6
 
 using Test, Documenter, Xtals, Graphs, MetaGraphs
 Xtals.banner()
