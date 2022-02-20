@@ -17,8 +17,15 @@ function equal_multisets(ac1::Union{Atoms{Frac}, Charges{Frac}},
     return isapprox(ac_dm, ac1)
 end
 
+# load here for use in multiple tests
+sbmof1 = Crystal("SBMOF-1.cif")
+test_structure2 = Crystal("test_structure2.cif")
+symmetry_test_structure = Crystal("symmetry_test_structure.cif")
+symmetry_test_structure_cartn = Crystal("symmetry_test_structure_cartn.cif")
+irmof1 = Crystal("IRMOF-1.cif")
+
 @testset "Crystal Tests" begin
-    xtal = Crystal("SBMOF-1.cif")
+    xtal = deepcopy(sbmof1)
     @test Xtals.vtk_filename(xtal) == "SBMOF-1.vtk"
     xtal = Crystal("ATIBOU01_clean.cssr")
     @test Xtals.vtk_filename(xtal) == "ATIBOU01_clean.vtk"
@@ -34,7 +41,7 @@ end
     @test n_dimensions(xtal) == 3
 
     # cif reader
-    xtal = Crystal("test_structure2.cif")
+    xtal = deepcopy(test_structure2)
     strip_numbers_from_atom_labels!(xtal)
     @test xtal.name == "test_structure2.cif"
     @test isapprox(xtal.box, Box(10.0, 20.0, 30.0, 90*π/180, 45*π/180, 120*π/180))
@@ -76,7 +83,7 @@ end
     @test_throws ErrorException Xtals.remove_duplicate_atoms_and_charges(xtal)
 
     # xyz writer
-    xtal = Crystal("SBMOF-1.cif")
+    xtal = deepcopy(sbmof1)
     xtal_xyz_filename = replace(replace(xtal.name, ".cif" => ""), ".cssr" => "") * ".xyz"
     write_xyz(xtal)
     atoms_read = read_xyz(xtal_xyz_filename) # Atoms{Cart}
@@ -89,7 +96,7 @@ end
     rm(xtal_xyz_filename) # clean up
 
     # test .cif writer; write, read in, assert equal
-    crystal = Crystal("SBMOF-1.cif")
+    crystal = deepcopy(sbmof1)
     rewrite_filename = "rewritten.cif"
     write_cif(crystal, joinpath(rc[:paths][:crystals], rewrite_filename))
     crystal_reloaded = Crystal(rewrite_filename)
@@ -117,13 +124,13 @@ end
     #  test wraps coords to [0, 1] for symmetry ops
     xtal = Crystal("symmetry_test_structure.cif", wrap_coords=false)
     @test any(xtal.atoms.coords.xf .> 1.0)
-    xtal = Crystal("symmetry_test_structure.cif", wrap_coords=true) # default
+    xtal = deepcopy(symmetry_test_structure) # default is to wrap coords
     @test all(xtal.atoms.coords.xf .< 1.0) && all(xtal.atoms.coords.xf .> 0.0)
     xtal = Crystal("symmetry_test_structure_charges.cif")
     @test xtal.charges.n == xtal.atoms.n
     @test !any(isnan.(xtal.charges.q))
 
-    non_P1_crystal = Crystal("symmetry_test_structure.cif") # not in P1 original
+    non_P1_crystal = deepcopy(symmetry_test_structure) # not in P1 original
     strip_numbers_from_atom_labels!(non_P1_crystal)
 
     P1_crystal = Crystal("symmetry_test_structure_P1.cif") # in P1 originally
@@ -133,7 +140,7 @@ end
     @test equal_multisets(non_P1_crystal.atoms, P1_crystal.atoms, P1_crystal.box)
     @test equal_multisets(non_P1_crystal.charges, P1_crystal.charges, P1_crystal.box)
 
-    non_P1_cartesian = Crystal("symmetry_test_structure_cartn.cif") # not in P1 originally
+    non_P1_cartesian = deepcopy(symmetry_test_structure_cartn) # not in P1 originally
     strip_numbers_from_atom_labels!(non_P1_cartesian)
 
     @test isapprox(non_P1_crystal.box, non_P1_cartesian.box)
@@ -172,16 +179,16 @@ end
     # keep this in cartesian to test both
     write_cif(non_P1_xtal_cartesian, joinpath("data", "crystals", "rewritten_symmetry_test_structure_cartn.cif"), fractional_coords=false)
     rewritten_non_p1_fractional = Crystal("rewritten_symmetry_test_structure.cif"; convert_to_p1=false)
-    strip_numbers_from_atom_labels!(rewritten_non_p1_fractional) # TODO remove
+    strip_numbers_from_atom_labels!(rewritten_non_p1_fractional)
     rewritten_non_p1_cartesian = Crystal("rewritten_symmetry_test_structure_cartn.cif"; convert_to_p1=false)
     strip_numbers_from_atom_labels!(rewritten_non_p1_cartesian)
 
     @test isapprox(rewritten_non_p1_fractional, non_P1_xtal, atol=0.0001)
     @test isapprox(rewritten_non_p1_cartesian, non_P1_xtal_cartesian, atol=0.0001)
 
-    non_P1_xtal = Crystal("symmetry_test_structure.cif", convert_to_p1=true)
+    non_P1_xtal = deepcopy(symmetry_test_structure)
     strip_numbers_from_atom_labels!(non_P1_xtal)
-    non_P1_xtal_cartesian = Crystal("symmetry_test_structure_cartn.cif", convert_to_p1=true)
+    non_P1_xtal_cartesian = deepcopy(symmetry_test_structure_cartn)
     strip_numbers_from_atom_labels!(non_P1_xtal_cartesian)
     @test non_P1_xtal.symmetry.is_p1
     @test non_P1_xtal_cartesian.symmetry.is_p1
@@ -194,7 +201,7 @@ end
     # test .cssr reader too; test_structure2.{cif,cssr} designed to be the same.
     xtal_cssr = Crystal("test_structure2.cssr")
     strip_numbers_from_atom_labels!(xtal_cssr)
-    xtal_cif = Crystal("test_structure2.cif")
+    xtal_cif = deepcopy(test_structure2)
     strip_numbers_from_atom_labels!(xtal_cif)
     @test isapprox(xtal_cif, xtal_cssr)
 
@@ -206,7 +213,7 @@ end
     @test isapprox(xtal_cssr, xtal_cif, atol=0.0001)
 
     # sanity checks on replicate crystal
-    sbmof = Crystal("SBMOF-1.cif")
+    sbmof = deepcopy(sbmof1)
     strip_numbers_from_atom_labels!(sbmof)
     replicated_sbmof = replicate(sbmof, (1, 1, 1))
     @test isapprox(sbmof, replicated_sbmof)
@@ -221,10 +228,10 @@ end
     @test chemical_formula(sbmof) == chemical_formula(replicated_sbmof)
     @test isapprox(crystal_density(sbmof), crystal_density(replicated_sbmof), atol=1e-7)
 
-    sbmof1 = Crystal("SBMOF-1.cif")
-    rbox = replicate(sbmof1.box, (2, 3, 4))
-    @test rbox.Ω ≈ sbmof1.box.Ω * 2 * 3 * 4
-    @test all(rbox.c_to_f * sbmof1.box.f_to_c * [1.0, 1.0, 1.0] .≈ [1/2, 1/3, 1/4])
+    xtal = deepcopy(sbmof1)
+    rbox = replicate(xtal.box, (2, 3, 4))
+    @test rbox.Ω ≈ xtal.box.Ω * 2 * 3 * 4
+    @test all(rbox.c_to_f * xtal.box.f_to_c * [1.0, 1.0, 1.0] .≈ [1/2, 1/3, 1/4])
 
 
     # test crystal addition
@@ -271,7 +278,7 @@ end
     @test_throws AssertionError +(c1, c2, c) # by default, do not let crystal additions result in overlap
 
     # bond addition
-    xtal = Crystal("SBMOF-1.cif")
+    xtal = deepcopy(sbmof1)
     xtal2 = deepcopy(xtal)
     infer_bonds!(xtal, true)
     infer_bonds!(xtal2, true)
@@ -279,23 +286,23 @@ end
     @test ne(xtal3.bonds) == ne(xtal.bonds) + ne(xtal2.bonds)
 
     # more xtal tests
-    sbmof1 = Crystal("SBMOF-1.cif", include_zero_charges=false)
-    @test ! has_charges(sbmof1)
-    @test isapprox(sbmof1.box.reciprocal_lattice, 2 * π * inv(sbmof1.box.f_to_c))
-    @test sbmof1.box.Ω ≈ det(sbmof1.box.f_to_c) # sneak in crystal test
-    @test isapprox(crystal_density(sbmof1), 1570.4, atol=0.5) # kg/m3
+    xtal = Crystal("SBMOF-1.cif", include_zero_charges=false)
+    @test ! has_charges(xtal)
+    @test isapprox(xtal.box.reciprocal_lattice, 2 * π * inv(xtal.box.f_to_c))
+    @test xtal.box.Ω ≈ det(xtal.box.f_to_c) # sneak in crystal test
+    @test isapprox(crystal_density(xtal), 1570.4, atol=0.5) # kg/m3
 
     # indexing
-    sbmof1_sub = sbmof1[10:15]
+    sbmof1_sub = xtal[10:15]
     @test sbmof1_sub.atoms.n == 6
     @test sbmof1_sub.charges.n == 0
-    @test sbmof1_sub.atoms.species == sbmof1.atoms.species[10:15]
-    @test sbmof1_sub.atoms.coords.xf == sbmof1.atoms.coords.xf[:, 10:15]
+    @test sbmof1_sub.atoms.species == xtal.atoms.species[10:15]
+    @test sbmof1_sub.atoms.coords.xf == xtal.atoms.coords.xf[:, 10:15]
     unequal_n_q = Crystal("symmetry_test_structure_charges.cif", include_zero_charges=false)
     @test_throws ErrorException lastindex(unequal_n_q)
     @test_throws ErrorException unequal_n_q[[1]]
     
-    @test !isapprox(unequal_n_q, Crystal("symmetry_test_structure.cif"))
+    @test !isapprox(unequal_n_q, deepcopy(symmetry_test_structure))
 
     # including zero charges or not, when reading in a .cif `include_zero_charges` flag to Crystal constructor
     frame1 = Crystal("ATIBOU01_clean.cif", include_zero_charges=false) # has four zero charges in it
@@ -331,8 +338,8 @@ end
     xtal = Crystal("SBMOF-1_bad_labels.cif", species_col=["_atom_site_type_symbol"])
     @test xtal.atoms.species[1] == :C
 
-    xtal1 = Crystal("SBMOF-1.cif")
-    xtal2 = Crystal("SBMOF-1.cif")
+    xtal1 = deepcopy(sbmof1)
+    xtal2 = deepcopy(sbmof1)
     @test xtal1.atoms.species == xtal2.atoms.species
 
     @test_throws KeyError Crystal("SBMOF-1.cif", species_col=["bogus_column"])
@@ -340,7 +347,7 @@ end
     # overlap tests
     @test_throws ErrorException Crystal("SBMOF-1_overlap.cif")
     xtal1 = Crystal("SBMOF-1_overlap.cif", remove_duplicates=true)
-    @test isapprox(xtal1, Crystal("SBMOF-1.cif"))
+    @test isapprox(xtal1, deepcopy(sbmof1))
     @test_throws ErrorException Crystal("SBMOF-1_overlap_diff_atom.cif", remove_duplicates=true) # duplicate but diff atom, so not repairable
 
     @test_throws ErrorException Crystal("example.mol")
@@ -358,7 +365,7 @@ end
     @test true
     
     # slicing
-    xtal = Crystal("SBMOF-1.cif")
+    xtal = deepcopy(sbmof1)
     infer_bonds!(xtal, false)
     set_prop!(xtal.bonds, 1, 5, :bogus, "hi")
     ids = [1, 2, 5]
@@ -370,12 +377,12 @@ end
     ids = falses(xtal.atoms.n)
     ids[1] = ids[2] = ids[5] = true
     @test isapprox(xtal_sliced, xtal[ids])
-    xtal = Crystal("IRMOF-1.cif")
+    xtal = deepcopy(irmof1)
     @test lastindex(xtal) == xtal.atoms.n == 424
 
     # charge/atom count mismatch tests for isapprox
-    xtal = Crystal("SBMOF-1.cif")
-    xtal2 = Crystal("IRMOF-1.cif")
+    xtal = deepcopy(sbmof1)
+    xtal2 = deepcopy(irmof1)
     @test !isapprox(xtal, xtal2) # different atoms.n
     xtal2 = assign_charges(xtal, Dict(:Ca => -2.0, :O => 2.0, :S => 2.0, :C => 0.0, :H => 0.0), Inf)
     @test !isapprox(xtal, xtal2) # different charges.n

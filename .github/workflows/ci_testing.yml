@@ -12,15 +12,16 @@ concurrency: # only allow the most recent workflow to execute
   cancel-in-progress: true
 
 env: # environment variables
-  julia_version: '1.6.3' # julia version to use on all runners
+  julia_version: '1.7.1' # julia version to use on all runners (except cross-platform)
 
 
 
 jobs: # run in parallel within workflow
 
 
-  unit-and-doc-tests: # test package building w/o optional feature Python dependencies
+  unit-and-doc-tests:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps: # run in series within job
       - name: checkout commit
@@ -29,7 +30,7 @@ jobs: # run in parallel within workflow
       - name: set up Julia
         uses: julia-actions/setup-julia@latest
         with:
-          version: ${{env.julia_version}}
+          version: ${{ env.julia_version }}
       
       - name: build package
         uses: julia-actions/julia-buildpkg@latest
@@ -50,14 +51,98 @@ jobs: # run in parallel within workflow
         uses: codecov/codecov-action@v2
         with:
           verbose: true
+
+
+  load-order: # test that Xtals, PorousMaterials, XtalsML, and PoreMatMod can all be loaded simultaneously, and in any order
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout commit
+        uses: actions/checkout@master
+
+      - name: set up Julia
+        uses: julia-actions/setup-julia@latest
+        with:
+          version: ${{ env.julia_version }}
+      
+      - name: build package
+        uses: julia-actions/julia-buildpkg@latest
+
+      - name: install dependencies
+        run: julia --project -e 'import Pkg; Pkg.add.(["PorousMaterials", "PoreMatMod", "XtalsPyTools", "Combinatorics"])'
+
+      - name: load order
+        run: |
+          julia --project .github/workflow_extras/write_load_combos.jl Xtals PorousMaterials PoreMatMod XtalsPyTools
+          bash load_combos.sh
+
+
+  cross-platform-os:
+    if: github.ref_name == 'master'
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    
+    steps:
+      - name: checkout commit
+        uses: actions/checkout@master
+
+      - name: set up Julia
+        uses: julia-actions/setup-julia@latest
+        with:
+          version: ${{ env.julia_version }}
+      
+      - name: build package
+        uses: julia-actions/julia-buildpkg@latest
+      
+      - name: install dependencies
+        run: julia --project --color=yes -e 'import Pkg; Pkg.add("Documenter")'
+        shell: bash
+      
+      - name: run tests
+        run: julia --project --color=yes -e 'import Pkg; Pkg.test()'
+        shell: bash
+
+  
+  cross-platform-julia:
+    if: github.ref_name == 'master'
+    strategy:
+      fail-fast: true
+      matrix:
+        julia: ['1.1.1', '1.2.0', '1.3.1', '1.4.2', '1.5.4', '1.6.4', '1.7.0']
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    steps:
+      - name: checkout commit
+        uses: actions/checkout@master
+
+      - name: set up Julia
+        uses: julia-actions/setup-julia@latest
+        with:
+          version: ${{ matrix.julia }}
+      
+      - name: build package
+        uses: julia-actions/julia-buildpkg@latest
+      
+      - name: install dependencies
+        run: julia --project --color=yes -e 'import Pkg; Pkg.add("Documenter")'
+        shell: bash
+      
+      - name: run tests
+        run: julia --project --color=yes -e 'import Pkg; Pkg.test()'
+        shell: bash
           
 
   porousmaterials: # cross-test PorousMaterials for breaking changes
     needs: unit-and-doc-tests
-
     runs-on: ubuntu-latest
-
     continue-on-error: true # if this job fails, CI will still pass (but we will know about a compatibility issue)
+    timeout-minutes: 30
 
     steps:
       - name: check out commit
@@ -66,7 +151,7 @@ jobs: # run in parallel within workflow
       - name: set up Julia
         uses: julia-actions/setup-julia@latest
         with:
-          version: ${{env.julia_version}}
+          version: ${{ env.julia_version }}
 
       - name: test # use the cross_dep.jl script to run unit/doc tests on the dev branch of the specified package
         run: julia --project --color=yes ./test/cross_dep.jl PorousMaterials
@@ -74,10 +159,9 @@ jobs: # run in parallel within workflow
 
   porematmod:
     needs: unit-and-doc-tests
-
     runs-on: ubuntu-latest
-
     continue-on-error: true
+    timeout-minutes: 30
 
     steps:
       - name: checkout commit
@@ -86,7 +170,7 @@ jobs: # run in parallel within workflow
       - name: set up Julia
         uses: julia-actions/setup-julia@latest
         with:
-          version: ${{env.julia_version}}
+          version: ${{ env.julia_version }}
 
       - name: test
         run: julia --project --color=yes ./test/cross_dep.jl PoreMatMod
@@ -94,10 +178,9 @@ jobs: # run in parallel within workflow
 
   xtalspytools:
     needs: unit-and-doc-tests
-
     runs-on: ubuntu-latest
-
     continue-on-error: true
+    timeout-minutes: 30
     
     steps:
       - name: checkout commit
@@ -106,7 +189,7 @@ jobs: # run in parallel within workflow
       - name: set up Julia
         uses: julia-actions/setup-julia@latest
         with:
-          version: ${{env.julia_version}}
+          version: ${{ env.julia_version }}
       
       - name: set up python dependencies
         run: |
@@ -119,8 +202,9 @@ jobs: # run in parallel within workflow
 
   deploy-docs:
     needs: unit-and-doc-tests
-
     runs-on: ubuntu-latest
+    if: github.ref_name == 'master'
+    timeout-minutes: 30
 
     env:
       GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
@@ -133,7 +217,7 @@ jobs: # run in parallel within workflow
       - name: set up Julia
         uses: julia-actions/setup-julia@latest
         with:
-          version: ${{env.julia_version}}
+          version: ${{ env.julia_version }}
 
       - name: build package
         uses: julia-actions/julia-buildpkg@latest
@@ -143,3 +227,26 @@ jobs: # run in parallel within workflow
 
       - name: build and deploy docs
         run:  julia --project --color=yes ./docs/make.jl
+  
+
+  aqua-jl:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: checkout commit
+        uses: actions/checkout@v2
+
+      - name: set up Julia
+        uses: julia-actions/setup-julia@latest
+        with:
+          version: ${{ env.julia_version }}
+
+      - name: build package
+        uses: julia-actions/julia-buildpkg@latest
+
+      - name: install dependencies
+        run: julia --project --color=yes -e 'import Pkg; Pkg.add.(["Aqua"])'
+
+      - name: Aqua.jl
+        run: julia --project --color=yes ./test/aqua.jl

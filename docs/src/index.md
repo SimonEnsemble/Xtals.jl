@@ -8,7 +8,7 @@ crystals such as metal-organic frameworks (MOFs).
 ## Installation
 
 1. Download and install the [Julia programming language](https://julialang.org/),
- v1.5 or higher.
+ v1.1 or higher.
 
 2. Open the package manager in the Julia REPL (using `]`) and enter:
 

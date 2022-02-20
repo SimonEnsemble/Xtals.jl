@@ -338,7 +338,7 @@ end
 """
     write_bond_information(crystal, filename)
     write_bond_information(crystal, center_at_origin=false)
-    write_bond_information(xtal, filename, :cross_boundary => p -> p, "bonds.vtk") # cross boundary bonds only
+    write_bond_information(xtal, filename, :cross_boundary => p -> p, "bonds.vtk") # cross-boundary bonds only
     write_bond_information(xtal, filename, :distance => d -> d < 1.0, "bonds.vtk") # distance less than 1.0
 
 Writes the bond information from a crystal to the selected filename.
@@ -350,7 +350,7 @@ Writes the bond information from a crystal to the selected filename.
 - `bond_filter::Pair{Symbol, Function}`: (optional) a key-value pair of an edge attribute and a predicate function. Bonds with attributes that cause the predicate to return false are excluded from writing.
 """
 function write_bond_information(crystal::Crystal, filename::String;
-        center_at_origin::Bool=false, bond_filter::Union{Pair{Symbol, F}, Nothing}=nothing) where F
+        center_at_origin::Bool=false, bond_filter::Pair{Symbol, F}=(:NOTHING => x -> ())) where F <: Function
     if ne(crystal.bonds) == 0
         @warn("Crystal %s has no bonds present. To get bonding information for this
         crystal run `infer_bonds!` with an array of bonding rules\n", crystal.name)
@@ -360,8 +360,8 @@ function write_bond_information(crystal::Crystal, filename::String;
     end
     # filter bonds
     idx_keep_bonds = trues(ne(crystal.bonds))
-    if !isnothing(bond_filter)
-        attr, pred = bond_filter
+    attr, pred = bond_filter
+    if attr != :NOTHING
         for (b, bond) ∈ enumerate(edges(crystal.bonds))
             prop = get_prop(crystal.bonds, bond, attr)
             if !pred(prop)
