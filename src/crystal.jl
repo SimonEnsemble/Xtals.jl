@@ -17,7 +17,7 @@ struct SymmetryInfo
 end
 SymmetryInfo() = SymmetryInfo([Array{String, 2}(undef, 3, 0) ["x", "y", "z"]], "P1", true) # default
 
-struct Crystal <: AbstractAtomicSystem{3}
+struct Crystal <: AbstractSystem{3}
     name::String
     box::Box
     atoms::Atoms{Frac}
@@ -595,7 +595,7 @@ Strip numbers from labels for `crystal.atoms`.
 Precisely, for `atom` in `crystal.atoms`, find the first number that appears in `atom`.
 Remove this number and all following characters from `atom`.
 e.g. C12 --> C
-	 Ba12A_3 --> Ba
+     Ba12A_3 --> Ba
 
 # Arguments
 - `crystal::Crystal`: The crystal containing the crystal structure information
@@ -603,7 +603,7 @@ e.g. C12 --> C
 function strip_numbers_from_atom_labels!(crystal::Crystal)
     for i = 1:crystal.atoms.n
         crystal.atoms.species[i] = strip_number_from_label(crystal.atoms.species[i])
-	end
+    end
 end
 
 vtk_filename(crystal::Crystal) = replace(replace(crystal.name, ".cif" => ""), ".cssr" => "") * ".vtk"
@@ -640,7 +640,7 @@ function chemical_formula(crystal::Crystal; verbose::Bool=false)
     if verbose
         @printf("Chemical formula of %s:\n\t", crystal.name)
         for (atom, formula_unit) in atom_counts
-			@printf("%s_%d", string(atom), formula_unit)
+            @printf("%s_%d", string(atom), formula_unit)
         end
         @printf("\n")
     end
@@ -664,7 +664,7 @@ function molecular_weight(crystal::Crystal)
     atomic_masses = rc[:atomic_masses]
 
     mass = 0.0
-	for i = 1:crystal.atoms.n
+    for i = 1:crystal.atoms.n
         mass += atomic_masses[crystal.atoms.species[i]]
     end
 
@@ -988,8 +988,8 @@ end
 function Base.show(io::IO, crystal::Crystal)
     println(io, "Name: ", crystal.name)
     println(io, crystal.box)
-	@printf(io, "\t# atoms = %d\n", crystal.atoms.n)
-	@printf(io, "\t# charges = %d\n", crystal.charges.n)
+    @printf(io, "\t# atoms = %d\n", crystal.atoms.n)
+    @printf(io, "\t# charges = %d\n", crystal.charges.n)
     println(io, "\tchemical formula: ", chemical_formula(crystal))
     @printf(io, "\tspace Group: %s\n", crystal.symmetry.space_group)
     @printf(io, "\tsymmetry Operations:\n")
