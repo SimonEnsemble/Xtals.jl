@@ -51,7 +51,7 @@ export
 
     # crystal.jl
     Crystal, strip_numbers_from_atom_labels!, assign_charges, chemical_formula, molecular_weight, 
-    crystal_density, write_cif, has_charges, apply_symmetry_operations, write_cssr, 
+    crystal_density, write_cif, has_charges, apply_symmetry_operations, write_cssr, rename,
     # AtomsBase things also from crystal
     position, velocity, bounding_box, boundary_conditions,
 

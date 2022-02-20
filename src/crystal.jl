@@ -474,6 +474,24 @@ function Crystal(filename::String;
 end
 
 
+"""
+    renamed_xtal = rename(xtal, "new name")
+
+Returns a copy of a crystal with the name changed.
+"""
+function rename(xtal::Crystal, name::String)::Crystal
+    # make a "nothing" crystal
+    nothing_xtal = Crystal(
+        "nothing",
+        xtal.box,
+        Atoms(0, Symbol[], Frac(zeros(3,0))), 
+        Charges{Frac}(0)
+    )
+    # add the "nothing" crystal to the input crystal and change the name
+    return +(xtal, nothing_xtal, name=name)
+end
+
+
 # documented in matter.jl
 function wrap!(crystal::Crystal)
     wrap!(crystal.atoms.coords)
