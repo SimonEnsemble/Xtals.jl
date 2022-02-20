@@ -390,5 +390,18 @@ irmof1 = Crystal("IRMOF-1.cif")
     # make sure that CIF files with tabs in the _symmetry_equiv_pos_as_xyz blocks load w/o error
     xtal = Crystal("xtal_w_tabs.cif", check_overlap=false)
     @test true
+
+@testset "rename" begin
+     xtal1 = deepcopy(sbmof1)
+     infer_bonds!(xtal1, true)
+     xtal2 = rename(xtal1, "renamed xtal")
+
+     # test that crystal is unchanged
+     @test isapprox(xtal1.box, xtal2.box)
+     @test SimpleGraph(xtal1.bonds) == SimpleGraph(xtal2.bonds)
+     @test isapprox(xtal1.atoms, xtal2.atoms)
+     # test that name is changed
+     @test xtal2.name == "renamed xtal"
+end
 end
 end
