@@ -24,7 +24,8 @@ for testfile ∈ testfiles
     @time include(testfile)
 end
 
-if VERSION.minor ≥ 7
+# run doctests unless disabled via environment variable
+if "doctest" ∉ keys(ENV) || ENV["doctest"] ≠ "false"
     @time doctest(Xtals)
 end
 
