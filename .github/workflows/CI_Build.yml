@@ -18,7 +18,7 @@ env: # environment variables
 jobs: # run in parallel within workflow
 
   unit-and-doc-tests:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     timeout-minutes: 30
 
     steps: # run in series within job
@@ -53,7 +53,7 @@ jobs: # run in parallel within workflow
 
   porousmaterials: # cross-test PorousMaterials for breaking changes
     needs: unit-and-doc-tests
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     continue-on-error: true # if this job fails, CI will still pass (but we will know about a compatibility issue)
     timeout-minutes: 30
 
@@ -72,7 +72,7 @@ jobs: # run in parallel within workflow
 
   porematmod:
     needs: unit-and-doc-tests
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     continue-on-error: true
     timeout-minutes: 30
 
@@ -91,7 +91,7 @@ jobs: # run in parallel within workflow
 
   xtalspytools:
     needs: unit-and-doc-tests
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     continue-on-error: true
     timeout-minutes: 30
     
@@ -114,7 +114,7 @@ jobs: # run in parallel within workflow
   
 
   aqua-jl:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     timeout-minutes: 30
 
     steps:
