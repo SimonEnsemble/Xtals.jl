@@ -50,7 +50,7 @@ export
     read_xyz, write_xyz, read_mol, write_mol2, assert_P1_symmetry, set_paths, view_crystal,
 
     # crystal.jl
-    Crystal, strip_numbers_from_atom_labels!, assign_charges, chemical_formula, molecular_weight, 
+    Crystal, strip_numbers_from_atom_labels!, assign_charges, empirical_formula, molecular_weight, 
     crystal_density, write_cif, has_charges, apply_symmetry_operations, write_cssr, rename,
     # AtomsBase things also from crystal
     position, velocity, bounding_box, boundary_conditions,

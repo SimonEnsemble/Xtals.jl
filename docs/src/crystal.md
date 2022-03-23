@@ -71,7 +71,7 @@ xtal.atoms.n, super_xtal.atoms.n
 ```julia
 rho = crystal_density(xtal)         # Crystal density of the crystal in kg/m^2
 mw = molecular_weight(xtal)         # The molecular weight of the unit cell in amu
-formula = chemical_formula(xtal)    # The irreducible chemical formula of the crystal
+formula = empirical_formula(xtal)    # The irreducible chemical formula of the crystal
 ```
 
 ## Assigning new charges
@@ -95,7 +95,7 @@ Bravais unit cell of a crystal.
 
 	# atoms = 424
 	# charges = 424
-	chemical formula: Dict(:Zn => 4, :H => 12, :O => 13, :C => 24)
+	chemical formula: C₁₉₂H₉₆O₁₀₄Zn₃₂
 	space Group: P1
 	symmetry Operations:
 		'x, y, z'
@@ -125,7 +125,7 @@ write_xyz(xtal, "my_new_xyz_file.xyz")      # stored in the current directory
     replicate
     molecular_weight
     crystal_density
-    chemical_formula
+    empirical_formula
     assign_charges
     write_cif
     write_xyz

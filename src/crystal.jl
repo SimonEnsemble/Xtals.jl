@@ -627,7 +627,7 @@ end
 vtk_filename(crystal::Crystal) = replace(replace(crystal.name, ".cif" => ""), ".cssr" => "") * ".vtk"
 
 """
-    formula = chemical_formula(crystal, verbose=false)
+    formula = empirical_formula(crystal, verbose=false)
 
 Find the irreducible chemical formula of a crystal structure.
 
@@ -638,7 +638,7 @@ Find the irreducible chemical formula of a crystal structure.
 # Returns
 - `formula::Dict{Symbol, Int}`: A dictionary with the irreducible chemical formula of a crystal structure
 """
-function chemical_formula(crystal::Crystal; verbose::Bool=false)
+function empirical_formula(crystal::Crystal; verbose::Bool=false)
     unique_atoms = unique(crystal.atoms.species)
     # use dictionary to count atom types
     atom_counts = Dict{Symbol, Int}([a => 0 for a in unique_atoms])
@@ -1110,11 +1110,19 @@ function Base.:+(crystals::Crystal...; check_overlap::Bool=true, name::String="a
     return crystal
 end
 
-# AtomsBase interface things...NB that the indexing/iteration aspects aren't included because they would conflict with how slicing is defined in this package
+# AtomsBase interface things
 import Base.position
 import AtomsBase.velocity
 import AtomsBase.bounding_box
 import AtomsBase.boundary_conditions
+import Base.length, Base.getindex
+import AtomsBase.atomic_symbol
+
+length(xtal::Crystal) = xtal.atoms.n
+
+getindex(xtal::Crystal, index::Int) = xtal.atoms[index]
+
+atomic_symbol(atom::Atoms) = atom.species[1]
 
 function position(crystal::Crystal)
     pos = Cart(crystal.atoms.coords, crystal.box).x
@@ -1124,4 +1132,5 @@ end
 velocity(::Crystal) = missing
 
 bounding_box(crystal::Crystal) = SVector{3}([SVector{3}(crystal.box.f_to_c[:,i]u"Å") for i in 1:3])
+
 boundary_conditions(::Crystal) = SVector{3,BoundaryCondition}([Periodic(), Periodic(), Periodic()])
