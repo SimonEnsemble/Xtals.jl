@@ -62,7 +62,7 @@ irmof1 = Crystal("IRMOF-1.cif")
     @test isapprox(xtal2.charges, Charges([-2.0, 2.0], Frac([0.2 0.6; 0.5 0.3; 0.7 0.1])))
     @test ! neutral(assign_charges(xtal, Dict(:Ca => 2.0, :O => 2.0), 100.0)) # not charge neutral
     @test_throws ErrorException assign_charges(xtal, Dict(:Ca => 2.0, :O => 2.0)) # not charge neutral
-    @test chemical_formula(xtal) == Dict(:Ca => 1, :O => 1)
+    @test empirical_formula(xtal) == Dict(:Ca => 1, :O => 1)
     @test molecular_weight(xtal) ≈ 15.9994 + 40.078
     xtal3 = assign_charges(xtal2, Dict(:Ca => -2.0, :O => 2.0))
     @test isapprox(xtal2.charges, xtal3.charges)
@@ -78,7 +78,7 @@ irmof1 = Crystal("IRMOF-1.cif")
 
     @test isapprox(xtal.atoms, Atoms([:Ca, :Ca, :O, :C], f))
     @test isapprox(net_charge(xtal), 2.0)
-    @test chemical_formula(xtal) == Dict(:Ca => 2, :O => 1, :C => 1)
+    @test empirical_formula(xtal) == Dict(:Ca => 2, :O => 1, :C => 1)
     infer_bonds!(xtal, true)
     @test_throws ErrorException Xtals.remove_duplicate_atoms_and_charges(xtal)
 
@@ -225,7 +225,7 @@ irmof1 = Crystal("IRMOF-1.cif")
     @test Xtals.replication_factors(replicated_sbmof.box, 14.0) == (1, 1, 1)
     @test isapprox(sbmof.atoms.coords.xf[:, 1] ./ repfactors, replicated_sbmof.atoms.coords.xf[:, 1])
     @test isapprox(replicated_sbmof.box.reciprocal_lattice, 2 * π * inv(replicated_sbmof.box.f_to_c))
-    @test chemical_formula(sbmof) == chemical_formula(replicated_sbmof)
+    @test empirical_formula(sbmof) == empirical_formula(replicated_sbmof)
     @test isapprox(crystal_density(sbmof), crystal_density(replicated_sbmof), atol=1e-7)
 
     xtal = deepcopy(sbmof1)
@@ -355,8 +355,8 @@ irmof1 = Crystal("IRMOF-1.cif")
     infer_bonds!(xtal1, true)
     @test_throws ErrorException replicate(xtal1, (1,1,1))
 
-    # test verbose printing in chemical_formula
-    Xtals.chemical_formula(xtal1, verbose=true)
+    # test verbose printing in empirical_formula
+    empirical_formula(xtal1, verbose=true)
     @test true
 
     @test xtal1 == apply_symmetry_operations(xtal1)

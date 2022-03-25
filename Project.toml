@@ -1,7 +1,7 @@
 name = "Xtals"
 uuid = "ede5f01d-793e-4c47-9885-c447d1f18d6d"
 authors = ["SimonEnsemble <cory.simon@oregonstate.edu>"]
-version = "0.3.13"
+version = "0.4.0"
 
 [deps]
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
