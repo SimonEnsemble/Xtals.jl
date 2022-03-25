@@ -475,11 +475,11 @@ end
 
 
 """
-    renamed_xtal = rename(xtal, "new name")
+    renamed_xtal = rename_xtal(xtal, "new name")
 
 Returns a copy of a crystal with the name changed.
 """
-function rename(xtal::Crystal, name::String)::Crystal
+function rename_xtal(xtal::Crystal, name::String)::Crystal
     # make a "nothing" crystal
     nothing_xtal = Crystal(
         "nothing",
