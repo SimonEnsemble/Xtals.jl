@@ -356,7 +356,7 @@ irmof1 = Crystal("IRMOF-1.cif")
     @test_throws ErrorException replicate(xtal1, (1,1,1))
 
     # test verbose printing in empirical_formula
-    Xtals.empirical_formula(xtal1, verbose=true)
+    empirical_formula(xtal1, verbose=true)
     @test true
 
     @test xtal1 == apply_symmetry_operations(xtal1)
