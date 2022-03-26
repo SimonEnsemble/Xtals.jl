@@ -53,7 +53,7 @@ export
     Crystal, strip_numbers_from_atom_labels!, assign_charges, empirical_formula, molecular_weight, 
     crystal_density, write_cif, has_charges, apply_symmetry_operations, write_cssr, rename_xtal,
     # AtomsBase things also from crystal
-    position, velocity, bounding_box, boundary_conditions,
+    position, velocity, bounding_box, boundary_conditions, chemical_formula,
 
     # bonds.jl
     infer_bonds!, write_bond_information, BondingRule, bond_sanity_check, remove_bonds!, read_bonding_rules,

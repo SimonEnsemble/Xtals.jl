@@ -1134,3 +1134,5 @@ velocity(::Crystal) = missing
 bounding_box(crystal::Crystal) = SVector{3}([SVector{3}(crystal.box.f_to_c[:,i]u"Å") for i in 1:3])
 
 boundary_conditions(::Crystal) = SVector{3,BoundaryCondition}([Periodic(), Periodic(), Periodic()])
+
+chemical_formula(crystal::Crystal) = AtomsBase.chemical_formula(crystal)
