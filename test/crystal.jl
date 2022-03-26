@@ -394,7 +394,7 @@ irmof1 = Crystal("IRMOF-1.cif")
 @testset "rename" begin
      xtal1 = deepcopy(sbmof1)
      infer_bonds!(xtal1, true)
-     xtal2 = rename(xtal1, "renamed xtal")
+     xtal2 = rename_xtal(xtal1, "renamed xtal")
 
      # test that crystal is unchanged
      @test isapprox(xtal1.box, xtal2.box)
