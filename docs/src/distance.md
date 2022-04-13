@@ -16,7 +16,7 @@ distance(xtal.atoms.coords, xtal.box, 1, 2, false)
 18.538930020700434
 ```
 
-The [`apply_pbc`](@ref) argument allows for calculation of distances across the periodic boundaries of the [`Box`](@ref).
+The `apply_pbc` argument allows for calculation of distances across the periodic boundaries of the [`Box`](@ref).
 
 ```jldoctest distance
 distance(xtal.atoms.coords, xtal.box, 1, 2, true)
