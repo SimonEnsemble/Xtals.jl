@@ -120,7 +120,7 @@ write_xyz(xtal, "my_new_xyz_file.xyz")      # stored in the current directory
 
 ```@docs
     Crystal
-    SymmetryInfo
+    Xtals.SymmetryInfo
     strip_numbers_from_atom_labels!
     replicate
     molecular_weight
