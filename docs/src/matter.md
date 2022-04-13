@@ -6,7 +6,7 @@ end
 
 # Matter and Coordinates
 
-[`Atoms`](@ref) and [`Charges`](@ref) are the building blocks of [`Crystal`](@ref)s and [`Molecule`](@ref)s in `Xtals.jl`. 
+[`Atoms`](@ref) and [`Charges`](@ref) are the building blocks of [`Crystal`](@ref)s and molecules in `Xtals.jl`. 
 Each have coordinates in both [`Cart`](@ref)esian and [`Frac`](@ref)tional space (associated with unit cell information, i.e., a [`Box`](@ref)).
 
 ## Coordinates
