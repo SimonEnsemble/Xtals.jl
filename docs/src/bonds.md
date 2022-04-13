@@ -12,7 +12,7 @@ The nodes of the graph correspond to the [`Crystal`](@ref)'s [`Atoms`](@ref), an
 ## Bonding Rules
 
 `Xtals` uses an array of [`BondingRule`](@ref) structs stored in `rc` for deciding if two [`Atoms`](@ref) are an appropriate distance to be chemically bonded.  
-The default rules are based on the [Cordero covalent radii](doi.org/10.1039/B801115J), modified based on the work of [Thomas Manz](doi.org/10.1039/c9ra07327b).  
+The default rules are based on the [Cordero covalent radii](https://doi.org/10.1039/B801115J), modified based on the work of [Thomas Manz](https://doi.org/10.1039/c9ra07327b).  
 Each [`BondingRule`](@ref) is composed of two chemical species symbols and a floating point value, the maximum distance for inferring a bond between the indicated species.
 
 ```jldoctest; output=false
