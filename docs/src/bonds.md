@@ -121,7 +121,6 @@ infer_bonds!
 infer_bonds
 remove_bonds!
 write_bond_information
-read_mol
 bond_distance
 calculate_bond_vectors!
 clear_vectors!
