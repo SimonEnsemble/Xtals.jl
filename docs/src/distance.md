@@ -7,7 +7,7 @@ end
 # Distances
 
 The distance between two [`Atoms`](@ref) in a [`Crystal`](@ref) is central to many operations within `Xtals.jl`.  
-The [`distance`](@ref) function calculates the [`Cart`](@ref)esian displacement between the [`Coords`](@ref) ([`Cart`](@ref) or [`Frac`](@ref)) of two points, `i` and `j`, within a given [`box`](@ref), in units of Å.
+The [`distance`](@ref) function calculates the [`Cart`](@ref)esian displacement between the [`Coords`](@ref) ([`Cart`](@ref) or [`Frac`](@ref)) of two points, `i` and `j`, within a given [`Box`](@ref), in units of Å.
 
 ```jldoctest distance
 xtal = Crystal("IRMOF-1.cif")
