@@ -61,7 +61,7 @@ Cart(xtal.atoms.coords, xtal.box)
 ## Replicating a box
 
 For simulations in larger volumes than a single crystallograhic unit cell, the
-`Box` may be replicated along each or any of the three crystallographic axes.
+`Box` may be replicated along each or any of the three crystallographic axes.  See [`replicate`](@ref).
 
 ```julia
 replicated_box = replicate(box, (2,2,2))
@@ -85,7 +85,6 @@ See box.vtk
 ```@docs
     Box
     unit_cube
-    replicate
     write_vtk
     Frac
 ```
