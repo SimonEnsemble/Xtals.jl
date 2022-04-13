@@ -64,9 +64,8 @@ or construct a `Crystal` data structure directly.
 - `species_col::Array{String}`: which column to use for species identification for `crystal.atoms.species`. we use a priority list:
     we check for the first entry of `species_col` in the .cif file; if not present, we then use the second entry, and so on.
 - `infer_bonds::Bool`: if true, bonds are inferred automatically. If set, must specify `periodic_boundaries`. By default, bonds are not inferred.
-- `periodic_boundaries::Union{Bool, Missing}`: use with `infer_bonds` to specify treatment of the unit cell boundary.  Set `true` to treat the unit cell edge as a periodic boundary (allow bonds across it); set `false` to restrict bonding to within the local unit cell.
-
-across periodic unit cell boundaries; if `false`, bonds are only inferred within the local unit cell; if `missing` (default), bonds are not inferred.
+- `periodic_boundaries::Union{Bool, Missing}`: use with `infer_bonds` to specify treatment of the unit cell boundary.  Set `true` to treat the unit cell edge as a periodic boundary (allow bonds across it); set `false` to restrict bonding to within the local unit cell. By default, no bonds are inferred.
+- `absolute_path::Bool`: set `true` to load from an absolute path instead of the default path stored in `rc[:paths][:crystals]`.
 
 # Returns
 - `crystal::Crystal`: A crystal containing the crystal structure information
@@ -91,15 +90,18 @@ function Crystal(filename::String;
                  remove_duplicates::Bool=false,
                  species_col::Array{String, 1}=["_atom_site_type_symbol", "_atom_site_label"],
                  infer_bonds::Bool=false,
-                 periodic_boundaries::Union{Bool, Missing}=missing)
+                 periodic_boundaries::Union{Bool, Missing}=missing,
+                 absolute_path::Bool=false)
     # Read file extension. Ensure we can read the file type
     extension = split(filename, ".")[end]
     if ! (extension in ["cif", "cssr"])
         error("I can only read .cif or .cssr crystal structure files.")
     end
 
+    # get file path via global default dir unless flag specified
+    filepath = absolute_path ? filename : joinpath(rc[:paths][:crystals], filename)
     # read all lines of crystal structure file
-    _f = open(joinpath(rc[:paths][:crystals], filename), "r")
+    _f = open(filepath, "r")
     lines = readlines(_f)
     close(_f)
 
