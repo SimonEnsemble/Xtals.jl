@@ -1,14 +1,12 @@
 ![Xtals.jl](assets/logo.jpg)
 
-A pure-[Julia](https://julialang.org/) package for representation of porous
-crystals such as metal-organic frameworks (MOFs).
+A pure-[Julia](https://julialang.org/) package for representation of porous crystals such as metal-organic frameworks (MOFs).
 
 *In development, please contribute, post issues 🐛, and improve!*
 
 ## Installation
 
-1. Download and install the [Julia programming language](https://julialang.org/),
- v1.1 or higher.
+1. Download and install the [Julia programming language](https://julialang.org/), v1.3 or higher.
 
 2. Open the package manager in the Julia REPL (using `]`) and enter:
 
@@ -24,7 +22,10 @@ julia> using Xtals # that's it
 
 ## Dependencies
 
-Some features of `Xtals.jl` require Python libraries.  If these are missing, you may see warnings when the module loads.  For users unfamiliar with configuring Python, the [quick-setup script](https://raw.githubusercontent.com/SimonEnsemble/Xtals.jl/master/quick_setup.jl) will install and build `Xtals.jl` along with a Python environment and the dependencies.  Run it like so:
+Some (non-core) features of `Xtals.jl` require Python libraries.  
+If these are missing, you may see warnings when the module loads.  
+For users unfamiliar with configuring Python, the [quick-setup script](https://raw.githubusercontent.com/SimonEnsemble/Xtals.jl/master/quick_setup.jl) will install and build `Xtals.jl` along with a Python environment and the dependencies.  
+Run it like so:
 
 ```
 $ julia quick_setup.jl

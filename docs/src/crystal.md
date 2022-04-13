@@ -6,11 +6,13 @@ end
 
 # Crystals
 
-`Xtals.jl` maintains a data structure `Crystal` that stores information about a crystal structure file.
+`Xtals.jl` maintains a data structure [`Crystal`](@ref) that stores information about a crystal structure file.
 
-## Reading in a crystal structure file
+## Reading in a Crystal Structure File
 
-Currently, the crystal structure file reader accepts `.cif` and `.cssr` file formats. `Xtals.jl` looks for the crystal structure files in `rc[:paths][:crystals]` which is by default `./data/crystals` (relative to `pwd()` at module loading). By typing `rc[:paths][:crystals] = "my_crystal_dir"`, `Xtals.jl` now looks for the crystal structure file in `my_crystal_dir`.
+Currently, the crystal structure file reader accepts `.cif` and `.cssr` file formats. 
+`Xtals.jl` looks for the crystal structure files in `rc[:paths][:crystals]` which is by default `./data/crystals` (relative to `pwd()` at module loading). 
+By typing `rc[:paths][:crystals] = "my_crystal_dir"`, `Xtals.jl` now looks for the crystal structure file in `my_crystal_dir`.
 The files can be read as:
 
 ```jldoctest crystal; output=false
@@ -27,10 +29,11 @@ xtal.symmetry                       # Symmetry information of the crystal. By de
 Xtals.SymmetryInfo(["x"; "y"; "z";;], "P1", true)
 ```
 
-## Fixing atom species labels
+## Fixing Atom Species Labels
 
-Often, the atoms species are appended by numbers. This messes with the internal workings of `Xtals.jl`.
-To circumvent this problem, the function `strip_numbers_from_atom_labels!(xtal)` removes the appended numbers.
+Often, the atoms species are appended by numbers. 
+This messes with the internal workings of `Xtals.jl`.
+To circumvent this problem, the function [`strip_numbers_from_atom_labels!`](@ref) removes the appended numbers.
 It is important to use this function prior to GCMC or Henry coefficient calculations and bond inference operations.
 
 ```jldoctest crystal
@@ -39,6 +42,7 @@ xtal.atoms.species[1]
 # output
 :Zn1
 ```
+
 ```jldoctest crystal
 strip_numbers_from_atom_labels!(xtal)
 xtal.atoms.species[1]
@@ -46,18 +50,20 @@ xtal.atoms.species[1]
 :Zn
 ```
 
-## Converting the coordinates to cartesian space
+## Converting the Coordinates to Cartesian Space
 
-The coordinates of the crystals are stored in fractional coordinates. If one needs to analyze the cartesian coordinates of the crystal,
-that can be done by using the unit cell information of the crystal.
+The coordinates of the [`Crystal`](@ref)'s [`Atoms`](@ref) are stored in [`Frac`](@ref)tional coordinates. 
+If one needs to analyze the [`Cart`](@ref)esian coordinates of the [`Crystal`](@ref), that can be done by using the unit cell ([`Box`](@ref)) information.
+
 ```julia
 xtal.atoms.coords.xf                                    # array of fractional coordinates
 cart_coords = xtal.box.f_to_c * xtal.atoms.coords.xf    # array of cartesian coordinates
 ```
 
-## Creating a super cell
+## Creating a Super-Cell
 
-For many simulations, one needs to replicate the unit cell multiple times to create a bigger super cell.
+For many simulations, one needs to replicate the unit cell multiple times to create a bigger super-cell.
+This is done with [`replicate`](@ref):
 
 ```jldoctest crystal
 super_xtal = replicate(xtal, (2,2,2))       # Replicates the original unit cell once in each dimension
@@ -66,17 +72,17 @@ xtal.atoms.n, super_xtal.atoms.n
 (424, 3392)
 ```
 
-## Finding other properties
+## Finding Other Properties
 
 ```julia
 rho = crystal_density(xtal)         # Crystal density of the crystal in kg/m^2
 mw = molecular_weight(xtal)         # The molecular weight of the unit cell in amu
-formula = empirical_formula(xtal)    # The irreducible chemical formula of the crystal
+formula = empirical_formula(xtal)   # The irreducible chemical formula of the crystal
 ```
 
-## Assigning new charges
+## Assigning New Charges
 
-If the crystal structure file does not contains partial charges, we provide methods to assign new charges to the crystal
+If the structure file does not contain partial charges, we provide methods to assign new [`Charges`](@ref) to the [`Crystal`](@ref).
 
 ```jldoctest crystal; output=false
 species_to_charge = Dict(:Zn => 2.0, :C => 0.0, :H => 0.0, :O => -0.61538)  # This method assigns a static charge to atom species
@@ -104,9 +110,9 @@ Bravais unit cell of a crystal.
 		# edges = 0
 ```
 
-## Writing crystal files
+## Writing Crystal Files
 
-We provide methods to write both `.xyz` and `.cif` files
+We provide methods to write both `.xyz` and `.cif` files.
 
 ```jldoctest crystal; output=false
 write_cif(xtal, "my_new_cif_file.cif")      # Stored in the current directory
@@ -116,7 +122,7 @@ write_xyz(xtal, "my_new_xyz_file.xyz")      # stored in the current directory
 ```
 
 
-# Detailed docs
+# Detailed Docs
 
 ```@docs
     Crystal

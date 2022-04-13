@@ -6,17 +6,13 @@ end
 
 # The Spatial Box
 
-Within `Xtals.jl`, the 3D space in which all `Coords` are located is the
-`Box`.  Each `Crystal` has its own `Box`, equivalent to the unit cell of a material,
-containing as attributes the unit cell edge lengths (`a` `b` `c`), crystallographic
-dihedral angles (`α` `β` `γ`), volume, conversion factors for translating
-between `Frac`tional and `Cart`esian coordinates, and the reciprocal (Fourier
-transform) vectors for the Bravais lattice.
+Within `Xtals.jl`, the 3D space in which all [`Coords`](@ref) are located is the [`Box`](@ref).  
+Each [`Crystal`](@ref) has its own [`Box`](@ref), equivalent to the unit cell of a material, containing as attributes the unit cell edge lengths (`a` `b` `c`), crystallographic dihedral angles (`α` `β` `γ`), volume, conversion factors for translating between [`Frac`](@ref)tional and [`Cart`](@ref)esian coordinates, and the reciprocal (Fourier transform) vectors for the Bravais lattice.
 
-## defining a box
+## Defining a Box
 
-A `Box` is most conveniently constructed from its basic spatial data (`a` `b` `c`
-`α` `β` `γ`).  For example, given the unit cell of Co-MOF-74, we can define its `Box`:
+A [`Box`](@ref) is most conveniently constructed from its basic spatial data (`a` `b` `c` `α` `β` `γ`).  
+For example, given the unit cell of Co-MOF-74, we can define its [`Box`](@ref):
 
 ```julia
 a = 26.13173 # Å
@@ -28,13 +24,14 @@ c = 6.722028
 box = Box(a, b, c, α, β, γ)
 ```
 
-A `Box` may also be defined by providing only the `Frac`tional-to-`Cart`esian conversion
-matrix:
+A [`Box`](@ref) may also be defined by providing only the [`Frac`](@ref)tional-to-[`Cart`](@ref)esian conversion matrix:
+
 ```julia
 box = Box([26.1317 -13.0659 0; 0 22.6307 0; 0 0 6.72203])
 ```
 
-To quickly get a simple unit-cubic `Box`, use the `unit_cube` function.
+To quickly get a simple unit-cubic [`Box`](@ref), use the [`unit_cube`](@ref) function.
+
 ```julia
 @info unit_cube()
 #┌ Info: Bravais unit cell of a crystal.
@@ -44,10 +41,9 @@ To quickly get a simple unit-cubic `Box`, use the `unit_cube` function.
 ```
 
 
-## Transforming coordinates
+## Transforming Coordinates
 
-Conversions are provided for switching between `Frac`tional and `Cart`esian `Coords`
-using the `Box` (works for `Atoms` and `Charges`, too)
+Conversions are provided for switching between [`Frac`](@ref)tional and [`Cart`](@ref)esian [`Coords`](@ref) using the [`Box`](@ref) (works for [`Atoms`](@ref) and [`Charges`](@ref), too).
 
 ```julia
 xtal = Crystal("Co-MOF-74.cif")
@@ -58,20 +54,18 @@ Cart(xtal.atoms.coords, xtal.box)
 ```
 
 
-## Replicating a box
+## Replicating a Box
 
-For simulations in larger volumes than a single crystallograhic unit cell, the
-`Box` may be replicated along each or any of the three crystallographic axes.  See [`replicate`](@ref).
+For simulations in larger volumes than a single crystallograhic unit cell, the [`Box`](@ref) may be replicated along each or any of the three crystallographic axes.  
+See [`replicate`](@ref).
 
 ```julia
 replicated_box = replicate(box, (2,2,2))
 ```
 
+## Exporting a Box
 
-## Exporting a box
-
-For visualization of the unit cell boundaries, the `Box` may be written out to a
-`.vtk` file for use in [Visit](https://wci.llnl.gov/simulation/computer-codes/visit/)
+For visualization of the unit cell boundaries, the [`Box`](@ref) may be written out to a `.vtk` file for use in [Visit](https://wci.llnl.gov/simulation/computer-codes/visit/).
 
 ```jldoctest; setup=:(box = Box([26.1317 -13.0659 0; 0 22.6307 0; 0 0 6.72203])), output=false
 write_vtk(box, "box.vtk")
@@ -79,12 +73,10 @@ write_vtk(box, "box.vtk")
 See box.vtk
 ```
 
-
-# Detailed docs
+# Detailed Docs
 
 ```@docs
     Box
     unit_cube
     write_vtk
-    Frac
 ```
