@@ -113,7 +113,7 @@ jobs: # run in parallel within workflow
         run: julia --project --color=yes ./test/cross_dep.jl XtalsPyTools
   
 
-  aqua-jl:
+  linting:
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -130,7 +130,10 @@ jobs: # run in parallel within workflow
         uses: julia-actions/julia-buildpkg@latest
 
       - name: install dependencies
-        run: julia --project --color=yes -e 'import Pkg; Pkg.add.(["Aqua"])'
+        run: julia --project --color=yes -e 'import Pkg; Pkg.add.(["Aqua", "Lint", "JuliaFormatter"])'
 
       - name: Aqua.jl
         run: julia --project --color=yes ./test/aqua.jl
+
+      - name: JuliaFormatter.jl
+        run: julia --project --color=yes ./test/juliaformatter.jl

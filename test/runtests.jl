@@ -1,3 +1,4 @@
+
 testfiles = [
     "bonds.jl",
     "misc.jl",
@@ -7,7 +8,7 @@ testfiles = [
     "box.jl",
     "assert_p1_symmetry.jl",
     "paths.jl"
-    ]
+]
 
 @assert VERSION.major == 1
 @assert VERSION.minor ≥ 6
