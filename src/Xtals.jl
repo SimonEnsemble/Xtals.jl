@@ -29,7 +29,7 @@ function __init__()
     rc[:paths][:crystals] = ""
     rc[:paths][:data] = ""
     # set paths to data and crystals relative to pwd() at import
-    set_paths(joinpath(pwd(), "data"))
+    set_paths(joinpath(Pkg.depots1(), "data"); no_warn=true)
 end
 
 
