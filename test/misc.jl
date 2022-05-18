@@ -33,8 +33,9 @@ using Xtals, Test, DataFrames, Graphs, CSV
     @test neighbors(bonds, 1) == [2, 5]
 
     xtal = Crystal("SBMOF-1.cif", infer_bonds=true, periodic_boundaries=true)
-    write_mol2(xtal, filename="temp/test.mol2")
-    @test isfile("temp/test.mol2")
+    mol2_temp = tempname()
+    write_mol2(xtal, filename=mol2_temp)
+    @test isfile(mol2_temp)
     write_mol2(xtal)
     @test isfile("SBMOF-1.mol2")
 end

@@ -198,9 +198,8 @@ Launch a GUI window displaying the crystal.
 - `drop_cross_pb_bonds::Bool` : Optional. Set to `true` to remove bonds that extend across periodic boundaries of the unit cell (these tend to mess up the visualization). Defaults to `true`.
 """
 function view_crystal(xtal::Crystal; drop_cross_pb_bonds::Bool=true)
-    uuid = uuid1()
-    structure_file = "./temp_$uuid.cif"
-    box_file = "./temp_$uuid.vtk"
+    structure_file = tempname() * ".mol2"
+    box_file = tempname() * ".vtk"
     crystal = deepcopy(xtal)
     if drop_cross_pb_bonds
         drop_cross_pb_bonds!(crystal)

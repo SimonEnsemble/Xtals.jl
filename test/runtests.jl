@@ -15,10 +15,6 @@ testfiles = [
 using Test, Documenter, Xtals, Graphs, MetaGraphs
 Xtals.banner()
 
-if !isdir("temp")
-    mkdir("temp")
-end
-
 for testfile ∈ testfiles
     @info "Running test/$testfile"
     @time include(testfile)

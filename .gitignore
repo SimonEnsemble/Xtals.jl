@@ -2,7 +2,6 @@ docs/build/*
 Manifest.toml
 .vscode/
 test/data
-test/temp*
 test/*.cif
 test/*.cssr
 test/*.mol2

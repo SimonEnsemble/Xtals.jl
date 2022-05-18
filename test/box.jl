@@ -95,8 +95,9 @@ using Test
                   )
 
      xtal = Crystal("SBMOF-1.cif")
-     write_vtk(xtal.box, "temp/test.vtk", verbose=true)
-     @test isfile("temp/test.vtk")
+     vtk_temp = tempname() * ".vtk"
+     write_vtk(xtal.box, vtk_temp, verbose=true)
+     @test isfile(vtk_temp)
 
      # effective test of Base.show(io::IO, box::Box)
      println(xtal.box)

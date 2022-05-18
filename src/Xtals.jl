@@ -1,6 +1,6 @@
 module Xtals
 
-using AtomsBase, Bio3DView, CSV, DataFrames, FIGlet, Graphs, LinearAlgebra, MetaGraphs, Printf, StaticArrays, Unitful, UUIDs
+using AtomsBase, Bio3DView, CSV, DataFrames, FIGlet, Graphs, LinearAlgebra, MetaGraphs, Printf, StaticArrays, Unitful
 
 # global variable dictionary
 global rc = Dict{Symbol,Any}()
