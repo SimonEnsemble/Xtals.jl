@@ -172,7 +172,7 @@ Warnings are issued if any chosen paths are not valid folders.
 - `print_paths::Bool` : Optional.  If `true`, prints contents of `rc[:paths]` to console.  Defaults to `false`.
 - `no_warn::Bool` : Optional.  Set `true` to suppress invalid path warnings.  Default to `false`.
 """
-function set_paths(path_to_data::String=Pkg.depots1(); print_paths::Bool=false, no_warn::Bool=false)
+function set_paths(path_to_data::String=pwd(); print_paths::Bool=false, no_warn::Bool=false)
     for (key, path) ∈ rc[:paths] # set all relative paths
         rc[:paths][key] = joinpath(path_to_data, String(key))
     end
