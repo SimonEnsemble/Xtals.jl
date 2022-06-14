@@ -907,28 +907,31 @@ write crystal structure to `.cssr` format.
 # arguments
 * `xtal::Crystal`: crystal to write to file
 * `filename::String`: filename to write to. default is to write `.cssr` file to `pwd()`.  will append `.cssr` if absent from `filename`.
+* `quiet::Bool` : (optional) set `true` to suppress console output
 """
-function write_cssr(xtal::Crystal, filename::String)
+function write_cssr(xtal::Crystal, filename::String; quiet::Bool=false)
     @assert xtal.symmetry.is_p1 "crystal must be in P1 symmetry"
     if ! occursin(".cssr", filename)
         filename *= ".cssr"
     end
-    f = open(filename, "w")
-    @printf(f, "%f %f %f\n", xtal.box.a, xtal.box.b, xtal.box.c)
-    @printf(f, "%f %f %f SPGR = 1 P 1   OPT = 1\n", rad2deg(xtal.box.α), rad2deg(xtal.box.β), rad2deg(xtal.box.γ))
-    @printf(f, "%d 0\n0 xtal : xtal", xtal.atoms.n)
-    for a = 1:xtal.atoms.n
-        q = 0.0
-        if xtal.charges.n != 0
-            q = xtal.charges.q[a]
+    open(filename, "w") do f
+        @printf(f, "%f %f %f\n", xtal.box.a, xtal.box.b, xtal.box.c)
+        @printf(f, "%f %f %f SPGR = 1 P 1   OPT = 1\n", rad2deg(xtal.box.α), rad2deg(xtal.box.β), rad2deg(xtal.box.γ))
+        @printf(f, "%d 0\n0 xtal : xtal", xtal.atoms.n)
+        for a = 1:xtal.atoms.n
+            q = 0.0
+            if xtal.charges.n != 0
+                q = xtal.charges.q[a]
+            end
+            @printf(f, "\n%d %s %f %f %f 0 0  0  0  0  0  0  0  %f", a, xtal.atoms.species[a], xtal.atoms.coords.xf[:, a]..., q, )
         end
-        @printf(f, "\n%d %s %f %f %f 0 0  0  0  0  0  0  0  %f", a, xtal.atoms.species[a], xtal.atoms.coords.xf[:, a]..., q, )
     end
-    close(f)
-    @info "see $filename"
+    if !quiet
+        @info "see $filename"
+    end
 end
 
-write_cssr(crystal::Crystal) = write_cssr(crystal, String(split(crystal.name, ".")[1]))
+write_cssr(crystal::Crystal; kwargs...) = write_cssr(crystal, String(split(crystal.name, ".")[1]))
 
 
 """

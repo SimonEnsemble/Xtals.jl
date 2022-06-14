@@ -288,7 +288,7 @@ end
  
      da_xtalname = "ATIBOU01_clean"
      xtal_cif = Crystal(da_xtalname * ".cif", include_zero_charges=true)
-     write_cssr(xtal_cif)
+     write_cssr(xtal_cif, quiet=true)
      write_cssr(xtal_cif, joinpath(rc[:paths][:crystals], da_xtalname * ".cssr"))
      xtal_cssr = Crystal(da_xtalname * ".cssr", include_zero_charges=true)
      @test isapprox(xtal_cssr, xtal_cif, atol=0.0001)
