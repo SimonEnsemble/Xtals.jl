@@ -120,7 +120,7 @@
     
     # test that result is translation invariant
     results = Vector{Bool}(undef, 10000)
-    for i ∈ 1:length(results)
+    for i ∈ eachindex(results)
         translate_by!(xtal.atoms.coords, Frac(rand(3, 1)))
         results[i] = isapprox(bond_angle(xtal, 2, 1, 3), α, rtol=1e-5)
     end
