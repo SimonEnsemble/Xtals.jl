@@ -1047,7 +1047,7 @@ end
 # slicing of crystal by arrays of Int's
 function Base.getindex(crystal::Crystal, ids::Union{Array{Int, 1}, UnitRange{Int}})
     # mapping from old index to new index
-    old_to_new = Dict(ids[i] => i for i in 1:length(ids))
+    old_to_new = Dict(ids[i] => i for i in eachindex(ids))
     # create appropriately sized graph
     bonds = MetaGraph(length(ids))
     # copy bonds from within slice
@@ -1069,7 +1069,7 @@ function Base.getindex(crystal::Crystal, ids::Union{Array{Int, 1}, UnitRange{Int
 end
 
 # slicing of crystal by arrays of Bit's (overload above)
-Base.getindex(crystal::Crystal, ids::Union{BitArray{1}}) = getindex(crystal, [i for i = 1:length(ids) if ids[i]])
+Base.getindex(crystal::Crystal, ids::Union{BitArray{1}}) = getindex(crystal, [i for i = eachindex(ids) if ids[i]])
 
 
 function Base.lastindex(crystal::Crystal)
