@@ -152,7 +152,7 @@ function Crystal(filename::String;
             end
 
             # Make sure the space group is P1
-            if line[1] == "_symmetry_space_group_name_H-M"
+            if line[1] == "_symmetry_space_group_name_H-M" || line[1] == "_space_group_name_Hall"
                 # use anonymous function to combine all terms past the first
                 #   to extract space group name
                 space_group = reduce((x, y) -> x * " " * y, line[2:end])
@@ -471,6 +471,8 @@ function Crystal(filename::String;
 
     # if crystal has bonds, make sure distances aren't missing
     calc_missing_bond_distances!(crystal)
+
+    @assert space_group ≠ "" "Failed to determine space group!"
 
     return crystal
 end
