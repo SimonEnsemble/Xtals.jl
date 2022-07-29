@@ -457,7 +457,7 @@ function Crystal(filename::String;
     if check_overlap
         overlap_flag, overlap_pairs = overlap(crystal, true)
         if overlap_flag
-            error("Overlapping atoms: $overlap_pairs")
+            error("Crystal $(crystal.name) has overlapping atoms: $overlap_pairs")
         end
     end
 

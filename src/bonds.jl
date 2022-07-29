@@ -275,9 +275,10 @@ The bonding rules are hierarchical, i.e. the first bonding rule takes precedence
 - `include_bonds_across_periodic_boundaries::Bool`: Whether to check across the periodic boundary when calculating bonds.
 - `bonding_rules::Array{BondingRule, 1}`: The array of bonding rules that will be used to fill the bonding information. They are applied in the order that they appear. `rc[:bonding_rules]` will be used if none provided.
 - `calculate_vectors::Bool`: Optional. Set `true` to annotate all edges in the `bonds` graph with vector information.
+- `sanity_check::Bool`: Optional. Set `false` to skip the sanity check after inferring bonds.
 """
 function infer_bonds!(crystal::Crystal, include_bonds_across_periodic_boundaries::Bool;
-                      bonding_rules::Array{BondingRule, 1}=rc[:bonding_rules], calculate_vectors::Bool=false)
+                      bonding_rules::Array{BondingRule, 1}=rc[:bonding_rules], calculate_vectors::Bool=false, sanity_check::Bool=true)
     @assert ne(crystal.bonds) == 0 @sprintf("The crystal %s already has bonds. Remove them with the `remove_bonds!` function before inferring new ones.", crystal.name)
     # loop over every atom
     for i in 1:crystal.atoms.n
@@ -295,7 +296,9 @@ function infer_bonds!(crystal::Crystal, include_bonds_across_periodic_boundaries
     if calculate_vectors
         calculate_bond_vectors!(crystal)
     end
-    bond_sanity_check(crystal)
+    if sanity_check
+        bond_sanity_check(crystal)
+    end
 end
 
 
@@ -313,25 +316,26 @@ Print warnings when sanity checks fail.
 Return `true` if sanity checks pass, `false` otherwise.
 """
 function bond_sanity_check(crystal::Crystal)::Bool
+    pass_flag = true
     for a = 1:crystal.atoms.n
         ns = neighbors(crystal.bonds, a)
         # is the graph fully connected?
         if length(ns) == 0
             @warn "atom $a = $(crystal.atoms.species[a]) in $(crystal.name) is not bonded to any other atom."
-            return false
+            pass_flag = false
         end
         # does hydrogen have only one bond?
         if (crystal.atoms.species[a] == :H) && (length(ns) > 1)
             @warn "hydrogen atom $a in $(crystal.name) is bonded to more than one atom!"
-            return false
+            pass_flag = false
         end
         # does carbon have greater than four bonds?
         if (crystal.atoms.species[a] == :C) && (length(ns) > 4)
             @warn "carbon atom $a in $(crystal.name) is bonded to more than four atoms!"
-            return false
+            pass_flag = false
         end
     end
-    return true
+    return pass_flag
 end
 
 
