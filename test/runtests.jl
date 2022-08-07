@@ -1,28 +1,30 @@
 testfiles = [
-    "crystal.jl",
-    "bonds.jl",
-    "misc.jl",
-    "matter.jl",
-    "distance.jl",
-    "box.jl",
-    "assert_p1_symmetry.jl",
+    "crystal.jl"
+    "bonds.jl"
+    "misc.jl"
+    "matter.jl"
+    "distance.jl"
+    "box.jl"
+    "assert_p1_symmetry.jl"
     "paths.jl"
     ]
 
-@assert VERSION.major == 1
-@assert VERSION.minor ≥ 6
+@assert (VERSION.major == 1) && (VERSION.minor ≥ 6) "Minimum Julia version not met."
 
-using Test, Documenter, Xtals, Graphs, MetaGraphs
+using Documenter, IOCapture, Logging, Test, Xtals
+
 Xtals.banner()
 
 for testfile ∈ testfiles
     @info "Running test/$testfile"
-    @time include(testfile)
+    with_logger(NullLogger()) do
+        include(testfile)
+    end
 end
 
 # run doctests unless disabled via environment variable
 if "doctest" ∉ keys(ENV) || ENV["doctest"] ≠ "false"
-    @time doctest(Xtals)
+    doctest(Xtals)
 end
 
 @info "Done."

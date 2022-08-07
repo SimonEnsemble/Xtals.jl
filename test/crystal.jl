@@ -1,10 +1,7 @@
 module Crystal_Test
 
-using Xtals
-using LinearAlgebra
-using Test
-using MetaGraphs, Graphs
-using AtomsBase
+using AtomsBase, Graphs, LinearAlgebra, MetaGraphs, Test, Xtals
+import IOCapture.capture
 
 # for test only
 # if the multi sets are equal, then when you remove duplicates,
@@ -126,7 +123,9 @@ end
     @test true
 
     # test verbose printing in empirical_formula
-    empirical_formula(sbmof1, verbose=true)
+    capture() do
+        empirical_formula(sbmof1, verbose=true)
+    end
     @test true ##! can this be redirected to a string variable for comparison (and to suppress CLI output during testing?)
 end
 
