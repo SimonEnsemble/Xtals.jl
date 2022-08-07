@@ -24,7 +24,7 @@ end
 
 # run doctests unless disabled via environment variable
 if "doctest" ∉ keys(ENV) || ENV["doctest"] ≠ "false"
-    @time doctest(Xtals)
+    doctest(Xtals)
 end
 
 @info "Done."
