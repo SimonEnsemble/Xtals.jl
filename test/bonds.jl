@@ -1,6 +1,7 @@
 module Bonds_test
 
 using Xtals, Graphs, Test, MetaGraphs, LinearAlgebra
+import IOCapture.capture
 
 irmof1 = Crystal("IRMOF-1.cif")
 cof102 = Crystal("cof-102.cif")
@@ -147,7 +148,9 @@ end
     
     @test length(rc[:bonding_rules]) == (n + 1)
     
-    println([r for r ∈ bonding_rules if :C == r.species_j][1])
+    capture() do
+        println([r for r ∈ bonding_rules if :C == r.species_j][1])
+    end
     
     @test true
 
@@ -165,7 +168,9 @@ end
 @testset "etc" begin
     temp_vtk_path = tempname()
     xtal = Crystal("SBMOF-1.cif")
-    write_bond_information(xtal, temp_vtk_path, center_at_origin=true)
+    capture() do
+        write_bond_information(xtal, temp_vtk_path, center_at_origin=true)
+    end
 
     @test isfile(temp_vtk_path * ".vtk")
 
@@ -174,8 +179,10 @@ end
     write_xyz(xtal, tempname())
     all_bonds_temppath = tempname()
     no_pb_temppath = tempname()
-    write_bond_information(xtal, all_bonds_temppath)
-    write_bond_information(xtal, no_pb_temppath, bond_filter=:cross_boundary=>p->!p)
+    capture() do
+        write_bond_information(xtal, all_bonds_temppath)
+        write_bond_information(xtal, no_pb_temppath, bond_filter=:cross_boundary=>p->!p)
+    end
 
     @test all(isfile.([all_bonds_temppath, no_pb_temppath] .* ".vtk"))
 end

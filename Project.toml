@@ -13,7 +13,6 @@ FIGlet = "3064a664-84fe-4d92-92c7-ed492f3d8fae"
 Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
 JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
-Logging = "56ddb016-857b-54e1-b83d-db4d58db5568"
 MetaGraphs = "626554b9-1ddb-594c-aa3c-2596fe9399a5"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
@@ -35,7 +34,9 @@ julia = "1.6"
 
 [extras]
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+IOCapture = "b5f81e59-6552-4d32-b1f0-c071b021bf89"
+Logging = "56ddb016-857b-54e1-b83d-db4d58db5568"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test", "Documenter"]
+test = ["Test", "Documenter", "IOCapture", "Logging"]

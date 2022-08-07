@@ -1,7 +1,6 @@
 module Path_Test
 
-using Xtals
-using Test
+using IOCapture, Test, Xtals
 
 @testset "Path Tests" begin
     @test rc[:atomic_masses][:He] == 4.0026

@@ -1,8 +1,7 @@
 module Box_Test
 
-using Xtals
-using LinearAlgebra
-using Test
+using LinearAlgebra, Test, Xtals
+import IOCapture.capture
 
 @testset "Box Tests" begin
     box = Box(11.6, 5.5, 22.9, 90.0 * π / 180, 100.8 * π / 180.0, 90.0 * π / 180.0)
@@ -96,11 +95,15 @@ using Test
 
      xtal = Crystal("SBMOF-1.cif")
      vtk_temp = tempname() * ".vtk"
-     write_vtk(xtal.box, vtk_temp, verbose=true)
+     capture() do
+      write_vtk(xtal.box, vtk_temp, verbose=true)
+     end
      @test isfile(vtk_temp)
 
      # effective test of Base.show(io::IO, box::Box)
-     println(xtal.box)
+     capture() do
+      println(xtal.box)
+     end
      @test true
 end
 end

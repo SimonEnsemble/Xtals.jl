@@ -1,11 +1,14 @@
 module Misc_Test
 
 using Xtals, Test, DataFrames, Graphs, CSV
+import IOCapture.capture
 
 @testset "Misc Tests" begin
     xtal = Crystal("SBMOF-1.cif")
     infer_bonds!(xtal, true)
-    @test_throws String view_crystal(xtal) # this function really can't be tested programmatically...
+    capture() do
+        @test_throws String view_crystal(xtal) # this function really can't be tested programmatically...
+    end
 
     am = rc[:atomic_masses]
     @test isapprox(am[:H], 1.00794, atol=0.001)
