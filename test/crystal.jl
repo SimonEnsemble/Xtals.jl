@@ -268,7 +268,7 @@ end
      @test_throws ErrorException write_cif(crystal)
      crystal = assign_charges(crystal, Dict(:Mn => 2.0, :O => -2.0, :H => 0.0, :C => 0.0), Inf)
      write_cif(crystal)
-     @test isfile("ATIBOU01_clean.cif")
+     @test isfile("ATIBOU01_clean.cssr.cif")
 end
 
 @testset "strip numbers from labels" begin
