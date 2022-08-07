@@ -773,7 +773,7 @@ end
 
 """
     write_cif(crystal, filename; fractional_coords=true, number_atoms=true)
-    write_cif(crystal) # writes to file crystal.name
+    write_cif(crystal) # writes to file crystal.name[.cif]
 
 Write a `crystal::Crystal` to a .cif file.
 
@@ -897,7 +897,7 @@ function write_cif(crystal::Crystal, filename::String; fractional_coords::Bool=t
     close(cif_file)
 end
 
-write_cif(crystal::Crystal) = write_cif(crystal, String(split(crystal.name, ".")[1]))
+write_cif(crystal::Crystal; kwargs...) = write_cif(crystal, String(split(crystal.name, ".cif")[1]); kwargs...)
 
 
 """
