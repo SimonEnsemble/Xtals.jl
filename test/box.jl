@@ -94,11 +94,11 @@ import IOCapture.capture
                   )
 
      xtal = Crystal("SBMOF-1.cif")
-     vtk_temp = tempname() * ".vtk"
+     vtk_temp = tempname()
      capture() do
       write_vtk(xtal.box, vtk_temp, verbose=true, center_at_origin=true)
      end
-     @test isfile(vtk_temp)
+     @test isfile(vtk_temp * ".vtk")
 
      # effective test of Base.show(io::IO, box::Box)
      capture() do
