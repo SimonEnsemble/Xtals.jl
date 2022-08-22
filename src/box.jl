@@ -152,10 +152,10 @@ end
 
 """
     write_vtk(box, filename; verbose=true, center_at_origin=false)
-    write_vtk(framework)
+    write_vtk(crystal)
 
 Write a `Box` to a .vtk file for visualizing e.g. the unit cell boundary of a crystal.
-If a `Framework` is passed, the `Box` of that framework is written to a file that is the
+If a `Crystal` is passed, the `Box` of that crystal is written to a file that is the
 same as the crystal structure filename but with a .vtk extension.
 
 Appends ".vtk" extension to `filename` automatically if not passed.
@@ -163,43 +163,45 @@ Appends ".vtk" extension to `filename` automatically if not passed.
 # Arguments
 - `box::Box`: a Bravais lattice
 - `filename::AbstractString`: filename of the .vtk file output (absolute path)
-- `framework::Framework`: A framework containing the crystal structure information
+- `crystal::Crystal`: a crystal structure object
 - `center_at_origin::Bool`: center box at origin if true. if false, the origin is the corner of the box.
+- `verbose::Bool`: if true, print the name of the written file to the console.
 """
-function write_vtk(box::Box, filename::AbstractString; verbose::Bool=true,
+function write_vtk(box::Box, filename::AbstractString; verbose::Bool=false,
                    center_at_origin::Bool=false)
     if ! occursin(".vtk", filename)
         filename *= ".vtk"
     end
-    vtk_file = open(filename, "w")
 
-    @printf(vtk_file, "# vtk DataFile Version 2.0\nunit cell boundary\n
-                       ASCII\nDATASET POLYDATA\nPOINTS 8 double\n")
+    open(filename, "w") do vtk_file
+        @printf(vtk_file, "# vtk DataFile Version 2.0\nunit cell boundary\n
+                        ASCII\nDATASET POLYDATA\nPOINTS 8 double\n")
 
-    x_shift = zeros(3)
-    if center_at_origin
-        x_shift = box.f_to_c * [0.5, 0.5, 0.5]
-    end
+        x_shift = zeros(3)
+        if center_at_origin
+            x_shift = box.f_to_c * [0.5, 0.5, 0.5]
+        end
 
-    # write points on boundary of unit cell
-    for i = 0:1
-        for j = 0:1
-            for k = 0:1
-                xf = [i, j, k] # fractional coordinates of corner
-                cornerpoint = box.f_to_c * xf - x_shift
-                @printf(vtk_file, "%.3f %.3f %.3f\n",
-                        cornerpoint[1], cornerpoint[2], cornerpoint[3])
+        # write points on boundary of unit cell
+        for i = 0:1
+            for j = 0:1
+                for k = 0:1
+                    xf = [i, j, k] # fractional coordinates of corner
+                    cornerpoint = box.f_to_c * xf - x_shift
+                    @printf(vtk_file, "%.3f %.3f %.3f\n",
+                            cornerpoint[1], cornerpoint[2], cornerpoint[3])
+                end
             end
         end
-    end
 
-    # define connections
-    @printf(vtk_file, "LINES 12 36\n2 0 1\n2 0 2\n2 1 3\n2 2 3\n2 4 5\n2 4 6\n2 5 7\n2 6 7\n2 0 4\n2 1 5\n2 2 6\n2 3 7\n")
-    close(vtk_file)
+        # define connections
+        @printf(vtk_file, "LINES 12 36\n2 0 1\n2 0 2\n2 1 3\n2 2 3\n2 4 5\n2 4 6\n2 5 7\n2 6 7\n2 0 4\n2 1 5\n2 2 6\n2 3 7\n")
+    end
     if verbose
         println("See ", filename)
     end
 end
+
 
 """
     inside_box = inside(frac_coords) # true or false

@@ -35,7 +35,7 @@ const NET_CHARGE_TOL = 1e-4 # net charge tolerance
 """
     crystal = Crystal(filename;
         check_neutrality=true, net_charge_tol=1e-4,
-        check_overlap=true, convert_to_p1=true, 
+        check_overlap=true, convert_to_p1=true,
         read_bonds_from_file=false, wrap_coords=true,
         include_zero_charges=true,
         remove_duplicates=false,
@@ -101,9 +101,7 @@ function Crystal(filename::String;
     # get file path via global default dir unless flag specified
     filepath = absolute_path ? filename : joinpath(rc[:paths][:crystals], filename)
     # read all lines of crystal structure file
-    _f = open(filepath, "r")
-    lines = readlines(_f)
-    close(_f)
+    lines = readlines(filepath)
 
     # Initialize arrays. We'll populate them when reading through the crystal structure file.
     charge_values = Array{Float64, 1}()
@@ -488,7 +486,7 @@ function rename_xtal(xtal::Crystal, name::String)::Crystal
     nothing_xtal = Crystal(
         "nothing",
         xtal.box,
-        Atoms(0, Symbol[], Frac(zeros(3,0))), 
+        Atoms(0, Symbol[], Frac(zeros(3,0))),
         Charges{Frac}(0)
     )
     # add the "nothing" crystal to the input crystal and change the name
@@ -566,7 +564,8 @@ end
 
 # doc string in Misc.jl
 xyz_filename(crystal::Crystal) = replace(replace(crystal.name, ".cif" => ""), ".cssr" => "") * ".xyz"
-function write_xyz(crystal::Crystal; comment::AbstractString="", center_at_origin::Bool=false)
+
+function write_xyz(crystal::Crystal, filename::AbstractString=xyz_filename(crystal); center_at_origin::Bool=false, kwargs...)
     filename = xyz_filename(crystal)
     atoms = Atoms(crystal.atoms.species,
                   Cart(crystal.atoms.coords, crystal.box)
@@ -574,14 +573,13 @@ function write_xyz(crystal::Crystal; comment::AbstractString="", center_at_origi
     if center_at_origin
         x_c = crystal.box.f_to_c * [0.5, 0.5, 0.5]
         atoms.coords.x .-= x_c
-        write_xyz(atoms, filename, comment=comment)
-    else
-        write_xyz(atoms, filename, comment=comment)
+
     end
+    write_xyz(atoms, filename; kwargs...)
 end
 
-# convenient wrapper for saving crystals
-write_xyz(xtal::Crystal, name::String) = write_xyz(Cart(xtal.atoms, xtal.box), name)
+write_vtk(crystal::Crystal, filename::AbstractString; kwargs...) = write_vtk(crystal.box, filename; kwargs...)
+write_vtk(crystal::Crystal; kwargs...) = write_vtk(crystal.box, crystal.name; kwargs...)
 
 # docstring in matter.jl
 neutral(crystal::Crystal, tol::Float64=1e-5) = neutral(crystal.charges, tol)
@@ -806,95 +804,95 @@ function write_cif(crystal::Crystal, filename::String; fractional_coords::Bool=t
     if ! occursin(".cif", filename)
         filename *= ".cif"
     end
-    cif_file = open(filename, "w")
-    # first line should be data_xtalname_PM
-    if crystal.name == ""
-        @printf(cif_file, "data_PM\n")
-    else
-        # don't include file extension!
-        @printf(cif_file, "data_%s_PM\n", split(crystal.name, ".")[1])
-    end
-
-    @printf(cif_file, "_symmetry_space_group_name_H-M    '%s'\n", crystal.symmetry.space_group)
-
-    @printf(cif_file, "_cell_length_a    %f\n", crystal.box.a)
-    @printf(cif_file, "_cell_length_b    %f\n", crystal.box.b)
-    @printf(cif_file, "_cell_length_c    %f\n", crystal.box.c)
-
-    @printf(cif_file, "_cell_angle_alpha    %f\n", crystal.box.α * 180.0 / pi)
-    @printf(cif_file, "_cell_angle_beta    %f\n", crystal.box.β * 180.0 / pi)
-    @printf(cif_file, "_cell_angle_gamma    %f\n", crystal.box.γ * 180.0 / pi)
-
-    @printf(cif_file, "_symmetry_Int_Tables_number 1\n\n")
-    @printf(cif_file, "loop_\n_symmetry_equiv_pos_as_xyz\n")
-    if size(crystal.symmetry.operations, 2) == 0
-        @printf(cif_file, "'x,y,z'\n")
-    end
-    for i in 1:size(crystal.symmetry.operations, 2)
-        @printf(cif_file, "'%s,%s,%s'\n", crystal.symmetry.operations[:, i]...)
-    end
-    @printf(cif_file, "\n")
-
-    @printf(cif_file, "loop_\n_atom_site_label\n_atom_site_type_symbol\n")
-    if fractional_coords
-        @printf(cif_file, "_atom_site_fract_x\n_atom_site_fract_y\n_atom_site_fract_z\n")
-    else
-        @printf(cif_file, "_atom_site_Cartn_x\n_atom_site_Cartn_y\n_atom_site_Cartn_z\n")
-    end
-    high_precision_charges = false # if, for neutrality, need high-precision charges
-    if has_charges(crystal)
-        @printf(cif_file, "_atom_site_charge\n")
-        # if crystal will not be charge neutral to a 1e-5 tolerance when loading it
-        #    into PorousMaterials.jl, then write higher-precision charges
-        if abs(sum(round.(crystal.charges.q, digits=6))) > NET_CHARGE_TOL
-            @info "writing high-precision charges for " * filename * ".\n"
-            high_precision_charges = true
+    open(filename, "w") do cif_file
+        # first line should be data_xtalname_PM
+        if crystal.name == ""
+            @printf(cif_file, "data_PM\n")
+        else
+            # don't include file extension!
+            @printf(cif_file, "data_%s_PM\n", split(crystal.name, ".")[1])
         end
-    end
 
-    idx_to_label = Array{AbstractString, 1}(undef, crystal.atoms.n)
-    for i = 1:crystal.atoms.n
-        # print label and type symbol
-        @printf(cif_file, "%s    %s    ", string(crystal.atoms.species[i]) *
-                (number_atoms ? string(label_numbers[crystal.atoms.species[i]]) : ""),
-                crystal.atoms.species[i])
-        # store label for this atom idx
-        idx_to_label[i] = string(crystal.atoms.species[i]) *
-                    string(label_numbers[crystal.atoms.species[i]])
-        # increment label
-        label_numbers[crystal.atoms.species[i]] += 1
+        @printf(cif_file, "_symmetry_space_group_name_H-M    '%s'\n", crystal.symmetry.space_group)
+
+        @printf(cif_file, "_cell_length_a    %f\n", crystal.box.a)
+        @printf(cif_file, "_cell_length_b    %f\n", crystal.box.b)
+        @printf(cif_file, "_cell_length_c    %f\n", crystal.box.c)
+
+        @printf(cif_file, "_cell_angle_alpha    %f\n", crystal.box.α * 180.0 / pi)
+        @printf(cif_file, "_cell_angle_beta    %f\n", crystal.box.β * 180.0 / pi)
+        @printf(cif_file, "_cell_angle_gamma    %f\n", crystal.box.γ * 180.0 / pi)
+
+        @printf(cif_file, "_symmetry_Int_Tables_number 1\n\n")
+        @printf(cif_file, "loop_\n_symmetry_equiv_pos_as_xyz\n")
+        if size(crystal.symmetry.operations, 2) == 0
+            @printf(cif_file, "'x,y,z'\n")
+        end
+        for i in 1:size(crystal.symmetry.operations, 2)
+            @printf(cif_file, "'%s,%s,%s'\n", crystal.symmetry.operations[:, i]...)
+        end
+        @printf(cif_file, "\n")
+
+        @printf(cif_file, "loop_\n_atom_site_label\n_atom_site_type_symbol\n")
         if fractional_coords
-            @printf(cif_file, "%f    %f    %f", crystal.atoms.coords.xf[:, i]...)
+            @printf(cif_file, "_atom_site_fract_x\n_atom_site_fract_y\n_atom_site_fract_z\n")
         else
-            @printf(cif_file, "%f    %f    %f", (crystal.box.f_to_c * crystal.atoms.coords.xf[:, i])...)
+            @printf(cif_file, "_atom_site_Cartn_x\n_atom_site_Cartn_y\n_atom_site_Cartn_z\n")
         end
+        high_precision_charges = false # if, for neutrality, need high-precision charges
         if has_charges(crystal)
-            if high_precision_charges
-                @printf(cif_file, "    %.10f\n", crystal.charges.q[i])
-            else
-                @printf(cif_file, "    %f\n", crystal.charges.q[i])
+            @printf(cif_file, "_atom_site_charge\n")
+            # if crystal will not be charge neutral to a 1e-5 tolerance when loading it
+            #    into PorousMaterials.jl, then write higher-precision charges
+            if abs(sum(round.(crystal.charges.q, digits=6))) > NET_CHARGE_TOL
+                @info "writing high-precision charges for " * filename * ".\n"
+                high_precision_charges = true
             end
-        else
-            @printf(cif_file, "\n")
+        end
+
+        idx_to_label = Array{AbstractString, 1}(undef, crystal.atoms.n)
+        for i = 1:crystal.atoms.n
+            # print label and type symbol
+            @printf(cif_file, "%s    %s    ", string(crystal.atoms.species[i]) *
+                    (number_atoms ? string(label_numbers[crystal.atoms.species[i]]) : ""),
+                    crystal.atoms.species[i])
+            # store label for this atom idx
+            idx_to_label[i] = string(crystal.atoms.species[i]) *
+                        string(label_numbers[crystal.atoms.species[i]])
+            # increment label
+            label_numbers[crystal.atoms.species[i]] += 1
+            if fractional_coords
+                @printf(cif_file, "%f    %f    %f", crystal.atoms.coords.xf[:, i]...)
+            else
+                @printf(cif_file, "%f    %f    %f", (crystal.box.f_to_c * crystal.atoms.coords.xf[:, i])...)
+            end
+            if has_charges(crystal)
+                if high_precision_charges
+                    @printf(cif_file, "    %.10f\n", crystal.charges.q[i])
+                else
+                    @printf(cif_file, "    %f\n", crystal.charges.q[i])
+                end
+            else
+                @printf(cif_file, "\n")
+            end
+        end
+
+        # only print bond information if it is in the crystal
+        if ne(crystal.bonds) > 0
+            if ! number_atoms
+                error("must label atoms with numbers to write bond information.\n")
+            end
+            # print column names for bond information
+            @printf(cif_file, "\nloop_\n_geom_bond_atom_site_label_1\n_geom_bond_atom_site_label_2\n_geom_bond_distance\n")
+
+            for edge in collect(edges(crystal.bonds))
+                dxf = crystal.atoms.coords.xf[:, edge.src] - crystal.atoms.coords.xf[:, edge.dst]
+                nearest_image!(dxf)
+                @printf(cif_file, "%s    %s    %0.5f\n", idx_to_label[edge.src], idx_to_label[edge.dst],
+                        norm(dxf))
+            end
         end
     end
-
-    # only print bond information if it is in the crystal
-    if ne(crystal.bonds) > 0
-        if ! number_atoms
-             error("must label atoms with numbers to write bond information.\n")
-        end
-        # print column names for bond information
-        @printf(cif_file, "\nloop_\n_geom_bond_atom_site_label_1\n_geom_bond_atom_site_label_2\n_geom_bond_distance\n")
-
-        for edge in collect(edges(crystal.bonds))
-            dxf = crystal.atoms.coords.xf[:, edge.src] - crystal.atoms.coords.xf[:, edge.dst]
-            nearest_image!(dxf)
-            @printf(cif_file, "%s    %s    %0.5f\n", idx_to_label[edge.src], idx_to_label[edge.dst],
-                    norm(dxf))
-        end
-    end
-    close(cif_file)
 end
 
 write_cif(crystal::Crystal; kwargs...) = write_cif(crystal, String(split(crystal.name, ".cif")[1]); kwargs...)
@@ -1091,7 +1089,7 @@ function Base.:+(crystals::Crystal...; check_overlap::Bool=true, name::String="a
         @assert isapprox(crystals[i].box, box)
         @assert crystals[i].symmetry.space_group == symmetry.space_group
     end
-        
+
     # initialize atoms, charges, and bonds
     atoms   = deepcopy(crystals[1].atoms)
     charges = deepcopy(crystals[1].charges)
@@ -1106,7 +1104,7 @@ function Base.:+(crystals::Crystal...; check_overlap::Bool=true, name::String="a
         atoms   += crystal.atoms
         charges += crystal.charges
     end
-    
+
     crystal = Crystal(name, box, atoms, charges, bonds, symmetry)
 
     if check_overlap
