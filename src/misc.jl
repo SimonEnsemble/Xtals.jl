@@ -23,8 +23,7 @@ read a list of atomic species and their corresponding coordinates from an .xyz f
 - `atoms::Atoms{Cart}`: the set of atoms read from the .xyz file.
 """
 function read_xyz(filename::AbstractString)
-    f = open(filename)
-    lines = readlines(f)
+    lines = readlines(filename)
     @assert length(lines) > 0
     n = parse(Int, lines[1]) # get number of atoms
     species = Symbol[]
@@ -35,7 +34,6 @@ function read_xyz(filename::AbstractString)
             x[j, i] = parse(Float64, split(lines[i + 2])[1 + j])
         end
     end
-    close(f)
     return Atoms(species, Cart(x))
 end
 
@@ -58,13 +56,13 @@ if the extension is not provided.)
 function write_xyz(atoms::Atoms{Cart}, filename::AbstractString; comment::AbstractString="# $filename")
     filename = add_extension(filename, ".xyz")
 
-    xyzfile = open(filename, "w")
-    @printf(xyzfile, "%d\n#%s\n", atoms.n, comment)
-    for i = 1:atoms.n
-        @printf(xyzfile, "%s    %.4f    %.4f    %.4f\n", atoms.species[i],
-            atoms.coords.x[1, i], atoms.coords.x[2, i], atoms.coords.x[3, i])
+    open(filename, "w") do xyzfile
+        @printf(xyzfile, "%d\n#%s\n", atoms.n, comment)
+        for i = 1:atoms.n
+            @printf(xyzfile, "%s    %.4f    %.4f    %.4f\n", atoms.species[i],
+                atoms.coords.x[1, i], atoms.coords.x[2, i], atoms.coords.x[3, i])
+        end
     end
-    close(xyzfile)
     return nothing
 end
 
@@ -84,9 +82,7 @@ see [here](https://chem.libretexts.org/Courses/University_of_Arkansas_Little_Roc
 - `bond_types::Array{Int, 1}`: the array of bond types.
 """
 function read_mol(filename::String)
-    f = open(filename)
-    lines = readlines(f)
-    close(f)
+    lines = readlines(filename)
 
     n_atoms = parse(Int, split(lines[4])[1])
     n_bonds = parse(Int, split(lines[4])[2])
@@ -128,43 +124,39 @@ Write a `Crystal` to disk in the mol2 format.  Includes atoms, bonds, and unit c
 - `xtal::Crystal` : the crystal to export
 - `filename::String` : (Optional) the name of the file to save to.  By default, file is named automatically from `xtal.name`
 """
-function write_mol2(xtal::Crystal; filename::String="")
-    if filename == ""
-        filename = split(xtal.name, ".cif")[1] * ".mol2"
-    end
+function write_mol2(xtal::Crystal; filename::String=split(xtal.name, ".cif")[1] * ".mol2")
     # open buffer
-    f = open(filename, "w")
-    # start the MOLECULE data record
-    @printf(f, "@<TRIPOS>MOLECULE\n%s\n", xtal.name)
-    @printf(f, "%d %d\n", xtal.atoms.n, ne(xtal.bonds))
-    @printf(f, "SMALL\nNO_CHARGES\n\n")
-    # now the ATOM record
-    @printf(f, "@<TRIPOS>ATOM\n")
-    coords = Cart(xtal.atoms.coords, xtal.box)
-    for i in 1:xtal.atoms.n
-        @printf(f, "%d X %f %f %f %s\n", i, coords.x[:, i]..., xtal.atoms.species[i])
+    open(filename, "w") do f
+        # start the MOLECULE data record
+        @printf(f, "@<TRIPOS>MOLECULE\n%s\n", xtal.name)
+        @printf(f, "%d %d\n", xtal.atoms.n, ne(xtal.bonds))
+        @printf(f, "SMALL\nNO_CHARGES\n\n")
+        # now the ATOM record
+        @printf(f, "@<TRIPOS>ATOM\n")
+        coords = Cart(xtal.atoms.coords, xtal.box)
+        for i in 1:xtal.atoms.n
+            @printf(f, "%d X %f %f %f %s\n", i, coords.x[:, i]..., xtal.atoms.species[i])
+        end
+        # BOND record
+        if ne(xtal.bonds) ≠ 0
+            @printf(f, "\n@<TRIPOS>BOND\n")
+        end
+        for (i, e) in enumerate(edges(xtal.bonds))
+            @printf(f, "%d %d %d 1\n", i, src(e), dst(e))
+        end
+        # unit cell (CRYSIN)
+        @assert xtal.symmetry.is_p1 "Crystal must be in P1 symmetry."
+        @printf(f, "\n@<TRIPOS>CRYSIN\n")
+        @printf(f, "%f %f %f %f %f %f 1 1\n", xtal.box.a, xtal.box.b, xtal.box.c,
+            xtal.box.α, xtal.box.β, xtal.box.γ)
     end
-    # BOND record
-    if ne(xtal.bonds) ≠ 0
-        @printf(f, "\n@<TRIPOS>BOND\n")
-    end
-    for (i, e) in enumerate(edges(xtal.bonds))
-        @printf(f, "%d %d %d 1\n", i, src(e), dst(e))
-    end
-    # unit cell (CRYSIN)
-    @assert xtal.symmetry.is_p1 "Crystal must be in P1 symmetry."
-    @printf(f, "\n@<TRIPOS>CRYSIN\n")
-    @printf(f, "%f %f %f %f %f %f 1 1\n", xtal.box.a, xtal.box.b, xtal.box.c,
-        xtal.box.α, xtal.box.β, xtal.box.γ)
-    # flush the buffer
-    close(f)
 end
 
 
 """
     `set_paths("path_to_data", print_paths=true)`
 
-Sets all paths in `rc[:paths]` relative to `path_to_data`.  Paths follow the standard format of 
+Sets all paths in `rc[:paths]` relative to `path_to_data`.  Paths follow the standard format of
 `rc[:paths][:foo] = "path_to_data/foo"`, except for `rc[:paths][:data]` which is `"path_to_data"`.
 Warnings are issued if any chosen paths are not valid folders.
 # Arguments

@@ -6,12 +6,12 @@ end
 
 # The Spatial Box
 
-Within `Xtals.jl`, the 3D space in which all [`Coords`](@ref) are located is the [`Box`](@ref).  
+Within `Xtals.jl`, the 3D space in which all [`Coords`](@ref) are located is the [`Box`](@ref).
 Each [`Crystal`](@ref) has its own [`Box`](@ref), equivalent to the unit cell of a material, containing as attributes the unit cell edge lengths (`a` `b` `c`), crystallographic dihedral angles (`α` `β` `γ`), volume, conversion factors for translating between [`Frac`](@ref)tional and [`Cart`](@ref)esian coordinates, and the reciprocal (Fourier transform) vectors for the Bravais lattice.
 
 ## Defining a Box
 
-A [`Box`](@ref) is most conveniently constructed from its basic spatial data (`a` `b` `c` `α` `β` `γ`).  
+A [`Box`](@ref) is most conveniently constructed from its basic spatial data (`a` `b` `c` `α` `β` `γ`).
 For example, given the unit cell of Co-MOF-74, we can define its [`Box`](@ref):
 
 ```julia
@@ -56,7 +56,7 @@ Cart(xtal.atoms.coords, xtal.box)
 
 ## Replicating a Box
 
-For simulations in larger volumes than a single crystallograhic unit cell, the [`Box`](@ref) may be replicated along each or any of the three crystallographic axes.  
+For simulations in larger volumes than a single crystallograhic unit cell, the [`Box`](@ref) may be replicated along each or any of the three crystallographic axes.
 See [`replicate`](@ref).
 
 ```julia
@@ -68,7 +68,7 @@ replicated_box = replicate(box, (2,2,2))
 For visualization of the unit cell boundaries, the [`Box`](@ref) may be written out to a `.vtk` file for use in [Visit](https://wci.llnl.gov/simulation/computer-codes/visit/).
 
 ```jldoctest; setup=:(box = Box([26.1317 -13.0659 0; 0 22.6307 0; 0 0 6.72203])), output=false
-write_vtk(box, "box.vtk")
+write_vtk(box, "box.vtk"; verbose=true)
 # output
 See box.vtk
 ```
