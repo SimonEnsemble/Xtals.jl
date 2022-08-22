@@ -186,7 +186,9 @@ end
 
     @test all(isfile.([all_bonds_temppath, no_pb_temppath] .* ".vtk"))
 
-    write_bond_information(xtal)
+    capture() do
+        write_bond_information(xtal; verbose=true)
+    end
     @test isfile(xtal.name * "_bonds.vtk")
     rm(xtal.name * "_bonds.vtk")
 end
