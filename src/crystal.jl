@@ -566,7 +566,6 @@ end
 xyz_filename(crystal::Crystal) = replace(replace(crystal.name, ".cif" => ""), ".cssr" => "") * ".xyz"
 
 function write_xyz(crystal::Crystal, filename::AbstractString=xyz_filename(crystal); center_at_origin::Bool=false, kwargs...)
-    filename = xyz_filename(crystal)
     atoms = Atoms(crystal.atoms.species,
                   Cart(crystal.atoms.coords, crystal.box)
                   ) # put in Cartesian
