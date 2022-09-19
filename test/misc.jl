@@ -41,6 +41,10 @@ import IOCapture.capture
     @test isfile(mol2_temp)
     write_mol2(xtal)
     @test isfile("SBMOF-1.mol2")
+    write_xyz(xtal)
+    @test isfile("SBMOF-1.xyz")
+    write_xyz(xtal, "foo.xyz")
+    @test isfile("foo.xyz")
 end
 
 end
