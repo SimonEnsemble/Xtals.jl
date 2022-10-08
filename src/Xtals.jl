@@ -1,6 +1,7 @@
 module Xtals
 
 using AtomsBase, Bio3DView, CSV, DataFrames, FIGlet, Graphs, LinearAlgebra, MetaGraphs, Printf, StaticArrays, Unitful
+using PrecompileSignatures: @precompile_signatures
 
 # global variable dictionary
 global rc = Dict{Symbol,Any}()
@@ -59,5 +60,7 @@ export
     infer_bonds!, write_bond_information, BondingRule, bond_sanity_check, remove_bonds!, read_bonding_rules,
     write_bonding_rules, add_bonding_rules, drop_cross_pb_bonds!, bondingrules, bond_angle,
     get_bond_vector, calculate_bond_vectors!, clear_vectors!, bond_distance, infer_bonds
+
+@precompile_signatures(Xtals)
 
 end # module Xtals
