@@ -5,3 +5,4 @@ test/data
 test/*.cif
 test/*.cssr
 test/*.mol2
+test/*.xyz
