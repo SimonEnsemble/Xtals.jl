@@ -1,6 +1,6 @@
 [deps]
-AtomsBase = "a963bdd2-2df7-4f54-a1ee-49d51e6be12a"
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
+AtomsBase = "a963bdd2-2df7-4f54-a1ee-49d51e6be12a"
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
