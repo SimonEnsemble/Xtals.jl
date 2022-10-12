@@ -18,9 +18,9 @@ For example, given the unit cell of Co-MOF-74, we can define its [`Box`](@ref):
 a = 26.13173 # Å
 b = 26.13173
 c = 6.722028
-α = π/2 # radians
-β = π/2
-γ = 2*π/3
+α = π / 2 # radians
+β = π / 2
+γ = 2 * π / 3
 box = Box(a, b, c, α, β, γ)
 ```
 
@@ -40,7 +40,6 @@ To quickly get a simple unit-cubic [`Box`](@ref), use the [`unit_cube`](@ref) fu
 #└       Volume of unit cell: 1.000000 Å³
 ```
 
-
 ## Transforming Coordinates
 
 Conversions are provided for switching between [`Frac`](@ref)tional and [`Cart`](@ref)esian [`Coords`](@ref) using the [`Box`](@ref) (works for [`Atoms`](@ref) and [`Charges`](@ref), too).
@@ -53,14 +52,13 @@ Cart(xtal.atoms.coords, xtal.box)
 # 1.231811631 0.32198514120000005 … 6.2082409932000004 2.2119953472])
 ```
 
-
 ## Replicating a Box
 
 For simulations in larger volumes than a single crystallograhic unit cell, the [`Box`](@ref) may be replicated along each or any of the three crystallographic axes.
 See [`replicate`](@ref).
 
 ```julia
-replicated_box = replicate(box, (2,2,2))
+replicated_box = replicate(box, (2, 2, 2))
 ```
 
 ## Exporting a Box
@@ -69,7 +67,9 @@ For visualization of the unit cell boundaries, the [`Box`](@ref) may be written 
 
 ```jldoctest; setup=:(box = Box([26.1317 -13.0659 0; 0 22.6307 0; 0 0 6.72203])), output=false
 write_vtk(box, "box.vtk"; verbose=true)
+
 # output
+
 See box.vtk
 ```
 

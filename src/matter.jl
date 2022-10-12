@@ -15,15 +15,16 @@ generally, fractional coordinates should be in [0, 1] and are implicitly
 associated with a `Box` to represent a periodic coordinate system.
 
 e.g.
+
 ```julia
 f_coords = Frac(rand(3, 2))  # 2 particles
 f_coords.xf                  # retreive fractional coords
 ```
 """
-struct Frac<:Coords
+struct Frac <: Coords
     xf::Array{Float64, 2}
 end
-Base.isapprox(c1::Frac, c2::Frac; atol::Real=0) = isapprox(c1.xf, c2.xf, atol=atol)
+Base.isapprox(c1::Frac, c2::Frac; atol::Real=0) = isapprox(c1.xf, c2.xf; atol=atol)
 Base.hcat(c1::Frac, c2::Frac) = Frac(hcat(c1.xf, c2.xf))
 
 """
@@ -32,15 +33,16 @@ cartesian coordinates, a subtype of `Coords`.
 construct by passing an `Array{Float64, 2}` whose columns are the coordinates.
 
 e.g.
+
 ```julia
 c_coords = Cart(rand(3, 2))  # 2 particles
 c_coords.x                   # retreive cartesian coords
 ```
 """
-struct Cart<:Coords
+struct Cart <: Coords
     x::Array{Float64, 2}
 end
-Base.isapprox(c1::Cart, c2::Cart; atol::Real=0) = isapprox(c1.x, c2.x, atol=atol)
+Base.isapprox(c1::Cart, c2::Cart; atol::Real=0) = isapprox(c1.x, c2.x; atol=atol)
 Base.hcat(c1::Cart, c2::Cart) = Cart(hcat(c1.x, c2.x))
 
 # helpers for single vectors
@@ -59,7 +61,6 @@ Base.setindex!(coords::Cart, val::Array{Float64, 1}, ids) = (coords.x[:, ids] = 
 
 Base.size(coords::Cart) = size(coords.x)
 Base.size(coords::Frac) = size(coords.xf)
-
 
 """
     translate_by!(coords, dx)
@@ -80,14 +81,9 @@ note that periodic boundary conditions are *not* subsequently applied here.
 if applied to a `molecule::Molecule`, the coords of atoms, charges, and center of mass
 are all translated.
 """
-function translate_by!(coords::Cart, dx::Cart)
-    coords.x .= broadcast(+, coords.x, dx.x)
-end
+translate_by!(coords::Cart, dx::Cart) = coords.x .= broadcast(+, coords.x, dx.x)
 
-function translate_by!(coords::Frac, dxf::Frac)
-    coords.xf .= broadcast(+, coords.xf, dxf.xf)
-end
-
+translate_by!(coords::Frac, dxf::Frac) = coords.xf .= broadcast(+, coords.xf, dxf.xf)
 
 """
     wrap!(f::Frac)
@@ -96,10 +92,7 @@ end
 wrap fractional coordinates to [0, 1] via `mod(⋅, 1.0)`.
 e.g. -0.1 --> 0.9 and 1.1 -> 0.1
 """
-function wrap!(f::Frac)
-    f.xf .= mod.(f.xf, 1.0)
-end
-
+wrap!(f::Frac) = f.xf .= mod.(f.xf, 1.0)
 
 ###
 #   Atoms
@@ -109,7 +102,7 @@ end
 used to represent a set of atoms in space (their atomic species and coordinates).
 
 ```julia
-struct Atoms{T<:Coords} # enforce that the type specified is `Coords`
+struct Atoms{T <: Coords} # enforce that the type specified is `Coords`
     n::Int # how many atoms?
     species::Array{Symbol, 1} # list of species
     coords::T # coordinates
@@ -119,13 +112,14 @@ end
 here, `T` is `Frac` or `Cart`.
 
 helper constructor (infers `n`):
+
 ```julia
 species = [:H, :H]
 coords = Cart(rand(3, 2))
 atoms = Atoms(species, coords)
 ```
 """
-struct Atoms{T<:Coords} # enforce that the type specified is `Coords`
+struct Atoms{T <: Coords} # enforce that the type specified is `Coords`
     n::Int # how many atoms?
     species::Array{Symbol, 1} # list of species
     coords::T # coordinates
@@ -138,15 +132,18 @@ function Atoms(species::Array{Symbol, 1}, coords::Coords)
 end
 
 Atoms(species::Symbol, coords::Coords) = Atoms([species], coords)
-Atoms{Frac}(n::Int) = Atoms([:_ for a = 1:n], Frac([NaN for i = 1:3, a = 1:n])) # safe pre-allocation
-Atoms{Cart}(n::Int) = Atoms([:_ for a = 1:n], Cart([NaN for i = 1:3, a = 1:n])) # safe pre-allocation
+Atoms{Frac}(n::Int) = Atoms([:_ for a in 1:n], Frac([NaN for i in 1:3, a in 1:n])) # safe pre-allocation
+Atoms{Cart}(n::Int) = Atoms([:_ for a in 1:n], Cart([NaN for i in 1:3, a in 1:n])) # safe pre-allocation
 
-Base.isapprox(a1::Atoms, a2::Atoms; atol::Real=0) = (a1.species == a2.species) && isapprox(a1.coords, a2.coords, atol=atol)
-Base.:+(a1::Atoms, a2::Atoms) = Atoms(a1.n + a2.n, [a1.species; a2.species], hcat(a1.coords, a2.coords))
+function Base.isapprox(a1::Atoms, a2::Atoms; atol::Real=0)
+    return (a1.species == a2.species) && isapprox(a1.coords, a2.coords; atol=atol)
+end
+function Base.:+(a1::Atoms, a2::Atoms)
+    return Atoms(a1.n + a2.n, [a1.species; a2.species], hcat(a1.coords, a2.coords))
+end
 
 Base.getindex(atoms::Atoms, ids) = Atoms(atoms.species[ids], atoms.coords[ids])
 Base.lastindex(atoms::Atoms) = atoms.n
-
 
 ###
 #   point charges
@@ -155,7 +152,7 @@ Base.lastindex(atoms::Atoms) = atoms.n
 used to represent a set of partial point charges in space (their charges and coordinates).
 
 ```julia
-struct Charges{T<:Coords} # enforce that the type specified is `Coords`
+struct Charges{T <: Coords} # enforce that the type specified is `Coords`
     n::Int
     q::Array{Float64, 1}
     coords::T
@@ -165,13 +162,14 @@ end
 here, `T` is `Frac` or `Cart`.
 
 helper constructor (infers `n`):
+
 ```julia
 q = [0.1, -0.1]
 coords = Cart(rand(3, 2))
 charges = Charges(q, coords)
 ```
 """
-struct Charges{T<:Coords} # enforce that the type specified is `Coords`
+struct Charges{T <: Coords} # enforce that the type specified is `Coords`
     n::Int
     q::Array{Float64, 1}
     coords::T
@@ -183,15 +181,18 @@ function Charges(q::Array{Float64, 1}, coords::Coords)
 end
 
 Charges(q::Float64, coords::Coords) = Charges([q], coords) # for one charge
-Charges{Frac}(n::Int) = Charges([NaN for c = 1:n], Frac([NaN for i = 1:3, c = 1:n])) # safe pre-allocation
-Charges{Cart}(n::Int) = Charges([NaN for c = 1:n], Cart([NaN for i = 1:3, c = 1:n])) # safe pre-allocation
+Charges{Frac}(n::Int) = Charges([NaN for c in 1:n], Frac([NaN for i in 1:3, c in 1:n])) # safe pre-allocation
+Charges{Cart}(n::Int) = Charges([NaN for c in 1:n], Cart([NaN for i in 1:3, c in 1:n])) # safe pre-allocation
 
-Base.isapprox(c1::Charges, c2::Charges; atol::Real=0) = isapprox(c1.q, c2.q) && isapprox(c1.coords, c2.coords, atol=atol)
-Base.:+(c1::Charges, c2::Charges) = Charges(c1.n + c2.n, [c1.q; c2.q], hcat(c1.coords, c2.coords))
+function Base.isapprox(c1::Charges, c2::Charges; atol::Real=0)
+    return isapprox(c1.q, c2.q) && isapprox(c1.coords, c2.coords; atol=atol)
+end
+function Base.:+(c1::Charges, c2::Charges)
+    return Charges(c1.n + c2.n, [c1.q; c2.q], hcat(c1.coords, c2.coords))
+end
 
 Base.getindex(charges::Charges, ids) = Charges(charges.q[ids], charges.coords[ids])
 Base.lastindex(charges::Charges) = charges.n
-
 
 """
     nc = net_charge(charges)
@@ -201,14 +202,12 @@ Base.lastindex(charges::Charges) = charges.n
 find the sum of charges in `charges::Charges` or charges in `crystal::Crystal` or `molecule::Molecule`.
 (if there are no charges, the net charge is zero.)
 """
-function net_charge(charges::Charges)
+net_charge(charges::Charges) =
     if charges.n == 0
         return 0.0
     else
         return sum(charges.q)
     end
-end
-
 
 """
     neutral(charges, tol) # true or false. default tol = 1e-5

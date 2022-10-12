@@ -10,8 +10,8 @@ end
 
 ## Reading in a Crystal Structure File
 
-Currently, the crystal structure file reader accepts `.cif` and `.cssr` file formats. 
-`Xtals.jl` looks for the crystal structure files in `rc[:paths][:crystals]` which is by default `./data/crystals` (relative to `pwd()` at module loading). 
+Currently, the crystal structure file reader accepts `.cif` and `.cssr` file formats.
+`Xtals.jl` looks for the crystal structure files in `rc[:paths][:crystals]` which is by default `./data/crystals` (relative to `pwd()` at module loading).
 By typing `rc[:paths][:crystals] = "my_crystal_dir"`, `Xtals.jl` now looks for the crystal structure file in `my_crystal_dir`.
 The files can be read as:
 
@@ -22,37 +22,43 @@ xtal.box                            # The unit cell information
 xtal.atoms                          # The atom coordinates (in fractional space) and the atom identities
 xtal.charges                        # The charge magnitude and coordinates (in fractional space)
 xtal.bonds                          # Bonding information in the structure. By default this is an empty graph,
-                                    #  but use `read_bonds_from_file=true` argument in `Crystal` to read from crystal structure file
+#  but use `read_bonds_from_file=true` argument in `Crystal` to read from crystal structure file
 xtal.symmetry                       # Symmetry information of the crystal. By default converts the symmetry to P1 symmetry.
-                                    #  Use `convert_to_p1=false` argument in `Crystal` to keep original symmetry
+#  Use `convert_to_p1=false` argument in `Crystal` to keep original symmetry
+
 # output
+
 Xtals.SymmetryInfo(["x"; "y"; "z";;], "P1", true)
 ```
 
 ## Fixing Atom Species Labels
 
-Often, the atoms species are appended by numbers. 
+Often, the atoms species are appended by numbers.
 This messes with the internal workings of `Xtals.jl`.
 To circumvent this problem, the function [`strip_numbers_from_atom_labels!`](@ref) removes the appended numbers.
 It is important to use this function prior to GCMC or Henry coefficient calculations and bond inference operations.
 
 ```jldoctest crystal
-xtal = Crystal("IRMOF-1.cif", species_col=["_atom_site_label"])
+xtal = Crystal("IRMOF-1.cif"; species_col=["_atom_site_label"])
 xtal.atoms.species[1]
+
 # output
+
 :Zn1
 ```
 
 ```jldoctest crystal
 strip_numbers_from_atom_labels!(xtal)
 xtal.atoms.species[1]
+
 # output
+
 :Zn
 ```
 
 ## Converting the Coordinates to Cartesian Space
 
-The coordinates of the [`Crystal`](@ref)'s [`Atoms`](@ref) are stored in [`Frac`](@ref)tional coordinates. 
+The coordinates of the [`Crystal`](@ref)'s [`Atoms`](@ref) are stored in [`Frac`](@ref)tional coordinates.
 If one needs to analyze the [`Cart`](@ref)esian coordinates of the [`Crystal`](@ref), that can be done by using the unit cell ([`Box`](@ref)) information.
 
 ```julia
@@ -66,9 +72,11 @@ For many simulations, one needs to replicate the unit cell multiple times to cre
 This is done with [`replicate`](@ref):
 
 ```jldoctest crystal
-super_xtal = replicate(xtal, (2,2,2))       # Replicates the original unit cell once in each dimension
+super_xtal = replicate(xtal, (2, 2, 2))       # Replicates the original unit cell once in each dimension
 xtal.atoms.n, super_xtal.atoms.n
+
 # output
+
 (424, 3392)
 ```
 
@@ -87,12 +95,20 @@ If the structure file does not contain partial charges, we provide methods to as
 ```jldoctest crystal; output=false
 species_to_charge = Dict(:Zn => 2.0, :C => 0.0, :H => 0.0, :O => -0.61538)  # This method assigns a static charge to atom species
 charged_xtal = assign_charges(xtal, species_to_charge, 1e-3)                # This function creates a new charged `Crystal` object.
-                                                                            #   The function checks for charge neutrality with a tolerance of 1e-3
+#   The function checks for charge neutrality with a tolerance of 1e-3
 new_charges = Charges(zeros(xtal.atoms.n), xtal.atoms.coords)
-other_charged_xtal = Crystal(xtal.name, xtal.box, xtal.atoms,               # Here we create a new `Charges` object using an array of new charges.
-                             new_charges, xtal.bonds, xtal.symmetry)        #   The number of charges in the array has to be equal to the number of atoms
-                                                                            #   and finally a new `Crystal` object is manually created
+other_charged_xtal = Crystal(
+    xtal.name,
+    xtal.box,
+    xtal.atoms,               # Here we create a new `Charges` object using an array of new charges.
+    new_charges,
+    xtal.bonds,
+    xtal.symmetry
+)        #   The number of charges in the array has to be equal to the number of atoms
+#   and finally a new `Crystal` object is manually created
+
 # output
+
 Name: IRMOF-1.cif
 Bravais unit cell of a crystal.
 	Unit cell angles α = 90.000000 deg. β = 90.000000 deg. γ = 90.000000 deg.
@@ -117,10 +133,10 @@ We provide methods to write both `.xyz` and `.cif` files.
 ```jldoctest crystal; output=false
 write_cif(xtal, "my_new_cif_file.cif")      # Stored in the current directory
 write_xyz(xtal, "my_new_xyz_file.xyz")      # stored in the current directory
+
 # output
 
 ```
-
 
 # Detailed Docs
 

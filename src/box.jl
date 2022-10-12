@@ -54,13 +54,20 @@ function reciprocal_lattice(f_to_c::Array{Float64, 2})
 end
 
 # Automatically calculates Ω, f_to_c, and c_to_f for `Box` data structure based on axes lenghts and angles.
-function Box(a::Float64, b::Float64, c::Float64,
-             α::Float64, β::Float64, γ::Float64)
+function Box(a::Float64, b::Float64, c::Float64, α::Float64, β::Float64, γ::Float64)
     # unit cell volume (A³)
-    Ω = a * b * c * sqrt(1 - cos(α) ^ 2 - cos(β) ^ 2 - cos(γ) ^ 2 + 2 * cos(α) * cos(β) * cos(γ))
+    Ω = a * b * c * sqrt(1 - cos(α)^2 - cos(β)^2 - cos(γ)^2 + 2 * cos(α) * cos(β) * cos(γ))
     # matrices to map fractional coords <--> Cartesian coords
-    f_to_c = [[a, 0, 0] [b * cos(γ), b * sin(γ), 0] [c * cos(β), c * (cos(α) - cos(β) * cos(γ)) / sin(γ), Ω / (a * b * sin(γ))]]
-    c_to_f = [[1/a, 0, 0] [-cos(γ) / (a * sin(γ)), 1 / (b * sin(γ)), 0] [b * c * (cos(α) * cos(γ) - cos(β)) / (Ω * sin(γ)), a * c * (cos(β) * cos(γ) - cos(α)) / (Ω * sin(γ)), a * b * sin(γ) / Ω]]
+    f_to_c = [[a, 0, 0] [b * cos(γ), b * sin(γ), 0] [
+        c * cos(β),
+        c * (cos(α) - cos(β) * cos(γ)) / sin(γ),
+        Ω / (a * b * sin(γ))
+    ]]
+    c_to_f = [[1 / a, 0, 0] [-cos(γ) / (a * sin(γ)), 1 / (b * sin(γ)), 0] [
+        b * c * (cos(α) * cos(γ) - cos(β)) / (Ω * sin(γ)),
+        a * c * (cos(β) * cos(γ) - cos(α)) / (Ω * sin(γ)),
+        a * b * sin(γ) / Ω
+    ]]
     # the columns of f_to_c are the unit cell axes
     r = reciprocal_lattice(f_to_c)
 
@@ -101,8 +108,8 @@ end
 This function generates a unit cube, each side is 1.0 Angstrom long, and all the
 corners are right angles.
 """
-unit_cube() = Box(1.0, 1.0, 1.0, π/2, π/2, π/2)
-Box(a::Float64, b::Float64, c::Float64) = Box(a, b, c, π/2, π/2, π/2) # right angle box
+unit_cube() = Box(1.0, 1.0, 1.0, π / 2, π / 2, π / 2)
+Box(a::Float64, b::Float64, c::Float64) = Box(a, b, c, π / 2, π / 2, π / 2) # right angle box
 
 """
     f_coords = Frac(c_coords, box)
@@ -111,7 +118,6 @@ Box(a::Float64, b::Float64, c::Float64) = Box(a, b, c, π/2, π/2, π/2) # right
 
 convert Cartesian coordinates `c_coords::Cart` to fractional coordinates `f_coords::Frac`, using the `box::Box`.
 this works on `Atoms` and `Charges` too.
-
 """
 Frac(coords::Cart, box::Box) = Frac(box.c_to_f * coords.x)
 Frac(atoms::Atoms{Cart}, box::Box) = Atoms(atoms.species, Frac(atoms.coords, box))
@@ -121,7 +127,6 @@ Frac(charges::Charges{Cart}, box::Box) = Charges(charges.q, Frac(charges.coords,
     c_coords = Cart(f_coords, box)
     atoms_c = Cart(atoms_f, box)
     charges_c = Cart(charges_f, box)
-
 
 convert fractional coordinates `f_coords::Frac` to Cartesian coordinates `c_coords::Cart`, using the `box::Box`.
 this works on `Atoms` and `Charges` too.
@@ -139,15 +144,23 @@ Note `replicate(original_box, repfactors=(1, 1, 1))` returns same `Box`.
 The new fractional coordinates as described by `f_to_c` and `c_to_f` still ∈ [0, 1].
 
 # Arguments
-- `original_box::Box`: The box that you want to replicate
-- `repfactors::Tuple{Int, Int, Int}`: The factor you want to replicate the box by
+
+  - `original_box::Box`: The box that you want to replicate
+  - `repfactors::Tuple{Int, Int, Int}`: The factor you want to replicate the box by
 
 # Returns
-- `box::Box`: Fully formed Box object
+
+  - `box::Box`: Fully formed Box object
 """
 function replicate(box::Box, repfactors::Tuple{Int, Int, Int})
-    return Box(box.a * repfactors[1], box.b * repfactors[2], box.c * repfactors[3],
-               box.α, box.β, box.γ)
+    return Box(
+        box.a * repfactors[1],
+        box.b * repfactors[2],
+        box.c * repfactors[3],
+        box.α,
+        box.β,
+        box.γ
+    )
 end
 
 """
@@ -161,21 +174,29 @@ same as the crystal structure filename but with a .vtk extension.
 Appends ".vtk" extension to `filename` automatically if not passed.
 
 # Arguments
-- `box::Box`: a Bravais lattice
-- `filename::AbstractString`: filename of the .vtk file output (absolute path)
-- `crystal::Crystal`: a crystal structure object
-- `center_at_origin::Bool`: center box at origin if true. if false, the origin is the corner of the box.
-- `verbose::Bool`: if true, print the name of the written file to the console.
+
+  - `box::Box`: a Bravais lattice
+  - `filename::AbstractString`: filename of the .vtk file output (absolute path)
+  - `crystal::Crystal`: a crystal structure object
+  - `center_at_origin::Bool`: center box at origin if true. if false, the origin is the corner of the box.
+  - `verbose::Bool`: if true, print the name of the written file to the console.
 """
-function write_vtk(box::Box, filename::AbstractString; verbose::Bool=false,
-                   center_at_origin::Bool=false)
-    if ! occursin(".vtk", filename)
+function write_vtk(
+    box::Box,
+    filename::AbstractString;
+    verbose::Bool=false,
+    center_at_origin::Bool=false
+)
+    if !occursin(".vtk", filename)
         filename *= ".vtk"
     end
 
     open(filename, "w") do vtk_file
-        @printf(vtk_file, "# vtk DataFile Version 2.0\nunit cell boundary\n
-                        ASCII\nDATASET POLYDATA\nPOINTS 8 double\n")
+        @printf(
+            vtk_file,
+            "# vtk DataFile Version 2.0\nunit cell boundary\n
+          ASCII\nDATASET POLYDATA\nPOINTS 8 double\n"
+        )
 
         x_shift = zeros(3)
         if center_at_origin
@@ -183,25 +204,32 @@ function write_vtk(box::Box, filename::AbstractString; verbose::Bool=false,
         end
 
         # write points on boundary of unit cell
-        for i = 0:1
-            for j = 0:1
-                for k = 0:1
+        for i in 0:1
+            for j in 0:1
+                for k in 0:1
                     xf = [i, j, k] # fractional coordinates of corner
                     cornerpoint = box.f_to_c * xf - x_shift
-                    @printf(vtk_file, "%.3f %.3f %.3f\n",
-                            cornerpoint[1], cornerpoint[2], cornerpoint[3])
+                    @printf(
+                        vtk_file,
+                        "%.3f %.3f %.3f\n",
+                        cornerpoint[1],
+                        cornerpoint[2],
+                        cornerpoint[3]
+                    )
                 end
             end
         end
 
         # define connections
-        @printf(vtk_file, "LINES 12 36\n2 0 1\n2 0 2\n2 1 3\n2 2 3\n2 4 5\n2 4 6\n2 5 7\n2 6 7\n2 0 4\n2 1 5\n2 2 6\n2 3 7\n")
+        @printf(
+            vtk_file,
+            "LINES 12 36\n2 0 1\n2 0 2\n2 1 3\n2 2 3\n2 4 5\n2 4 6\n2 5 7\n2 6 7\n2 0 4\n2 1 5\n2 2 6\n2 3 7\n"
+        )
     end
     if verbose
         println("See ", filename)
     end
 end
-
 
 """
     inside_box = inside(frac_coords) # true or false
@@ -215,10 +243,11 @@ returns true if coords are all inside a box and false otherwise.
 if a molecule or crystal is passed, both atoms and charges must be inside the box.
 
 # Arguments
-* `coords::Coords` the coordinates (works for `Cart` and `Frac`)
-* `molecule::Molecule{T}`: a molecule in either `T::Frac` or `T::Cart` coords
-* `crystal::Crystal`: a crystal
-* `box::Box` the box (only needed if Cartesian)
+
+  - `coords::Coords` the coordinates (works for `Cart` and `Frac`)
+  - `molecule::Molecule{T}`: a molecule in either `T::Frac` or `T::Cart` coords
+  - `crystal::Crystal`: a crystal
+  - `box::Box` the box (only needed if Cartesian)
 """
 inside(coords::Frac) = all(coords.xf .<= 1.0) && all(coords.xf .>= 0.0)
 inside(coords::Cart, box::Box) = inside(Frac(coords, box))
@@ -229,22 +258,39 @@ translate_by!(coords::Cart, dx::Frac, box::Box) = translate_by!(coords, Cart(dx,
 
 function Base.show(io::IO, box::Box)
     println(io, "Bravais unit cell of a crystal.")
-    @printf(io, "\tUnit cell angles α = %f deg. β = %f deg. γ = %f deg.\n",
-        box.α * 180.0 / π, box.β * 180.0 / π, box.γ * 180.0 / π)
-    @printf(io, "\tUnit cell dimensions a = %f Å. b = %f Å, c = %f Å\n",
-        box.a, box.b, box.c)
+    @printf(
+        io,
+        "\tUnit cell angles α = %f deg. β = %f deg. γ = %f deg.\n",
+        box.α * 180.0 / π,
+        box.β * 180.0 / π,
+        box.γ * 180.0 / π
+    )
+    @printf(
+        io,
+        "\tUnit cell dimensions a = %f Å. b = %f Å, c = %f Å\n",
+        box.a,
+        box.b,
+        box.c
+    )
     @printf(io, "\tVolume of unit cell: %f Å³\n", box.Ω)
 end
 
-function Base.isapprox(box1::Box, box2::Box; atol::Real=0.0, rtol::Real=atol > 0 ? 0.0 : sqrt(eps()))
-    return (isapprox(box1.a, box2.a, atol=atol, rtol=rtol) &&
-            isapprox(box1.b, box2.b, atol=atol, rtol=rtol) &&
-            isapprox(box1.c, box2.c, atol=atol, rtol=rtol) &&
-            isapprox(box1.α, box2.α, atol=atol, rtol=rtol) &&
-            isapprox(box1.β, box2.β, atol=atol, rtol=rtol) &&
-            isapprox(box1.γ, box2.γ, atol=atol, rtol=rtol) &&
-            isapprox(box1.Ω, box2.Ω, atol=atol, rtol=rtol) &&
-            isapprox(box1.f_to_c, box2.f_to_c, atol=atol, rtol=rtol) &&
-            isapprox(box1.c_to_f, box2.c_to_f, atol=atol, rtol=rtol) &&
-            isapprox(box1.reciprocal_lattice, box2.reciprocal_lattice, atol=atol, rtol=rtol))
+function Base.isapprox(
+    box1::Box,
+    box2::Box;
+    atol::Real=0.0,
+    rtol::Real=atol > 0 ? 0.0 : sqrt(eps())
+)
+    return (
+        isapprox(box1.a, box2.a; atol=atol, rtol=rtol) &&
+        isapprox(box1.b, box2.b; atol=atol, rtol=rtol) &&
+        isapprox(box1.c, box2.c; atol=atol, rtol=rtol) &&
+        isapprox(box1.α, box2.α; atol=atol, rtol=rtol) &&
+        isapprox(box1.β, box2.β; atol=atol, rtol=rtol) &&
+        isapprox(box1.γ, box2.γ; atol=atol, rtol=rtol) &&
+        isapprox(box1.Ω, box2.Ω; atol=atol, rtol=rtol) &&
+        isapprox(box1.f_to_c, box2.f_to_c; atol=atol, rtol=rtol) &&
+        isapprox(box1.c_to_f, box2.c_to_f; atol=atol, rtol=rtol) &&
+        isapprox(box1.reciprocal_lattice, box2.reciprocal_lattice; atol=atol, rtol=rtol)
+    )
 end

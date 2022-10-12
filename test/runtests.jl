@@ -7,7 +7,7 @@ testfiles = [
     "box.jl"
     "assert_p1_symmetry.jl"
     "paths.jl"
-    ]
+]
 
 @assert (VERSION.major == 1) && (VERSION.minor ≥ 6) "Minimum Julia version not met."
 
@@ -15,10 +15,10 @@ using Documenter, IOCapture, Logging, Test, Xtals
 
 Xtals.banner()
 
-for testfile ∈ testfiles
+for testfile in testfiles
     @info "Running test/$testfile"
     with_logger(NullLogger()) do
-        include(testfile)
+        return include(testfile)
     end
 end
 
