@@ -3,14 +3,11 @@
     xtal = Crystal(
         "vector test 1",
         box,
-        Atoms(
-            [:H, :H, :H],
-            Frac([
+        Atoms([:H, :H, :H], Frac([
                 0.000 0.000 0.075
                 0.075 0.000 0.000
                 0.000 0.000 0.000
-            ])
-        ),
+            ])),
         Charges{Frac}(0)
     )
 
@@ -51,14 +48,11 @@
     xtal = Crystal(
         "vector test 2",
         box,
-        Atoms(
-            [:H, :H, :H],
-            Frac([
+        Atoms([:H, :H, :H], Frac([
                 1.000 0.000 0.075
                 0.075 0.000 0.000
                 0.000 0.000 0.000
-            ])
-        ),
+            ])),
         Charges{Frac}(0)
     )
     infer_bonds!(xtal, true; calculate_vectors=true)
@@ -74,14 +68,11 @@
     xtal = Crystal(
         "vector test 3",
         box,
-        Atoms(
-            [:H, :H, :H],
-            Frac([
+        Atoms([:H, :H, :H], Frac([
                 0.000 0.075 0.150
                 0.000 0.000 0.000
                 0.000 0.000 0.000
-            ])
-        ),
+            ])),
         Charges{Frac}(0)
     )
     infer_bonds!(xtal, true; calculate_vectors=true)

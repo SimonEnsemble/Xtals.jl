@@ -1,7 +1,8 @@
 import Pkg
 
 # tries to load a Python dependency; on failure, adds the dependency via Conda
-check_add_dep(pkg; channel="") = try
+check_add_dep(pkg; channel="") =
+    try
         @info "Checking dependency: $pkg"
         pyimport(pkg)
     catch
