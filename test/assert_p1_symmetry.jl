@@ -7,7 +7,7 @@ using IOCapture, Test, Xtals
 #   coefficient test
 @testset "P1 Symmetry Tests" begin
     IOCapture.capture() do
-        non_P1_framework = Crystal("symmetry_test_structure.cif", convert_to_p1=false)
+        non_P1_framework = Crystal("symmetry_test_structure.cif"; convert_to_p1=false)
         # Test that an assertion is thrown when trying to replicate a non-P1
         #   structure
         @test_throws ErrorException replicate(non_P1_framework, (2, 2, 2))

@@ -6,8 +6,7 @@ import IOCapture.capture
 @testset "Box Tests" begin
     box = Box(11.6, 5.5, 22.9, 90.0 * π / 180, 100.8 * π / 180.0, 90.0 * π / 180.0)
     @test isapprox(box, Box(box.f_to_c)) # alt. constructor
-    @test isapprox(box, Box(box.a, box.b, box.c,
-                            box.α, box.β, box.γ)) # alt. constructor
+    @test isapprox(box, Box(box.a, box.b, box.c, box.α, box.β, box.γ)) # alt. constructor
     @test box.f_to_c * box.c_to_f ≈ Matrix{Float64}(I, 3, 3)
     @test isapprox(box.reciprocal_lattice, 2 * π * inv(box.f_to_c)) #TODO just use this method to construct recip. lattice.
     @test isapprox(replicate(box, (1, 1, 1)), box)
@@ -27,10 +26,11 @@ import IOCapture.capture
     @test isapprox(replicate(box, (3, 5, 4)), Box(3.0, 5.0, 4.0))
 
     box = Box(10.0, 10.0, 10.0)
-    f = Frac([0.1 0.1;
-              0.3 0.2;
-              0.5 0.6]
-             )
+    f = Frac([
+        0.1 0.1
+        0.3 0.2
+        0.5 0.6
+    ])
     atoms = Atoms([:C, :O], f)
     atoms_c = Cart(atoms, box)
     @test atoms_c.species == atoms.species
@@ -44,20 +44,22 @@ import IOCapture.capture
 
     # inside box function
     box = Box(1.0, 20.0, 30.0)
-    f = Frac([0.1 0.6;
-               0.9 0.8;
-               0.8 0.9]
-              )
+    f = Frac([
+        0.1 0.6
+        0.9 0.8
+        0.8 0.9
+    ])
     @test inside(f)
     f.xf[2, 2] = -0.1
-    @test ! inside(f)
+    @test !inside(f)
     f.xf[2, 2] = 1.2
-    @test ! inside(f)
+    @test !inside(f)
 
-    c = Cart([0.1 0.4;
-              4.5 13.0;
-              22. 10.1]
-             )
+    c = Cart([
+        0.1 0.4
+        4.5 13.0
+        22.0 10.1
+    ])
     @test inside(c, box)
     c.x[2, 2] = -0.1
     @test !inside(c, box)
@@ -71,39 +73,43 @@ import IOCapture.capture
 
     # translate_by!
     box = Box(1.0, 10.0, 40.0)
-    f = Frac([0.1 0.2;
-              0.2 0.5;
-              0.3 0.8]
-            )
+    f = Frac([
+        0.1 0.2
+        0.2 0.5
+        0.3 0.8
+    ])
     dx = Cart([0.2, 1.0, 4.0])
     translate_by!(f, dx, box)
-    @test isapprox(f, Frac([0.3 0.4;
-                             0.3 0.6;
-                             0.4 0.9]
-                            )
-                  )
+    @test isapprox(f, Frac([
+        0.3 0.4
+        0.3 0.6
+        0.4 0.9
+    ]))
 
-    c = Cart([1.0 0.0;
-              10.0 0.0;
-              40.0 0.0]) #corner of box
+    c = Cart([
+        1.0 0.0
+        10.0 0.0
+        40.0 0.0
+    ]) #corner of box
     dxf = Frac([-1.0, -1.0, -1.0])
     translate_by!(c, dxf, box)
-    @test isapprox(c, Cart([0.0 -1.0;
-                            0.0 -10.0;
-                            0.0 -40.0])
-                  )
+    @test isapprox(c, Cart([
+        0.0 -1.0
+        0.0 -10.0
+        0.0 -40.0
+    ]))
 
-     xtal = Crystal("SBMOF-1.cif")
-     vtk_temp = tempname()
-     capture() do
-      write_vtk(xtal.box, vtk_temp, verbose=true, center_at_origin=true)
-     end
-     @test isfile(vtk_temp * ".vtk")
+    xtal = Crystal("SBMOF-1.cif")
+    vtk_temp = tempname()
+    capture() do
+        return write_vtk(xtal.box, vtk_temp; verbose=true, center_at_origin=true)
+    end
+    @test isfile(vtk_temp * ".vtk")
 
-     # effective test of Base.show(io::IO, box::Box)
-     capture() do
-      println(xtal.box)
-     end
-     @test true
+    # effective test of Base.show(io::IO, box::Box)
+    capture() do
+        return println(xtal.box)
+    end
+    @test true
 end
 end

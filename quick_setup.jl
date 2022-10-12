@@ -1,22 +1,18 @@
 import Pkg
 
-
 # tries to load a Python dependency; on failure, adds the dependency via Conda
-function check_add_dep(pkg; channel="")
-    try
+check_add_dep(pkg; channel="") = try
         @info "Checking dependency: $pkg"
         pyimport(pkg)
     catch
         @info "Installing $pkg..."
-        Conda.add(pkg, channel=channel)
+        Conda.add(pkg; channel=channel)
         pyimport(pkg)
         @info "$pkg install verified."
     end
-end
-
 
 @info "Setting up Python environment..."
-ENV["PYTHON"]=""
+ENV["PYTHON"] = ""
 Pkg.add("PyCall")
 Pkg.build("PyCall")
 using PyCall
@@ -63,6 +59,6 @@ end
 
 # check the deps, add if missing
 check_add_dep("scipy")
-check_add_dep("pymatgen", channel="conda-forge")
+check_add_dep("pymatgen"; channel="conda-forge")
 
 @info "Setup complete!"

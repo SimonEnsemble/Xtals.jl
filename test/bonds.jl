@@ -11,8 +11,8 @@ cof102 = Crystal("cof-102.cif")
     xtal1 = deepcopy(xtal)
     infer_bonds!(xtal, true)
     xtal2 = xtal[1:10]
-    xtal3 = +(xtal, xtal2, check_overlap=false)
-    xtal4 = +(xtal2, xtal, check_overlap=false)
+    xtal3 = +(xtal, xtal2; check_overlap=false)
+    xtal4 = +(xtal2, xtal; check_overlap=false)
 
     # check "conservation of matter"
     @test nv(xtal3.bonds) == nv(xtal.bonds) + nv(xtal2.bonds)
@@ -28,9 +28,9 @@ cof102 = Crystal("cof-102.cif")
     @test nv(xtal3.bonds) == nv(xtal4.bonds)
 
     # check adding when 1 or both have no bonds
-    xtal5 = +(xtal1, xtal2, check_overlap=false)
-    xtal6 = +(xtal2, xtal1, check_overlap=false)
-    xtal7 = +(xtal1, xtal1, check_overlap=false)
+    xtal5 = +(xtal1, xtal2; check_overlap=false)
+    xtal6 = +(xtal2, xtal1; check_overlap=false)
+    xtal7 = +(xtal1, xtal1; check_overlap=false)
 
     @test ne(xtal5.bonds) == ne(xtal2.bonds)
 
@@ -44,7 +44,12 @@ include("bond_vectors.jl")
 @testset "bond sanity check" begin
     box = unit_cube()
     texas_carbon = read_xyz(joinpath(rc[:paths][:crystals], "texas_carbon.xyz"))
-    xtal = Crystal("CH5", box, Atoms(texas_carbon.n, texas_carbon.species, Frac(texas_carbon.coords, box)), Charges{Frac}(0))
+    xtal = Crystal(
+        "CH5",
+        box,
+        Atoms(texas_carbon.n, texas_carbon.species, Frac(texas_carbon.coords, box)),
+        Charges{Frac}(0)
+    )
 
     @test !bond_sanity_check(xtal)[1]
 
@@ -53,23 +58,29 @@ include("bond_vectors.jl")
     @test !bond_sanity_check(xtal)[1]
 
     trihydrogen = read_xyz(joinpath(rc[:paths][:crystals], "trihydrogen.xyz"))
-    xtal = Crystal("H3", box, Atoms(trihydrogen.n, trihydrogen.species, Frac(trihydrogen.coords, box)), Charges{Frac}(0))
+    xtal = Crystal(
+        "H3",
+        box,
+        Atoms(trihydrogen.n, trihydrogen.species, Frac(trihydrogen.coords, box)),
+        Charges{Frac}(0)
+    )
     infer_bonds!(xtal, false)
 
     @test !bond_sanity_check(xtal)[1]
 end
-
 
 @testset "NiPyC2 Tests" begin
     # NiPyC2 bonding
     c = Crystal("NiPyC2_relax.cif")
     strip_numbers_from_atom_labels!(c)
     c = replicate(c, (4, 4, 4))
-    bonding_rules = [BondingRule(:H, :*, 1.2),
-                     BondingRule(:Ni, :O, 2.5),
-                     BondingRule(:Ni, :N, 2.5),
-                     BondingRule(:*, :*, 1.9)]
-    infer_bonds!(c, true, bonding_rules=bonding_rules)
+    bonding_rules = [
+        BondingRule(:H, :*, 1.2),
+        BondingRule(:Ni, :O, 2.5),
+        BondingRule(:Ni, :N, 2.5),
+        BondingRule(:*, :*, 1.9)
+    ]
+    infer_bonds!(c, true; bonding_rules=bonding_rules)
     c1 = deepcopy(c)
     conn_comps = connected_components(c.bonds)
 
@@ -83,7 +94,6 @@ end
     @test length(conn_comps) == 2 # interpenetrated
 end
 
-
 @testset "BACMOH Tests" begin
     xtal = Crystal("BACMOH_clean.cif")
     strip_numbers_from_atom_labels!(xtal)
@@ -95,7 +105,6 @@ end
 
     @test xtal.atoms.species[neighbors(xtal.bonds, 1)] == [:O, :N, :N, :O]
 end
-
 
 @testset ".mol/.cif bonds vs. inferred" begin
     mol_atoms, mol_bonds = read_mol("data/example.mol")
@@ -111,7 +120,6 @@ end
 
     @test mol_bonds == xtal.bonds
 end
-
 
 @testset "metadata" begin
     xtal = deepcopy(cof102)
@@ -129,9 +137,8 @@ end
 
     @test xtal.bonds == xtal2.bonds
 
-    write_mol2(xtal, filename=tempname())
+    write_mol2(xtal; filename=tempname())
 end
-
 
 @testset "bonding rules" begin
     bonding_rules_path = tempname()
@@ -144,12 +151,12 @@ end
 
     @test length(bonding_rules) == n
 
-    add_bonding_rules([BondingRule(:foo, :bar, 5.)])
+    add_bonding_rules([BondingRule(:foo, :bar, 5.0)])
 
     @test length(rc[:bonding_rules]) == (n + 1)
 
     capture() do
-        println([r for r ∈ bonding_rules if :C == r.species_j][1])
+        return println([r for r ∈ bonding_rules if :C == r.species_j][1])
     end
 
     @test true
@@ -164,12 +171,11 @@ end
     @test true
 end
 
-
 @testset "etc" begin
     temp_vtk_path = tempname()
     xtal = Crystal("SBMOF-1.cif")
     capture() do
-        write_bond_information(xtal, temp_vtk_path, center_at_origin=true)
+        return write_bond_information(xtal, temp_vtk_path; center_at_origin=true)
     end
 
     @test isfile(temp_vtk_path * ".vtk")
@@ -181,18 +187,21 @@ end
     no_pb_temppath = tempname()
     capture() do
         write_bond_information(xtal, all_bonds_temppath)
-        write_bond_information(xtal, no_pb_temppath, bond_filter=:cross_boundary=>p->!p)
+        return write_bond_information(
+            xtal,
+            no_pb_temppath;
+            bond_filter=:cross_boundary => p -> !p
+        )
     end
 
     @test all(isfile.([all_bonds_temppath, no_pb_temppath] .* ".vtk"))
 
     capture() do
-        write_bond_information(xtal; verbose=true)
+        return write_bond_information(xtal; verbose=true)
     end
     @test isfile(xtal.name * "_bonds.vtk")
     rm(xtal.name * "_bonds.vtk")
 end
-
 
 @testset "bonds from xyz" begin
     xtal = deepcopy(irmof1)
@@ -202,10 +211,9 @@ end
     @test bonds == xtal.bonds
 end
 
-
 @testset "infer_bonds kwarg" begin
-    xtal1 = Crystal("IRMOF-1.cif", infer_bonds=true, periodic_boundaries=true)
-    xtal2 = Crystal("IRMOF-1.cif", infer_bonds=true, periodic_boundaries=false)
+    xtal1 = Crystal("IRMOF-1.cif"; infer_bonds=true, periodic_boundaries=true)
+    xtal2 = Crystal("IRMOF-1.cif"; infer_bonds=true, periodic_boundaries=false)
 
     @test xtal1.bonds ≠ xtal2.bonds
 

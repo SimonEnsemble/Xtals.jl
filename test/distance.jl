@@ -14,32 +14,34 @@ using LinearAlgebra
     @test isapprox(dxf, [-0.3, -0.1, 0.1])
 
     # distance (fractional)
-    f = Frac([0.2 0.4;
-              0.1 0.8;
-              0.8 0.6]
-              )
+    f = Frac([
+        0.2 0.4
+        0.1 0.8
+        0.8 0.6
+    ])
     box = unit_cube()
-    @test isapprox(distance(f, box, 1, 2, false),  norm(f.xf[:, 1] - f.xf[:, 2]))
+    @test isapprox(distance(f, box, 1, 2, false), norm(f.xf[:, 1] - f.xf[:, 2]))
     @test isapprox(distance(f, box, 2, 2, false), 0.0)
     @test isapprox(distance(f, box, 2, 1, false), distance(f, box, 1, 2, false))
-    @test isapprox(distance(f, box, 1, 2, true),  norm(f.xf[:, 1] - [0.4, -0.2, 0.6]))
+    @test isapprox(distance(f, box, 1, 2, true), norm(f.xf[:, 1] - [0.4, -0.2, 0.6]))
     box = Box(1.0, 10.0, 100.0)
-    @test isapprox(distance(f, box, 1, 2, false),  norm([0.2, 1.0, 80.0] - [0.4, 8.0, 60.0]))
-    @test isapprox(distance(f, box, 2, 1, true),  norm([0.2, 1.0, 80.0] - [0.4, -2.0, 60.0]))
+    @test isapprox(distance(f, box, 1, 2, false), norm([0.2, 1.0, 80.0] - [0.4, 8.0, 60.0]))
+    @test isapprox(distance(f, box, 2, 1, true), norm([0.2, 1.0, 80.0] - [0.4, -2.0, 60.0]))
 
     # distance (Cartesian)
-    c = Cart([0.2 0.4;
-              0.1 0.8;
-              0.8 0.6]
-              )
+    c = Cart([
+        0.2 0.4
+        0.1 0.8
+        0.8 0.6
+    ])
     box = unit_cube()
-    @test isapprox(distance(c, box, 1, 2, false),  norm(c.x[:, 1] - c.x[:, 2]))
+    @test isapprox(distance(c, box, 1, 2, false), norm(c.x[:, 1] - c.x[:, 2]))
     @test isapprox(distance(c, box, 2, 2, false), 0.0)
     @test isapprox(distance(c, box, 2, 1, false), distance(c, box, 1, 2, false))
-    @test isapprox(distance(c, box, 1, 2, true),  norm(c.x[:, 1] - [0.4, -0.2, 0.6]))
+    @test isapprox(distance(c, box, 1, 2, true), norm(c.x[:, 1] - [0.4, -0.2, 0.6]))
     box = Box(10.0, 1.0, 100.0)
     @test isapprox(distance(c, box, 1, 2, false), norm(c.x[:, 1] - c.x[:, 2]))
-    @test isapprox(distance(c, box, 2, 1, true),  norm([0.2, 0.1, 0.8] - [0.4, -0.2, 0.6]))
+    @test isapprox(distance(c, box, 2, 1, true), norm([0.2, 0.1, 0.8] - [0.4, -0.2, 0.6]))
 
     # distance (Tests from Avogadro measurement tool)
     crystal = Crystal("distance_test.cif")
@@ -50,32 +52,34 @@ using LinearAlgebra
 
     # overlap
     box = unit_cube()
-    f = Frac([0.2 0.4 0.6 0.401;
-              0.1 0.8 0.7 0.799;
-              0.8 0.6 0.5 0.602]
-              )
-    o_flag, o_ids = overlap(f, box, true, tol=0.01)
+    f = Frac([
+        0.2 0.4 0.6 0.401
+        0.1 0.8 0.7 0.799
+        0.8 0.6 0.5 0.602
+    ])
+    o_flag, o_ids = overlap(f, box, true; tol=0.01)
     @test o_flag
     @test o_ids == [(2, 4)]
 
-    f = Frac([0.2 0.4 0.6 0.2;
-              0.1 0.8 0.7 0.1;
-              0.99 0.6 0.5 0.01]
-              )
-    o_flag, o_ids = overlap(f, box, true, tol=0.03)
+    f = Frac([
+        0.2 0.4 0.6 0.2
+        0.1 0.8 0.7 0.1
+        0.99 0.6 0.5 0.01
+    ])
+    o_flag, o_ids = overlap(f, box, true; tol=0.03)
     @test o_flag
     @test o_ids == [(1, 4)]
-    o_flag, o_ids = overlap(f, box, false, tol=0.03)
+    o_flag, o_ids = overlap(f, box, false; tol=0.03)
     @test !o_flag
     @test o_ids == []
 
     xtal = Crystal("IRMOF-1.cif")
     @test !overlap(xtal, true)[1]
-    xtal = Crystal("IRMOF-1_overlap.cif", check_overlap=false)
+    xtal = Crystal("IRMOF-1_overlap.cif"; check_overlap=false)
     @test overlap(xtal, true)[1]
 
     # test distance function (via Avogadro)
-    crystal = Crystal("simple_test.cif", check_overlap=false)
+    crystal = Crystal("simple_test.cif"; check_overlap=false)
     @test distance(crystal.atoms, crystal.box, 1, 1, true) == 0.0
     @test isapprox(distance(crystal.atoms, crystal.box, 2, 5, true), 4.059, atol=0.001)
     @test isapprox(distance(crystal.atoms, crystal.box, 2, 5, false), 4.059, atol=0.001)
@@ -122,22 +126,22 @@ using LinearAlgebra
     # vector-column distances
     ###
 
-    function check_vector_indices(coords, box, Is, Js, apply_pbc = true)
-      d = distance(coords, box, Is, Js, apply_pbc)
+    function check_vector_indices(coords, box, Is, Js, apply_pbc=true)
+        d = distance(coords, box, Is, Js, apply_pbc)
 
-      # force using distance(::Coords, ::Box, ::Integer, ::Integer)
-      d_elementwise = distance.(Ref(coords), Ref(box), Is, Js, apply_pbc)
+        # force using distance(::Coords, ::Box, ::Integer, ::Integer)
+        d_elementwise = distance.(Ref(coords), Ref(box), Is, Js, apply_pbc)
 
-      # CartesianIndex is implicity a 1-vector
-      if Is isa CartesianIndices
-          d_elementwise = first.(d_elementwise)
-      end
+        # CartesianIndex is implicity a 1-vector
+        if Is isa CartesianIndices
+            d_elementwise = first.(d_elementwise)
+        end
 
-      @test d ≈ d_elementwise
+        @test d ≈ d_elementwise
     end
 
     # different types of indices
-    Is = (1:5, rand(1:5, 5), CartesianIndices((1:5))) 
+    Is = (1:5, rand(1:5, 5), CartesianIndices((1:5)))
     Js = (1:5, rand(1:5, 5), CartesianIndices((1:5)))
 
     for (I, J) in zip(Is, Js), pbc in (true, false)

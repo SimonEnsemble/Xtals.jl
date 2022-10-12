@@ -6,7 +6,7 @@ using IOCapture, Test, Xtals
     @test rc[:atomic_masses][:He] == 4.0026
     oldpath = rc[:paths][:data]
     newpath = joinpath(pwd(), "other_data")
-    set_paths(newpath, print_paths=true)
+    set_paths(newpath; print_paths=true)
     @test rc[:paths][:crystals] == joinpath(newpath, "crystals")
     rc[:paths][:crystals] = joinpath(newpath, "other_crystals")
     xtal = Crystal("SBMOF-1.cif")
