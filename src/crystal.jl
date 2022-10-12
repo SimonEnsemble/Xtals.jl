@@ -613,7 +613,10 @@ function replicate(crystal::Crystal, repfactors::Tuple{Int, Int, Int})
 
     atom_counter = 0
     charge_counter = 0
-    for ra in 0:(repfactors[1] - 1), rb in 0:(repfactors[2] - 1), rc in 0:(repfactors[3] - 1)
+    for ra in 0:(repfactors[1] - 1),
+        rb in 0:(repfactors[2] - 1),
+        rc in 0:(repfactors[3] - 1)
+
         xf_shift = 1.0 * [ra, rb, rc]
 
         # replicate atoms

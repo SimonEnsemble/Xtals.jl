@@ -202,7 +202,8 @@ Base.lastindex(charges::Charges) = charges.n
 find the sum of charges in `charges::Charges` or charges in `crystal::Crystal` or `molecule::Molecule`.
 (if there are no charges, the net charge is zero.)
 """
-net_charge(charges::Charges) = if charges.n == 0
+net_charge(charges::Charges) =
+    if charges.n == 0
         return 0.0
     else
         return sum(charges.q)
