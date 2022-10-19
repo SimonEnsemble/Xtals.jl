@@ -8,6 +8,7 @@ using AtomsBase,
     Graphs,
     LinearAlgebra,
     MetaGraphs,
+    PeriodicTable,
     Printf,
     StaticArrays,
     Unitful
