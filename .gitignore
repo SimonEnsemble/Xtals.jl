@@ -2,6 +2,7 @@ docs/build/*
 Manifest.toml
 .vscode/
 test/data
+test/data/crystals/*.cssr
 test/*.cif
 test/*.cssr
 test/*.mol2
