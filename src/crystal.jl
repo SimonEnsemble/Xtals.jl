@@ -1271,7 +1271,7 @@ end
 
 # slicing of crystal by arrays of Bit's (overload above)
 function Base.getindex(crystal::Crystal, ids::Union{BitArray{1}})
-    return getindex(crystal, [i for i = eachindex(ids) if ids[i]])
+    return getindex(crystal, [i for i in eachindex(ids) if ids[i]])
 end
 
 function Base.lastindex(crystal::Crystal)
