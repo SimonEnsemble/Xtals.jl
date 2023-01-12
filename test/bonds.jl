@@ -156,7 +156,7 @@ end
     @test length(rc[:bonding_rules]) == (n + 1)
 
     capture() do
-        return println([r for r ∈ bonding_rules if :C == r.species_j][1])
+        return println([r for r in bonding_rules if :C == r.species_j][1])
     end
 
     @test true
