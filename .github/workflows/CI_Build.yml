@@ -87,30 +87,6 @@ jobs: # run in parallel within workflow
 
       - name: test
         run: julia --project --color=yes ./test/cross_dep.jl PoreMatMod
-
-
-  xtalspytools:
-    needs: unit-and-doc-tests
-    runs-on: ubuntu-latest
-    continue-on-error: true
-    timeout-minutes: 30
-    
-    steps:
-      - name: checkout commit
-        uses: actions/checkout@v2
-
-      - name: set up Julia
-        uses: julia-actions/setup-julia@latest
-        with:
-          version: ${{ env.julia_version }}
-      
-      - name: set up python dependencies
-        run: |
-          wget https://raw.githubusercontent.com/SimonEnsemble/XtalsPyTools.jl/master/quick_setup.jl
-          julia --project --color=yes ./quick_setup.jl
-
-      - name: test
-        run: julia --project --color=yes ./test/cross_dep.jl XtalsPyTools
   
 
   aqua-jl:
