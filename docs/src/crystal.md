@@ -109,21 +109,10 @@ other_charged_xtal = Crystal(
 
 # output
 
-Name: IRMOF-1.cif
-Bravais unit cell of a crystal.
-	Unit cell angles α = 90.000000 deg. β = 90.000000 deg. γ = 90.000000 deg.
-	Unit cell dimensions a = 25.832000 Å. b = 25.832000 Å, c = 25.832000 Å
-	Volume of unit cell: 17237.492730 Å³
-
-	# atoms = 424
-	# charges = 424
-	chemical formula: C₁₉₂H₉₆O₁₀₄Zn₃₂
-	space Group: P1
-	symmetry Operations:
-		'x, y, z'
-	bonding graph:
-		# vertices = 424
-		# edges = 0
+Crystal(C₁₉₂H₉₆O₁₀₄Zn₃₂, periodic = TTT):
+    bounding_box      : [  25.832        0        0;
+                         1.58175e-15   25.832        0;
+                         1.58175e-15 1.58175e-15   25.832]u"Å"
 ```
 
 ## Writing Crystal Files
