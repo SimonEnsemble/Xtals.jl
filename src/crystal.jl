@@ -1284,7 +1284,11 @@ function Base.lastindex(crystal::Crystal)
     end
 end
 
-function Base.:+(crystals::Crystal...; check_overlap::Bool=true, name::AbstractString="added_xtal")
+function Base.:+(
+    crystals::Crystal...;
+    check_overlap::Bool=true,
+    name::AbstractString="added_xtal"
+)
     box = crystals[1].box
     symmetry = crystals[1].symmetry
     # all crystals must have same boxes and space group

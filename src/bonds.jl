@@ -17,7 +17,11 @@ struct BondingRule
     max_dist::Float64
 end
 
-function BondingRule(species_i::AbstractString, species_j::AbstractString, max_dist::AbstractString)
+function BondingRule(
+    species_i::AbstractString,
+    species_j::AbstractString,
+    max_dist::AbstractString
+)
     return BondingRule(Symbol.([species_i, species_j])..., parse(Float64, max_dist))
 end
 
