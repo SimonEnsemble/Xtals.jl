@@ -132,7 +132,10 @@ Write a `Crystal` to disk in the mol2 format.  Includes atoms, bonds, and unit c
   - `xtal::Crystal` : the crystal to export
   - `filename::AbstractString` : (Optional) the name of the file to save to.  By default, file is named automatically from `xtal.name`
 """
-function write_mol2(xtal::Crystal; filename::AbstractString=split(xtal.name, ".cif")[1] * ".mol2")
+function write_mol2(
+    xtal::Crystal;
+    filename::AbstractString=split(xtal.name, ".cif")[1] * ".mol2"
+)
     # open buffer
     open(filename, "w") do f
         # start the MOLECULE data record
@@ -181,7 +184,11 @@ Warnings are issued if any chosen paths are not valid folders.
   - `print_paths::Bool` : Optional.  If `true`, prints contents of `rc[:paths]` to console.  Defaults to `false`.
   - `no_warn::Bool` : Optional.  Set `true` to suppress invalid path warnings.  Default to `false`.
 """
-function set_paths(path_to_data::AbstractString=pwd(); print_paths::Bool=false, no_warn::Bool=false)
+function set_paths(
+    path_to_data::AbstractString=pwd();
+    print_paths::Bool=false,
+    no_warn::Bool=false
+)
     for (key, path) in rc[:paths] # set all relative paths
         rc[:paths][key] = joinpath(path_to_data, String(key))
     end
