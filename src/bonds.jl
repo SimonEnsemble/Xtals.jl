@@ -17,7 +17,11 @@ struct BondingRule
     max_dist::Float64
 end
 
-function BondingRule(species_i::String, species_j::String, max_dist::String)
+function BondingRule(
+    species_i::AbstractString,
+    species_j::AbstractString,
+    max_dist::AbstractString
+)
     return BondingRule(Symbol.([species_i, species_j])..., parse(Float64, max_dist))
 end
 
@@ -63,11 +67,11 @@ Writes bonding rules to a CSV file that can be loaded with [`read_bonding_rules`
 
 # Arguments
 
-  - `filename::String` : The name of the output file
+  - `filename::AbstractString` : The name of the output file
   - `bonding_rules::Array{BondingRule}` : (Optional) The rules to write to file. If not specified, the global rules are written.
 """
 function write_bonding_rules(
-    filename::String,
+    filename::AbstractString,
     bonding_rules::Array{BondingRule}=rc[:bonding_rules]
 )
     open(filename, "w") do f
@@ -84,13 +88,13 @@ Reads a CSV file of bonding rules and returns a BondingRule array.
 
 # Arguments
 
-  - `filename::String` : name of file in data directory containing bonding rules
+  - `filename::AbstractString` : name of file in data directory containing bonding rules
 
 # Returns
 
 `rules::Array{BondingRule}` : the bonding rules read from file
 """
-function read_bonding_rules(filename::String)::Array{BondingRule}
+function read_bonding_rules(filename::AbstractString)::Array{BondingRule}
     rules = BondingRule[]
     open(filename) do input_file
         for line in eachline(input_file)
@@ -401,14 +405,14 @@ Writes the bond information from a crystal to the selected filename.
 # Arguments
 
   - `crystal::Crystal`: The crystal to have its bonds written to a vtk file
-  - `filename::String`: The filename the bond information will be saved to. If left out, will default to crystal name.
+  - `filename::AbstractString`: The filename the bond information will be saved to. If left out, will default to crystal name.
   - `center_at_origin::Bool`: (optional) center the coordinates at the origin of the crystal
   - `bond_filter::Pair{Symbol, Function}`: (optional) a key-value pair of an edge attribute and a predicate function. Bonds with attributes that cause the predicate to return false are excluded from writing.
   - `verbose::Bool`: (optional) if true, prints output file name to console.
 """
 function write_bond_information(
     crystal::Crystal,
-    filename::String;
+    filename::AbstractString;
     verbose::Bool=false,
     center_at_origin::Bool=false,
     bond_filter::Pair{Symbol, F}=(:NOTHING => x -> ())

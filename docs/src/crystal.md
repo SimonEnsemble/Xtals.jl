@@ -112,7 +112,7 @@ other_charged_xtal = Crystal(
 Crystal(C₁₉₂H₉₆O₁₀₄Zn₃₂, periodic = TTT):
     bounding_box      : [  25.832        0        0;
                          1.58175e-15   25.832        0;
-                         1.58175e-15 1.58175e-15   25.832]u"Å"
+                         1.58175e-15 1.58175e-15   25.832]u"Å"
 ```
 
 ## Writing Crystal Files

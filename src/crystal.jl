@@ -13,13 +13,13 @@
 """
 struct SymmetryInfo
     operations::Array{String, 2}
-    space_group::String
+    space_group::AbstractString
     is_p1::Bool
 end
 SymmetryInfo() = SymmetryInfo([Array{String, 2}(undef, 3, 0) ["x", "y", "z"]], "P1", true) # default
 
 struct Crystal <: AbstractSystem{3}
-    name::String
+    name::AbstractString
     box::Box
     atoms::Atoms{Frac}
     charges::Charges{Frac}
@@ -28,7 +28,7 @@ struct Crystal <: AbstractSystem{3}
 end
 
 # default constructor without bond info or symmetry info
-function Crystal(name::String, box::Box, atoms::Atoms{Frac}, charges::Charges{Frac})
+function Crystal(name::AbstractString, box::Box, atoms::Atoms{Frac}, charges::Charges{Frac})
     return Crystal(name, box, atoms, charges, MetaGraph(atoms.n), SymmetryInfo())
 end
 
@@ -51,7 +51,7 @@ or construct a `Crystal` data structure directly.
 
 # Arguments
 
-  - `filename::String`: the name of the crystal structure file (include ".cif" or ".cssr") read from `PATH_TO_CRYSTALS`.
+  - `filename::AbstractString`: the name of the crystal structure file (include ".cif" or ".cssr") read from `PATH_TO_CRYSTALS`.
   - `check_neutrality::Bool`: check for charge neutrality
   - `net_charge_tol::Float64`: when checking for charge neutrality, throw an error if the absolute value of the net charge is larger than this value.
   - `check_overlap::Bool`: throw an error if overlapping atoms are detected.
@@ -85,7 +85,7 @@ or construct a `Crystal` data structure directly.
   - `symmetry::SymmetryInfo`: symmetry inforomation
 """
 function Crystal(
-    filename::String;
+    filename::AbstractString;
     check_neutrality::Bool=true,
     net_charge_tol::Float64=NET_CHARGE_TOL,
     check_overlap::Bool=true,
@@ -558,7 +558,7 @@ end
 
 Returns a copy of a crystal with the name changed.
 """
-function rename_xtal(xtal::Crystal, name::String)::Crystal
+function rename_xtal(xtal::Crystal, name::AbstractString)::Crystal
     # make a "nothing" crystal
     nothing_xtal = Crystal(
         "nothing",
@@ -873,13 +873,13 @@ Write a `crystal::Crystal` to a .cif file.
 # arguments
 
   - `crystal::Crystal`: crystal to write to file
-  - `filename::String`: the filename of the `.cif` file. if ".cif" is not included as an extension, it will automatically be appended to the `filename` string.
+  - `filename::AbstractString`: the filename of the `.cif` file. if ".cif" is not included as an extension, it will automatically be appended to the `filename` string.
   - `fractional_coords::Bool=true`: write the coordinates of the atoms as fractional coords if `true`. if `false`, write Cartesian coords.
   - `number_atoms::Bool=true`: write the atoms as "C1", "C2", "C3", ..., "N1", "N2", ... etc. to give each atom a unique identifier
 """
 function write_cif(
     crystal::Crystal,
-    filename::String;
+    filename::AbstractString;
     fractional_coords::Bool=true,
     number_atoms::Bool=true
 )
@@ -1038,10 +1038,10 @@ write crystal structure to `.cssr` format.
 # arguments
 
   - `xtal::Crystal`: crystal to write to file
-  - `filename::String`: filename to write to. default is to write `.cssr` file to `pwd()`.  will append `.cssr` if absent from `filename`.
+  - `filename::AbstractString`: filename to write to. default is to write `.cssr` file to `pwd()`.  will append `.cssr` if absent from `filename`.
   - `quiet::Bool` : (optional) set `true` to suppress console output
 """
-function write_cssr(xtal::Crystal, filename::String; quiet::Bool=false)
+function write_cssr(xtal::Crystal, filename::AbstractString; quiet::Bool=false)
     @assert xtal.symmetry.is_p1 "crystal must be in P1 symmetry"
     if !occursin(".cssr", filename)
         filename *= ".cssr"
@@ -1284,7 +1284,11 @@ function Base.lastindex(crystal::Crystal)
     end
 end
 
-function Base.:+(crystals::Crystal...; check_overlap::Bool=true, name::String="added_xtal")
+function Base.:+(
+    crystals::Crystal...;
+    check_overlap::Bool=true,
+    name::AbstractString="added_xtal"
+)
     box = crystals[1].box
     symmetry = crystals[1].symmetry
     # all crystals must have same boxes and space group
