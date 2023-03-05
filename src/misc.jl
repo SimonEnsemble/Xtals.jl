@@ -1,7 +1,7 @@
 BANNER = String(read(joinpath(dirname(pathof(Xtals)), "banner.txt")))
 banner() = println(BANNER)
 
-function add_extension(filename::String, extension::String)
+function add_extension(filename::AbstractString, extension::AbstractString)
     if !occursin(extension, filename)
         filename *= extension
     end
@@ -91,7 +91,7 @@ see [here](https://chem.libretexts.org/Courses/University_of_Arkansas_Little_Roc
   - `bonds::MetaGraph`: the bonding graph of the atoms read from the `.mol` file.
   - `bond_types::Array{Int, 1}`: the array of bond types.
 """
-function read_mol(filename::String)
+function read_mol(filename::AbstractString)
     lines = readlines(filename)
 
     n_atoms = parse(Int, split(lines[4])[1])
@@ -130,9 +130,9 @@ Write a `Crystal` to disk in the mol2 format.  Includes atoms, bonds, and unit c
 # Arguments
 
   - `xtal::Crystal` : the crystal to export
-  - `filename::String` : (Optional) the name of the file to save to.  By default, file is named automatically from `xtal.name`
+  - `filename::AbstractString` : (Optional) the name of the file to save to.  By default, file is named automatically from `xtal.name`
 """
-function write_mol2(xtal::Crystal; filename::String=split(xtal.name, ".cif")[1] * ".mol2")
+function write_mol2(xtal::Crystal; filename::AbstractString=split(xtal.name, ".cif")[1] * ".mol2")
     # open buffer
     open(filename, "w") do f
         # start the MOLECULE data record
@@ -177,11 +177,11 @@ Warnings are issued if any chosen paths are not valid folders.
 
 # Arguments
 
-  - `path_to_data::String` : an absolute or relative path to use as the root of the data folder tree. Defaults to present working directory.
+  - `path_to_data::AbstractString` : an absolute or relative path to use as the root of the data folder tree. Defaults to present working directory.
   - `print_paths::Bool` : Optional.  If `true`, prints contents of `rc[:paths]` to console.  Defaults to `false`.
   - `no_warn::Bool` : Optional.  Set `true` to suppress invalid path warnings.  Default to `false`.
 """
-function set_paths(path_to_data::String=pwd(); print_paths::Bool=false, no_warn::Bool=false)
+function set_paths(path_to_data::AbstractString=pwd(); print_paths::Bool=false, no_warn::Bool=false)
     for (key, path) in rc[:paths] # set all relative paths
         rc[:paths][key] = joinpath(path_to_data, String(key))
     end
