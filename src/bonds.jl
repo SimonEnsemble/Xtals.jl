@@ -1,50 +1,35 @@
 """
-    bonding_rule = BondingRule(:Ca, :O, 2.0)
-    bonding_rules = [BondingRule(:H, :*, 1.2),
-                     BondingRule(:*, :*, 1.9)]
-
-A rule for determining if two atoms within a crystal are bonded.
-
-# Attributes
-
-  - `species_i::Symbol`: One of the atoms types for this bond rule
-  - `species_j::Symbol`: The other atom type for this bond rule
-  - `max_dist`: The maximum distance between the atoms for bonding to occur
+Struct for holding the covalent bonding rules.
+`getindex(::BondingRules, ::Symbol, ::Symbol)` returns the bonding threshold for the two specified atomic species.
 """
-struct BondingRule
-    species_i::Symbol
-    species_j::Symbol
-    max_dist::Float64
-end
-
-function BondingRule(
-    species_i::AbstractString,
-    species_j::AbstractString,
-    max_dist::AbstractString
-)
-    return BondingRule(Symbol.([species_i, species_j])..., parse(Float64, max_dist))
+struct BondingRules
+    atom_to_int::Dict{Symbol, Int}
+    threshold::Matrix{Float64}
 end
 
 """
-    bond_rules = bondingrules()
-    bond_rules = bondingrules(covalent_radii=covalent_radii(), pad=0.05)
+    bond_rules = BondingRules()
+    bond_rules = bondingrules(covalent_radii(), pad=0.05)
 
-Returns a set of bonding rules based on the given Cordero parameters and tolerances.
+Set of bonding rules based on the given Cordero parameters and tolerances.
 
 # Arguments
 
-  - `cov_rad::Union{Dict{Symbol, Float64}, Nothing}`: Covalent radii. See [`covalent_radii()`](@ref)
+  - `covalent_radii::Union{Dict{Symbol, Float64}, Nothing}`: Covalent radii. See [`covalent_radii()`](@ref)
   - `pad::Float`: Amount to pad covalent radii for bonding interactions.
 
 # Returns
 
-  - `bondingrules::Array{BondingRule, 1}`: Bonding rules from the specified covalent radii.`
+  - `bondingrules::BondingRules`: Bonding rules from the specified covalent radii.`
 """
-function bondingrules(;
+function BondingRules(;
     covalent_radii::Dict{Symbol, Float64}=rc[:covalent_radii],
     pad::Float64=0.0
-)::Array{BondingRule}
-    bond_rules = BondingRule[]
+)::BondingRules
+    # mapping for element symbols to matrix indices
+    atom_to_int = Dict(keys(covalent_radii) .=> 1:length(covalent_radii))
+    # matrix for bond distance thresholds
+    threshold = zeros(length(covalent_radii), length(covalent_radii))
     # loop over parameterized atoms
     for (i, atom_i) in enumerate(keys(covalent_radii))
         # make rules for the atom with every other atom (and itself)
@@ -52,12 +37,16 @@ function bondingrules(;
             if j < i
                 continue # already did this atom in outer loop (don't duplicate)
             end
-            radii_sum = covalent_radii[atom_i] + covalent_radii[atom_j]
-            max_dist = radii_sum + pad
-            push!(bond_rules, BondingRule(atom_i, atom_j, max_dist))
+            threshold[i, j] = threshold[j, i] = covalent_radii[atom_i] + covalent_radii[atom_j] + pad
         end
     end
-    return bond_rules
+    return BondingRules(atom_to_int, threshold)
+end
+
+function getindex(bonding_rules::BondingRules, x::Symbol, y::Symbol)
+    x_idx = bonding_rules.atom_to_int[x]
+    y_idx = bonding_rules.atom_to_int[y]
+    return bonding_rules.threshold[x_idx, y_idx]
 end
 
 """
@@ -68,15 +57,17 @@ Writes bonding rules to a CSV file that can be loaded with [`read_bonding_rules`
 # Arguments
 
   - `filename::AbstractString` : The name of the output file
-  - `bonding_rules::Array{BondingRule}` : (Optional) The rules to write to file. If not specified, the global rules are written.
+  - `bonding_rules::BondingRules` : (Optional) The rules to write to file. If not specified, the global rules are written.
 """
 function write_bonding_rules(
     filename::AbstractString,
-    bonding_rules::Array{BondingRule}=rc[:bonding_rules]
+    bonding_rules::BondingRules=rc[:bonding_rules]
 )
     open(filename, "w") do f
-        for r in bonding_rules
-            @printf(f, "%s,%s,%f\n", r.species_i, r.species_j, r.max_dist)
+        for x in keys(bonding_rules.atom_to_int)
+            for y in keys(bonding_rules.atom_to_int)
+                @printf(f, "%s,%s,%f\n", x, y, bonding_rules[x, y])
+            end
         end
     end
 end
@@ -84,7 +75,7 @@ end
 """
     read_bonding_rules("file.csv")
 
-Reads a CSV file of bonding rules and returns a BondingRule array.
+Reads a CSV file of bonding rules and returns a BondingRules struct.
 
 # Arguments
 
@@ -92,16 +83,18 @@ Reads a CSV file of bonding rules and returns a BondingRule array.
 
 # Returns
 
-`rules::Array{BondingRule}` : the bonding rules read from file
+`rules::BondingRules` : the bonding rules read from file
 """
-function read_bonding_rules(filename::AbstractString)::Array{BondingRule}
-    rules = BondingRule[]
-    open(filename) do input_file
-        for line in eachline(input_file)
-            push!(rules, BondingRule(String.(split(line, ","))...))
-        end
+function read_bonding_rules(filename::AbstractString)::BondingRules
+    rule_data = [String.(split(line, ","))... for line in readlines(filename)]
+    elements = Symbol.(unique(reduce(vcat, r[1:2] for r in rule_data)))
+    atom_to_int = Dict(elements .=> 1:length(elements))
+    thresholds = zeros(length(elements), length(elements))
+    for rule in rule_data
+        thresholds[atom_to_int[Symbol(rule[1])], atom_to_int[Symbol(rule[2])]] = parse(Float64, rule[3])
     end
-    return rules
+    @assert issymmetric(thresholds)
+    return BondingRules(atom_to_int, thresholds)
 end
 
 """
@@ -412,7 +405,7 @@ Writes the bond information from a crystal to the selected filename.
 """
 function write_bond_information(
     crystal::Crystal,
-    filename::AbstractString;
+    filename::AbstractString=crystal.name * "_bonds.vtk";
     verbose::Bool=false,
     center_at_origin::Bool=false,
     bond_filter::Pair{Symbol, F}=(:NOTHING => x -> ())
@@ -479,10 +472,6 @@ DATASET POLYDATA\nPOINTS %d double\n",
             joinpath(pwd(), filename)
         )
     end
-end
-
-function write_bond_information(crystal::Crystal; kwargs...)
-    return write_bond_information(crystal, crystal.name * "_bonds.vtk"; kwargs...)
 end
 
 """
