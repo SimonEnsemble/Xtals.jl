@@ -220,7 +220,13 @@ function Crystal(
                 # =====================
                 # SYMMETRY READER
                 # =====================
+                symmetry_column = ""
                 if haskey(name_to_column, "_symmetry_equiv_pos_as_xyz")
+                    symmetry_column = "_symmetry_equiv_pos_as_xyz"
+                elseif haskey(name_to_column, "_space_group_symop_operation_xyz")
+                    symmetry_column = "_space_group_symop_operation_xyz"
+                end
+                if symmetry_column ≠ ""
                     symmetry_info = true
 
                     symmetry_count = 0
