@@ -1,7 +1,7 @@
 name = "Xtals"
 uuid = "ede5f01d-793e-4c47-9885-c447d1f18d6d"
 authors = ["SimonEnsemble <cory.simon@oregonstate.edu>"]
-version = "0.4.12"
+version = "0.4.13"
 
 [deps]
 AtomsBase = "a963bdd2-2df7-4f54-a1ee-49d51e6be12a"
