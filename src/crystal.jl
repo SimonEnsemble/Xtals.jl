@@ -220,7 +220,13 @@ function Crystal(
                 # =====================
                 # SYMMETRY READER
                 # =====================
+                symmetry_column = ""
                 if haskey(name_to_column, "_symmetry_equiv_pos_as_xyz")
+                    symmetry_column = "_symmetry_equiv_pos_as_xyz"
+                elseif haskey(name_to_column, "_space_group_symop_operation_xyz")
+                    symmetry_column = "_space_group_symop_operation_xyz"
+                end
+                if symmetry_column ≠ ""
                     symmetry_info = true
 
                     symmetry_count = 0
@@ -243,7 +249,7 @@ function Crystal(
                         # store as strings so it can be written out later
                         new_sym_rule = Array{AbstractString, 1}(undef, 3)
 
-                        sym_start = name_to_column["_symmetry_equiv_pos_as_xyz"] - 1
+                        sym_start = name_to_column[symmetry_column] - 1
                         for j in 1:3
                             new_sym_rule[j] = sym_funcs[j + sym_start]
                         end
@@ -417,7 +423,7 @@ function Crystal(
         if !is_p1 && !symmetry_info
             error(
                 @sprintf(
-                    "%s is not in P1 symmetry and the .cif does not have a _symmetry_equiv_pos_as_xyz column
+                    "%s is not in P1 symmetry and the .cif does not have a symmetry operations column
      for us to apply symmetry operations to convert into P1 symmetry.",
                     filename
                 )

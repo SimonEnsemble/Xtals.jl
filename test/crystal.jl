@@ -520,6 +520,7 @@ end
     @test isapprox(xtal.box.reciprocal_lattice, 2 * π * inv(xtal.box.f_to_c))
     @test xtal.box.Ω ≈ det(xtal.box.f_to_c) # sneak in crystal test
     @test isapprox(crystal_density(xtal), 1570.4, atol=0.5) # kg/m3     
+    @test Crystal("UiO-68_UVAHIK.cif"; remove_duplicates=true).atoms.n == 920
 end
 
 end
