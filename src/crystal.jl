@@ -157,7 +157,8 @@ function Crystal(
 
             # Make sure the space group is P1
             if line[1] == "_symmetry_space_group_name_H-M" ||
-               line[1] == "_space_group_name_Hall"
+               line[1] == "_space_group_name_Hall"         ||
+               line[1] == "_space_group_name_H-M_alt"
                 # use anonymous function to combine all terms past the first
                 #   to extract space group name
                 space_group = reduce((x, y) -> x * " " * y, line[2:end])

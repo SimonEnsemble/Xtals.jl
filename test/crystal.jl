@@ -23,6 +23,7 @@ test_structure2 = Crystal("test_structure2.cif")
 symmetry_test_structure = Crystal("symmetry_test_structure.cif")
 symmetry_test_structure_cartn = Crystal("symmetry_test_structure_cartn.cif")
 irmof1 = Crystal("IRMOF-1.cif")
+acof1 = Crystal("ACOF-1_vesta.cif")
 
 @testset "test data loading" begin
     @test !any(
@@ -32,7 +33,8 @@ irmof1 = Crystal("IRMOF-1.cif")
             test_structure2,
             symmetry_test_structure,
             symmetry_test_structure_cartn,
-            irmof1
+            irmof1,
+            acof1
         ])
     )
 end
