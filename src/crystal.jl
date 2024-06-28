@@ -1,6 +1,7 @@
 # AtomsBase interface things
 import Base: position, length, getindex, keys, display, show, print, println
-import AtomsBase: velocity, bounding_box, boundary_conditions, atomic_symbol, species_type, atomic_number
+import AtomsBase:
+    velocity, bounding_box, boundary_conditions, atomic_symbol, species_type, atomic_number
 
 """
     SymmetryInfo(symmetry, space_group, is_p1)
@@ -1198,9 +1199,7 @@ crystal and adding new ones...\n",
     return new_crystal
 end
 
-function Base.show(io::IO, mime::MIME"text/plain", system::Crystal)
-    print(io, system)
-end
+Base.show(io::IO, mime::MIME"text/plain", system::Crystal) = print(io, system)
 
 print(xtal::Crystal) = show(xtal)
 
@@ -1208,12 +1207,12 @@ print(io::IO, xtal::Crystal) = show(io, xtal)
 
 function println(xtal::Crystal)
     println("")
-    show(xtal)
+    return show(xtal)
 end
 
 function println(io::IO, xtal::Crystal)
     println(io, "")
-    show(io, xtal)
+    return show(io, xtal)
 end
 
 display(xtal::Crystal) = show(xtal)
@@ -1357,7 +1356,7 @@ function Base.:+(
     return crystal
 end
 
-keys(xtal::Crystal) = 1:xtal.atoms.n
+keys(xtal::Crystal) = 1:(xtal.atoms.n)
 
 atomic_number(xtal::Crystal) = [elements[x].number for x in xtal.atoms.species]
 
