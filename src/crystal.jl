@@ -1,3 +1,7 @@
+# AtomsBase interface things
+import Base: position, length, getindex, keys, display, show, print, println
+import AtomsBase: velocity, bounding_box, boundary_conditions, atomic_symbol, species_type, atomic_number
+
 """
     SymmetryInfo(symmetry, space_group, is_p1)
 
@@ -157,7 +161,7 @@ function Crystal(
 
             # Make sure the space group is P1
             if line[1] == "_symmetry_space_group_name_H-M" ||
-               line[1] == "_space_group_name_Hall"         ||
+               line[1] == "_space_group_name_Hall" ||
                line[1] == "_space_group_name_H-M_alt"
                 # use anonymous function to combine all terms past the first
                 #   to extract space group name
@@ -1194,7 +1198,31 @@ crystal and adding new ones...\n",
     return new_crystal
 end
 
-function Base.show(io::IO, crystal::Crystal)
+function Base.show(io::IO, mime::MIME"text/plain", system::Crystal)
+    print(io, system)
+end
+
+print(xtal::Crystal) = show(xtal)
+
+print(io::IO, xtal::Crystal) = show(io, xtal)
+
+function println(xtal::Crystal)
+    println("")
+    show(xtal)
+end
+
+function println(io::IO, xtal::Crystal)
+    println(io, "")
+    show(io, xtal)
+end
+
+display(xtal::Crystal) = show(xtal)
+
+display(io::IO, xtal::Crystal) = show(io, xtal)
+
+show(xtal::Crystal) = show(stdout, xtal)
+
+function show(io::IO, crystal::Crystal)
     println(io, "Name: ", crystal.name)
     println(io, crystal.box)
     @printf(io, "\t# atoms = %d\n", crystal.atoms.n)
@@ -1329,19 +1357,19 @@ function Base.:+(
     return crystal
 end
 
-# AtomsBase interface things
-import Base.position
-import AtomsBase.velocity
-import AtomsBase.bounding_box
-import AtomsBase.boundary_conditions
-import Base.length, Base.getindex
-import AtomsBase.atomic_symbol
+keys(xtal::Crystal) = 1:xtal.atoms.n
+
+atomic_number(xtal::Crystal) = [elements[x].number for x in xtal.atoms.species]
+
+species_type(xtal::Crystal) = xtal.atoms.species
 
 length(xtal::Crystal) = xtal.atoms.n
 
 getindex(xtal::Crystal, index::Int) = xtal.atoms[index]
 
 atomic_symbol(atom::Atoms) = atom.species[1]
+
+atomic_symbol(xtal::Crystal) = xtal.atoms.species
 
 function position(crystal::Crystal)
     pos = Cart(crystal.atoms.coords, crystal.box).x
