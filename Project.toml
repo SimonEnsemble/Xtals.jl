@@ -20,8 +20,8 @@ Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [compat]
 Aqua = "0.5"
-AtomsBase = "0.2, 0.4"
-Bio3DView = "1"
+AtomsBase = "0.2, 0.3, 0.4"
+Bio3DView = "0.1, 1, 2"
 CSV = "0.10"
 DataFrames = "1"
 Graphs = "1.4"
